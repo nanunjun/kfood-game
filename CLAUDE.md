@@ -58,7 +58,7 @@ kfood-game/
 - Godot 스크립트는 `godot-project/scripts/` 하위에 도메인별 폴더로 분리
   (`gameplay/`, `ui/`, `ads/`, `iap/`, `save/`, `analytics/` 등)
 - 한식 아이템 데이터는 **Godot `Resource` (`.tres`)** 기반으로 관리 (디자이너 친화적 — Unity ScriptableObject 대응)
-- AppLovin MAX (공식 Godot plugin) / Godot Foundation Google Play Billing / Godotx Firebase 등 SDK 작업 시 **공식 plugin 명시** + 버전 lock 확인 후 진행
+- AppLovin MAX (공식 Godot plugin) / Godot Foundation Google Play Billing / Godotx Firebase (`godot-x/firebase`) 등 SDK 작업 시 **공식 plugin 명시** + 버전 lock 확인 후 진행
 - 빌드 산출물(`build/`)은 절대 커밋하지 않음
 - `.tscn` (씬) / `.tres` (리소스) 바이너리/텍스트 편집은 가급적 Godot Editor에서 처리 — 텍스트 diff가 가능하더라도 godot-dev는 스크립트 위주 편집을 우선
 

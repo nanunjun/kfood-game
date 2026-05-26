@@ -3,11 +3,18 @@
 .godot/
 .import/
 *.translation
-# Godot Android custom build 캐시
-godot-project/android/build/.gradle/
-godot-project/android/build/build/
+# Godot Android custom build 전체 캐시 (1GB+ gradle/build intermediates)
+# .build_version은 보존, build/ 하위는 모두 ignore (재생성)
+godot-project/android/build/
 # Firebase secret
 godot-project/google-services.json
+# Plugin 생성 native 모듈 (재설치 시 plugin이 재배치, 클론 후 재설치 절차로 복원)
+# 보존 결정: addons/ 만 SSOT, android/firebase_*, ios/ 는 ignore
+godot-project/android/firebase_core/
+godot-project/android/firebase_analytics/
+godot-project/android/firebase_crashlytics/
+godot-project/android/firebase_messaging/
+godot-project/ios/
 
 # ===== Unity (legacy, ADR-004 이전 — 안전상 잔존) =====
 # 참고: https://github.com/github/gitignore/blob/main/Unity.gitignore

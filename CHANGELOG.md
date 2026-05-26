@@ -16,6 +16,25 @@
 
 ---
 
+## [2026-05-25] Godot env install — AAB smoke PASS, GitHub repo push, AppLovin signup gated
+- **무엇**:
+  - **Godot 4.6.3 stable 설치 + 프로젝트 import** (사용자가 4.5.2 LTS 대신 4.6.3 stable 선택, ADR-004 범위 안). `project.godot` 4.5 → 4.6 feature 갱신, deprecated `[physics] enable_pause_aware_picking` 제거, header 주석 sync.
+  - **JDK 17 (Temurin) + Android Studio + SDK API 34 + Build-Tools 34.0.0 + NDK 25.2.9519653 설치 완료** (사용자).
+  - **Godot Editor**: Editor Settings에 Android SDK Path 등록, Export Templates 4.6.3 다운로드(수동/Online 모드), Install Android Build Template 완료, Debug keystore 생성 + 등록.
+  - **첫 AAB smoke build PASS**: `build/kfoodmaster-0.1.0.aab` 생성. Godot 4.6.3 + custom gradle build 파이프라인 검증 완료.
+  - **scenes/main.tscn** placeholder 신설 (Editor가 missing scene 에러 raise → 빈 Node2D placeholder, M2에서 실 main 화면으로 교체).
+  - **`.gitignore` Godot 섹션 추가** (.godot/, .import/, *.translation, gradle 캐시, google-services.json).
+  - **Git init + 첫 commit (root-commit f5b05a1, 83 파일, 7148+ lines)**. 사용자 정보 globally configured (JS Park / fwlooking@gmail.com).
+  - **GitHub repo public 생성**: https://github.com/nanunjun/kfood-game (gh CLI 통한 한 줄 create+push).
+- **왜**: ADR-004 follow-up. M2 sprint gameplay 진입 prerequisite로 engine 환경 검증.
+- **결과/다음 단계**:
+  - **AppLovin MAX signup gated** — AppLovin이 dev signup 단계에서도 Play Store published app 요구. account-approval@applovin.com 이메일 회신: "publish 후 link 재신청". **결정: Option A (defer)** — AppLovin은 M2~M3 sprint(Play Console Internal Testing 트랙 등록 시점)로 이월. Stream A 수익 ADR 변경 없음, 단순 일정 슬립.
+  - **다음 plugin 작업** (이번 세션): Google Play Billing + Godotx Firebase. 둘 다 Play Console gate 없음 (Billing은 IAP **테스트**만 Play Console 필요, install/wire는 가능).
+  - **Play Console 셋업**은 M2 후반 또는 M3 초반 task. $25 일회 + Internal Testing 트랙 + AppLovin 재신청 (1~3 영업일 검토).
+  - **godot-setup-guide.md** 갱신 권고: 4.5.2 LTS → 4.6.x stable 라벨 sync (low priority, next sprint).
+
+---
+
 ## [2026-05-24] godot-dev sprint — Godot 4.5.2 LTS 환경 구축 + 프로젝트 bootstrap + 설치 가이드
 - **무엇**:
   - **godot-project/ bootstrap (31 파일)**:

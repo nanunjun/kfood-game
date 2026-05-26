@@ -241,7 +241,7 @@ ADR-002의 결정 #1~3, #5는 유지. **결정 #4(MVP full feature, 8~12개월)�
 **Godot Foundation Mobile 인프라**
 - Godot 4.6 / 4.5.2 mobile 개선 집중.
 - Foundation 직접 유지보수 plugin: **Godot Google Play Billing** (IAP) / **Godot Google Play Games Services** / **Godot StoreKit 2** (iOS).
-- **Godotx Firebase** (paulocoutinho, MIT 라이선스): Core / Analytics / Crashlytics.
+- **Godotx Firebase** (`godot-x/firebase`, MIT 라이선스): Core / Analytics / Crashlytics.
 - Android instrumented tests (Firebase Test Lab) 통합 가능.
 
 **선택 이유 요약**
@@ -257,7 +257,7 @@ ADR-002의 결정 #1~3, #5는 유지. **결정 #4(MVP full feature, 8~12개월)�
 2. **Language = GDScript only** (C#/.NET 미사용 — mobile runtime overhead 회피)
 3. **Ads (Stream A) = AppLovin MAX 공식 Godot plugin** (`AppLovin/AppLovin-MAX-Godot`, v1.2.0+)
 4. **IAP (Stream C) = Godot Foundation Google Play Billing plugin**
-5. **Analytics / Crashlytics = Godotx Firebase** (paulocoutinho, MIT)
+5. **Analytics / Crashlytics = Godotx Firebase** (`godot-x/firebase`, MIT)
 6. **Games Services = Godot Google Play Games Services** (Foundation), iOS는 추후 StoreKit 2 plugin
 7. **테스트 = Android instrumented tests (Firebase Test Lab) 통합**
 

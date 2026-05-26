@@ -1,6 +1,6 @@
 ## AnalyticsManager — Godotx Firebase Analytics wrapper (autoload).
 ##
-## ADR-004: Godotx Firebase (paulocoutinho, MIT). Analytics + Crashlytics 모듈.
+## ADR-004: Godotx Firebase (`godot-x/firebase`, MIT). Analytics + Crashlytics 모듈.
 ## Firebase Console에서 K-Food Master 프로젝트 생성 → google-services.json 다운로드 →
 ## godot-project/google-services.json 배치 (NEVER commit, .gitignore에 명시).
 ##

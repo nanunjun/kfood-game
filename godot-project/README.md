@@ -12,7 +12,7 @@ Godot 4.6 (또는 4.5.2 LTS 라인) 프로젝트 루트. GDScript only. [ADR-004
 3. 공식 plugin 설치 (Asset Library 또는 GitHub):
    - **AppLovin MAX Godot plugin** (`AppLovin/AppLovin-MAX-Godot`) — Ads
    - **Godot Google Play Billing plugin** (Godot Foundation) — IAP
-   - **Godotx Firebase** (paulocoutinho, MIT) — Analytics / Crashlytics
+   - **Godotx Firebase** (`godot-x/firebase`, MIT) — Analytics / Crashlytics
    - (선택) Godot Google Play Games Services
 4. AppLovin MAX SDK key 발급 후 Mediation Manager에서 어댑터(AdMob / Meta Audience Network / Amazon Publisher Services 등) 활성화
 

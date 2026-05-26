@@ -186,7 +186,7 @@ unlock_level  : int
 - **광고 (Stream A)**: **AppLovin MAX Godot plugin** (공식, `AppLovin/AppLovin-MAX-Godot`, v1.2.0+ / 2025-04-24)
   - AdMob / Meta Audience Network 등 mediated networks 지원, UMP 통합, Amazon Publisher Services 통합 가이드 제공
 - **백엔드 / 분석**: Firebase
-  - **클라이언트**: **Godotx Firebase** (paulocoutinho, MIT) — Core / Analytics / Crashlytics
+  - **클라이언트**: **Godotx Firebase** (`godot-x/firebase`, MIT) — Core / Analytics / Crashlytics
   - Analytics, Remote Config, Crashlytics
   - **Cloud Functions** — Stream B 매장 매칭 / 동적 affiliate link 생성
 - **위치 (Stream B)**: Google Places API (오프라인 매장), 한국 지역은 카카오맵 API 검토
@@ -312,7 +312,7 @@ unlock_level  : int
 - **Godot 4.6 (또는 4.5.2 LTS 라인)** — FOSS, 매출 게이트 없음 ([ADR-004](decisions.md#adr-004))
 - **AppLovin MAX Godot plugin** v1.2.0+ → 안정 버전 lock 필요
 - **Godot Foundation Google Play Billing plugin**
-- **Godotx Firebase** (paulocoutinho, MIT) — Analytics / Crashlytics
+- **Godotx Firebase** (`godot-x/firebase`, MIT) — Analytics / Crashlytics
 - Firebase Cloud Functions Node 20 런타임
 - Android API 24+ (AppLovin MAX Godot plugin v1.2.0 요구사항 재확인 후 finalize — godot-dev follow-up)
 

@@ -182,13 +182,17 @@ Godot Editor:
 
 ### 6.3 Godotx Firebase Plugin (Analytics + Crashlytics + Remote Config)
 
-- **Repo**: https://github.com/paulocoutinho/godotx-firebase (MIT)
-- **Maintainer**: paulocoutinho (커뮤니티, ADR-004 검증)
+- **Repo**: https://github.com/godot-x/firebase (MIT)
+- **Asset Library**: https://godotengine.org/asset-library/asset/4475 (이름 "Godotx Firebase")
+- **Maintainer**: godot-x 조직 (paulocoutinho 등, MIT, 활발 유지보수)
 
-**설치**:
-1. GitHub release → latest zip
-2. 압축 풀기 → `godot-project/addons/godotx_firebase/` 배치
-3. `Project > Project Settings > Plugins`에서 enable
+**설치 (옵션 1: Asset Library 권장)**:
+- Godot Editor 상단 `AssetLib` 탭 → 검색 "Godotx Firebase" → Download → Install
+
+**설치 (옵션 2: GitHub 수동)**:
+1. https://github.com/godot-x/firebase/releases → latest zip
+2. 압축 풀기 → `godot-project/addons/` 에 모듈별로 배치 (`godotx_firebase_core/`, `godotx_firebase_analytics/`, `godotx_firebase_crashlytics/`)
+3. `Project > Project Settings > Plugins`에서 enable (모듈 각각)
 
 **Firebase Console 설정**:
 1. https://console.firebase.google.com → "Add Project" → "K-Food Master"
