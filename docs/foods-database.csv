@@ -1,0 +1,13 @@
+food_id,name_ko,name_en,tier,servings,store_count,primary_cooking_method,secondary_method,cook_time_sec,perfect_window_ms,difficulty_score,visual_appeal_score,recognition_score,ad_trigger_priority,notes
+t1_001,호떡,Hotteok,1,1,2,grill,,8,1100,2,5,5,low,FTUE 1순위 후보; 단맛 카테고리 단독; 뒤집기 변형 가능
+t1_002,라면,Ramyeon,1,1,3,boil,,9,1000,1,3,5,low,FTUE 2순위; 글로벌 SS급 인지도; 끓이기 기본 조리법 데뷔
+t1_003,떡볶이,Tteokbokki,1,1,4,boil,,13,950,2,5,5,med,K-food 글로벌 시그니처; 어물전(어묵) 데뷔
+t1_004,김밥,Kimbap,1,1,5,roll,,4,1500,2,4,5,med,5가게 풀 순회 쇼케이스; no-cook 말기 타이밍
+t1_005,김치볶음밥,Kimchi Fried Rice,1,1,4,stirfry,,10,1000,3,3,4,med,냉장고 털이 정서; 볶기 조리법 데뷔
+t1_006,해물파전,Haemul Pajeon,1,1,4,panfry,,14,950,3,5,4,high,어물전 3SKU 동시 등장; 단일 탭 부치기(MVP); flip mechanic: post-launch (C-3 lock 2026-05-24)
+t1_007,한국식 콘도그,Korean Corn Dog,1,1,3,deepfry,,8,1000,3,5,4,high,튀기기 조리법 데뷔; SNS shareable (치즈 스트레치); C-1 ACCEPT: viral 우선 (2026-05-24)
+t2_008,비빔밥,Bibimbap,2,2,4,mix,,5,1300,3,5,5,med,Tier 2 진입 default; no-cook 비비기 마무리
+t2_009,김치찌개,Kimchi Jjigae,2,2,3,boil,,15,950,3,4,5,med,엄마 김치찌개 가족 정서 핵
+t2_010,잡채,Japchae,2,2,4,stirfry,toss,16,900,4,5,4,med,명절 정서; 6색 채소 비주얼; 매운 카테고리 회피
+t2_012,갈비구이,Galbi-gui,2,2,3,grill,,18,650,5,5,5,high,MVP 최고 난도; 사용자 명시 타이밍 핵심; PERFECT 좁음(4~7%); Korean BBQ iconic
+t2_013,순두부찌개,Sundubu Jjigae,2,2,3,boil,,14,950,3,4,5,med,C-2 lock 2026-05-24 (양념치킨 supersede); T2 어물전 단독 책임(멸치 육수); 김치찌개와 끓이기 페어; 매운+담백 hybrid

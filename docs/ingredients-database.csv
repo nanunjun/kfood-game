@@ -1,0 +1,48 @@
+ingredient_id,name_ko,name_en,store_type,used_in_foods,is_distractor_friendly,distractor_weight,notes
+ing_p_001,파,Green Onion,produce,t1_002;t1_003;t1_005;t1_006;t1_009;t2_009;t2_013,true,3,쪽파(t1_006 별도)와 시각 유사; 한식 base; 순두부찌개 마무리(C-2 lock)
+ing_p_002,쪽파,Chive Onion,produce,t1_006,true,2,파(ing_p_001)와 디스트랙터 페어
+ing_p_003,양파,Onion,produce,t1_003;t1_006;t1_009;t2_009;t2_010,true,3,한식 base; 잡채/김치찌개/갈비구이 공용 (양념치킨 used_in_foods 제거: C-2)
+ing_p_004,부추,Korean Chive,produce,t1_006,true,2,쪽파와 시각 디스트랙터 페어
+ing_p_005,마늘,Garlic,produce,t2_009_GRill,true,2,갈비 양념 (양념치킨 t2_011 제거: C-2)
+ing_p_006,배,Korean Pear,produce,t2_009_grill,false,1,갈비 양념(연육); 사용자 명시 재료
+ing_p_007,시금치,Spinach,produce,t1_004;t2_008;t2_010,true,2,비빔밥/잡채 색감 핵심
+ing_p_008,콩나물,Bean Sprout,produce,t2_008,true,2,비빔밥 식감
+ing_p_009,당근,Carrot,produce,t2_008;t2_010,true,2,비빔밥/잡채 색감
+ing_p_010,표고버섯,Shiitake,produce,t2_010,false,1,잡채 깊은 맛
+ing_p_011,호박,Korean Zucchini,produce,t2_013,true,2,순두부찌개 채소 (C-2 신규); 애호박; 호박색 변별
+ing_m_001,소시지,Sausage,meat,t1_007,false,2,콘도그 핵심; 한국식 콘도그는 소시지+모짜렐라 hybrid
+ing_m_002,햄,Ham,meat,t1_004;t1_005,true,2,김밥/볶음밥 공용; 소시지와 디스트랙터 페어
+ing_m_003,돼지고기,Pork,meat,t2_009,true,2,김치찌개 목살/앞다리
+ing_m_004,소고기,Beef,meat,t2_008;t2_010,true,2,비빔밥/잡채 잘게 다짐
+ing_m_005,LA갈비,LA Galbi,meat,t2_012,false,3,사용자 명시; 갈비구이 핵심
+ing_m_006,꽃갈비,Premium Galbi,meat,t2_012,false,3,사용자 명시; LA갈비와 시각 유사 디스트랙터 페어
+ing_s_001,김,Dried Seaweed,seafood,t1_004,false,2,김밥 외피; 어물전 단독 SKU
+ing_s_002,어묵,Fish Cake,seafood,t1_003,true,3,떡볶이 핵심; 단무지와 디스트랙터 페어 가능
+ing_s_003,오징어,Squid,seafood,t1_006,true,2,해물파전 사용자 명시
+ing_s_004,새우,Shrimp,seafood,t1_006,true,2,해물파전 사용자 명시; 멸치와 디스트랙터 페어
+ing_s_005,조개,Clam,seafood,t1_006,true,2,해물파전 사용자 명시; 바지락 포함 표현
+ing_s_006,멸치,Anchovy,seafood,t2_013,true,3,순두부찌개 육수 (C-2 신규); 새우와 디스트랙터 페어; T2 어물전 floor +1 핵심 SKU
+ing_g_001,라면사리,Ramyeon Noodle,grain,t1_002,false,2,라면 핵심
+ing_g_002,밥,Cooked Rice,grain,t1_004;t1_005;t2_008,true,2,김밥/볶음밥/비빔밥 공용
+ing_g_003,떡,Tteok (Rice Cake),grain,t1_003,false,3,떡볶이 핵심; 흰 윤기
+ing_g_004,밀가루,Flour,grain,t1_001,true,2,호떡 반죽; 부침가루와 디스트랙터 페어
+ing_g_005,부침가루,Pancake Mix,grain,t1_006;t1_007,true,3,해물파전/콘도그 공용; 밀가루와 디스트랙터 페어
+ing_g_006,빵가루,Bread Crumb,grain,t1_007,false,1,콘도그 외피
+ing_g_007,당면,Glass Noodle,grain,t2_010,false,3,잡채 핵심; 곡물 단독 SKU
+ing_x_001,계란,Egg,sundry,t1_002;t1_004;t1_005;t1_006;t2_013,true,3,한식 base 다목적; 라면/김밥/볶음밥/해물파전/순두부찌개(풀기)
+ing_x_002,소금,Salt,sundry,t1_001_dough;t1_006,false,1,호떡 반죽; 디스트랙터로만 등장 (강제 정답 X)
+ing_x_003,간장,Soy Sauce,sundry,t1_006;t2_010;t2_012,true,3,한식 base; 옹기 시각 디스트랙터 (고추장과 페어) (양념치킨 제거: C-2)
+ing_x_004,고추장,Gochujang,sundry,t1_003;t2_008,true,3,떡볶이/비빔밥; 간장과 옹기 디스트랙터 페어 (양념치킨 제거: C-2)
+ing_x_005,설탕,Sugar,sundry,t1_001;t1_007;t2_012,true,2,호떡/콘도그 코팅/갈비양념 (양념치킨 제거: C-2)
+ing_x_006,참기름,Sesame Oil,sundry,t2_010;t2_012,true,2,잡채/갈비 마무리
+ing_x_007,깨,Sesame Seed,sundry,t2_012,true,1,갈비 마무리 garnish (양념치킨 제거: C-2)
+ing_x_008,단무지,Pickled Radish,sundry,t1_004,true,3,김밥 핵심; 어묵과 시각 디스트랙터 페어
+ing_x_009,두부,Tofu,sundry,t2_009,false,2,김치찌개 핵심; 잡화 분류
+ing_x_010,김치,Kimchi,sundry,t1_005;t2_009;t2_013,false,3,한식 시그니처; 옹기 핵심; 순두부찌개 매운 베이스 (C-2 신규)
+ing_x_011,이스트,Yeast,sundry,t1_001,false,1,호떡 반죽 발효
+ing_x_012,견과류,Mixed Nuts,sundry,t1_001,false,2,호떡 속재료 (해바라기씨/땅콩)
+ing_x_013,계피,Cinnamon,sundry,t1_001,false,1,호떡 흑설탕 속
+ing_x_014,모짜렐라,Mozzarella,sundry,t1_007,false,2,한국식 콘도그 hybrid 시그니처
+ing_x_015,케첩,Ketchup,sundry,t1_007,true,1,콘도그 토핑 (선택); 디스트랙터로 자주 등장
+ing_x_016,순두부,Soft Tofu,sundry,t2_013,false,3,순두부찌개 핵심 (C-2 신규); 두부(ing_x_009)와 시각 디스트랙터 페어; 잡화 분류 (실 매장은 두부집/잡화 공용)
+ing_x_017,고춧가루,Red Pepper Powder,sundry,t2_013,true,2,순두부찌개 매운맛 (C-2 신규); 고추장과 색감 페어; 가루 클러스터 (밀가루/부침가루 cross-store 페어)

@@ -1,0 +1,48 @@
+# Godot 4 standard .gitignore
+# 참조: https://github.com/github/gitignore/blob/main/Godot.gitignore
+
+# Godot-specific 캐시
+.godot/
+.import/
+
+# 환경별 override (사용자 로컬 설정)
+override.cfg
+
+# Mono / .NET (GDScript only이지만 안전 차원)
+.mono/
+data_*/
+mono_crash.*.json
+
+# 빌드 산출물은 루트 build/ 폴더로 출력 — 로컬 임시 산출물만 무시
+*.aab
+*.apk
+*.ipa
+*.dmg
+
+# Android export 임시
+android/build/
+
+# Translation 자동 생성
+*.translation
+
+# Editor 임시 파일
+*.tmp
+*.bak
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Secret / credentials — 절대 commit X
+# (사용자가 Step 5/6에서 생성/배치)
+*.keystore
+*.jks
+google-services.json
+GoogleService-Info.plist
+applovin_sdk_key.txt
+firebase_admin_credentials.json
+
+# export_presets.cfg는 commit (preset 구조 자체는 공유)
+# — 단 preset 내부의 keystore 비번, sdk key는 placeholder만, 실 값은 별도 ENV/secret

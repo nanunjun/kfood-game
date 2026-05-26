@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  K-Food Master placeholder icon
+  1024×1024, 한식 떡볶이 톤 (Gochujang Red #C44536)
+  art-director 본격 sprint 전 임시. M1 art sprint에서 교체.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <rect width="1024" height="1024" fill="#F4E5C3"/>
+  <circle cx="512" cy="512" r="380" fill="#C44536"/>
+  <circle cx="512" cy="512" r="320" fill="#E76F51"/>
+  <text x="512" y="640" text-anchor="middle"
+        font-family="Arial, sans-serif" font-weight="900" font-size="420"
+        fill="#FFFFFF">K</text>
+</svg>
