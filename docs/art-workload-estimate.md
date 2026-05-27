@@ -1,25 +1,42 @@
 # Art Workload Estimate — K-Food Master MVP
 
-> 버전: **v3.0** · 작성: 2026-05-23 · 최종 개정: 2026-05-23 (ADR-003 반영)
-> 근거: [`decisions.md` ADR-003](decisions.md#adr-003-mvp-first-전환--34개월-출시--점진-확대-supersedes-adr-002) / [`GDD.md`](GDD.md) §9 §10 / [`systems/cooking-mechanics.md`](systems/cooking-mechanics.md) §2.2
-> 작성자: art-director (메인 스레드 대행) · 대상: pm, unity-dev, game-designer
+> 버전: **v3.1 (2026-05-26, supersedes v3.0)** — [ADR-005](decisions.md#adr-005) 4-stage 메커닉 추가 영향 반영 (placeholder).
+> 작성: 2026-05-23 · 최종 개정: 2026-05-26 (ADR-005 영향 placeholder; art-style reset 보류 중이라 정확 산정은 lock 후)
+> 근거: [`decisions.md` ADR-003](decisions.md#adr-003-mvp-first-전환--34개월-출시--점진-확대-supersedes-adr-002), [`decisions.md` ADR-005](decisions.md#adr-005) / [`GDD.md`](GDD.md) §9 §10 / [`systems/cooking-mechanics.md`](systems/cooking-mechanics.md) §2.2 §2A
+> 작성자: art-director (메인 스레드 대행) · 대상: pm, godot-dev, game-designer
 
 ---
 
 ## 0. Executive Summary
 
 > 🎯 **방침 (ADR-003 채택)**: ADR-002 결정 #1·2·3·5 유지 + **MVP-first 전환** (음식 10~15개, Tier 1~2, 친구 1~2명, Scene 3 2종)
+> 🆕 **ADR-005 (2026-05-26)**: 4-stage 메커닉 추가 — 칼/도마 + cut style 애니메이션(6종) + hero ingredient cut variation 신규 발주 필요. **+20~25h (사용자 추정) / +25~35h (pm reality check)** placeholder. **art-director 작업은 art-style reset 보류 중이라 BLOCKED — lock 후 정확 산정**.
 >
-> **순 art 작업 시간 ~80h (M1 sprint)** + 사전 작업 10~16h (M0). 3~4주 sprint로 압축 가능.
+> **순 art 작업 시간 ~80h (M1 sprint) + ADR-005 추가 ~25~35h (pm) → ~100~115h MVP (pm 추정)**. 사용자 추정 시 ~100~105h.
 
 | 항목 | 추정 |
 |------|------|
-| **M1 art sprint** | **~80h** (범위 ~75~110h, §4.2 리스크 케이스) |
+| **M1 art sprint (v3.0 baseline)** | **~80h** (범위 ~75~110h, §4.2 리스크 케이스) |
+| **ADR-005 추가 (v3.1, placeholder)** | **+25~35h (pm) / +20~25h (사용자)** — art-style lock 후 정확 산정 |
+| **M1 art sprint (v3.1 total, pm)** | **~100~115h** |
 | **M0 사전 작업 (anchor lock)** | ~10~16h |
-| **M1 sprint 일정** | **3~4주** (병행 기준 주 20~25h) |
-| **현금 예산** | MJ Standard $30/월 × 4개월(MVP) = ~$120 + engine-agnostic asset 소스(Flaticon/Pond5/Freesound 등) ~$50~150 = **~$170~270** |
+| **M1 sprint 일정** | **3~4주** (v3.0) + **+1~3주** (ADR-005, 사용자 1주 / pm 2~3주) = **4~7주** |
+| **현금 예산** | MJ Standard $30/월 × 4개월(MVP) = ~$120 + engine-agnostic asset 소스(Flaticon/Pond5/Freesound 등) ~$50~150 = **~$170~270** (ADR-005 영향 미미 — MJ 비용은 anchor 재활용으로 흡수) |
 | **외주 비용** | $0 |
-| **사운드** | M2~M3로 deferred (Suno Pro 결제 보류) |
+| **사운드** | M2~M3로 deferred (Suno Pro 결제 보류) — **ADR-005 영향: M2에 minimum 1~2주 sound 작업 추가 (BPM 메트로놈 + 칼질 SFX). 전체 사운드 deferred는 유지.** |
+
+### 0.1 ADR-005 추가 작업 항목 (v3.1 placeholder, art-style lock 후 정확 산정)
+
+| 항목 | 수량 | 단위 시간 (pm 추정) | 소계 |
+|------|------|--------------------|------|
+| 칼/도마 art 1 set (raw + slicing 모션 base) | 1 set | ~3~4h | ~3~4h |
+| Cut style별 애니메이션 (3~4 frames × 6 cut style) | 18~24 frames | ~0.5~0.7h | ~9~17h |
+| Hero ingredient cut variation (raw + cut 2종, 12 음식 × 1~2 hero) | ~24 sprites | ~0.4h | ~10h |
+| 마스코트 simpler style 재작업 가능성 (cut 모션 호환) | placeholder | ~3~4h | ~3~4h |
+| **ADR-005 추가 합계 (pm)** | | | **~25~35h** |
+| **ADR-005 추가 합계 (사용자)** | | | **~20~25h** |
+
+> ⚠️ **art-director 작업은 R-A14 BLOCKED on art-style reset**. 현재 reference 결정 보류 중. 정확 산정은 art-style lock 후 진입. 위 수치는 ADR-005 사용자 명시 추정 + pm cross-check 결과 placeholder.
 
 ---
 
@@ -284,6 +301,7 @@ ADR-003 §10.2 로드맵에 맞춰 launch 후 추가될 art workload. **dual-tra
 | 사운드 | M1 포함 | M1 포함 | **M2~M3 deferred** |
 
 ## 변경 이력
+- **2026-05-26 v3.1** (supersedes v3.0) — [ADR-005](decisions.md#adr-005) 영향 반영. 4-stage 메커닉 추가 → 칼/도마 1 set + cut style 애니메이션 (3~4 frames × 6 cut style) + hero ingredient cut variation (~24 sprites). **+25~35h (pm reality check) / +20~25h (사용자 추정) placeholder**. Total: ~80h → **~100~115h MVP (pm)**. art-director 작업은 art-style reset 보류 중이라 **BLOCKED — lock 후 정확 산정**. Post-Launch Backlog (§7) 무변경 (rhythm은 MVP). 사운드: M2에 minimum 1~2주 BPM 메트로놈 + 칼질 SFX 추가, 전체 사운드 deferred는 유지.
 - **2026-05-23 v3.0** — ADR-003 반영. MVP-first 전환. 음식 50→12, 친구 5→2, Scene 3 5→2종. Art ~228h → ~80h (M1 sprint). 사운드 M2~M3 deferred. Post-launch backlog 섹션(§7) 신설.
 - **2026-05-23 v2.0** — ADR-002 반영. 외주 제거, MVP full feature, 마스코트 캐릭터, 일정 8~12개월. 워크로드 ~228h.
 - **2026-05-23 v1.0** — 초안. Option A/B/C 비교, 외주 권장.

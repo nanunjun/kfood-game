@@ -16,6 +16,70 @@
 
 ---
 
+## [2026-05-26] ADR-005 confirm 3건 lock — 번호 005 유지, Perfect ±80ms, Skip 0.9
+- **무엇**:
+  - **ADR 번호 = 005 유지** (사용자 confirm, typo 수용. 006 rename X). 구조적 인덱스 일관 — hole 없음.
+  - **Perfect window = ±80ms LOCKED** (사용자 confirm, pm 권고 채택, 사용자 원안 ±100ms override). alpha fail rate 검증 후 필요 시 Remote Config로 ±100ms 완화 옵션.
+  - **Skip `accuracy_prep` = 0.9 LOCKED** (사용자 confirm, pm 권고 채택, 사용자 원안 1.0 auto-perfect override). skill bonus 명분 유지 (engage 시 +10% 추가 점수 상승 여지) + cut style anim art workload(+25~35h) 대비 engage ROI 확보.
+  - **갱신 파일 3종**:
+    - `docs/balance-config.md` v0.3 → **v0.3.1** (§6 dual-column 단일화 ±80ms LOCKED / §8 Skip default 1.0→0.9 LOCKED / §11 open question #10·#11 resolved / §2 컨텍스트 표 ADR-005-B / ADR-005-D LOCKED 라벨)
+    - `docs/decisions.md` ADR-005 — Context §Perfect window 수치 충돌 → LOCKED + Skip 항목 신규 LOCKED 추가 / Scoring 룰 §Perfect 라벨 / Mobile Latency Handling sync
+    - `CHANGELOG.md` — 본 항목
+- **왜**: ADR-005 채택 직후 pm raise한 3건 confirm을 한 라운드에 lock. alpha 데이터 기다리기 전 디자인 의도 명확히 → 후속 game-designer / godot-dev sprint가 placeholder 양자 병기 X 단일 값으로 진행.
+- **결과/다음 단계**:
+  - **개방 confirm 0건** (ADR-005 관련). 다음 잔여 confirm: 직전 sprint (Tier 2 카피 톤 / 튜토리얼 다시 보기 / 양념치킨 부활 / 잡채 ramp 보강) — 모두 alpha 이후 검토 또는 low-priority.
+  - **alpha 후 재검토 hook**: Perfect window fail rate 분포(±80ms로 30%+ Miss면 ±100ms 완화 검토) / Skip rate (>60%면 0.9→0.85 또는 +ad freq 강화) — data-analyst Phase 2 모니터링 항목.
+  - **잔여 ADR-005 후속 sprint**: game-designer (foods CSV prep_* lock + cooking-mechanics §X 본격) / ui-designer (도마 + Knife indicator + FTUE 6-step) / godot-dev M2 진입 시 / art-director (art-style lock 후).
+
+---
+
+## [2026-05-26] ADR-005: 4-stage 메커닉 추가 — 재료 준비 (rhythm tap, knife indicator). Option C (optional skill bonus). +1~3주 일정 영향.
+- **무엇**:
+  - **ADR-005 Accepted** — 3-stage → 4-stage 확장. Stage 2 sub-stage 분할 (2A 재료 준비 / 2B 조리 방법 / 2C 조리 시간). Scene 변경 없음 (Scene 2 키친 내 sub-flow).
+  - **Option C — optional skill bonus rhythm tap** 채택. Skip 가능 (📺 Rewarded Video → auto-perfect, Stream A 자연 트리거).
+  - **Knife indicator visual cue** — 칼이 자동 위아래 움직임, 도마 닿기 직전 = perfect tap. 별도 rhythm UI 없이 게임 비주얼 통합.
+  - **Cut Styles 6종 (한식)**: 다지기 / 채썰기 / 어슷썰기 / 통썰기 / 송송썰기 / 깍둑썰기.
+  - **Total Score 가중 평균 공식** (cooking-mechanics §3 곱셈 모델 supersede): 재료 25% × 준비 20% × 방법 20% × 시간 35%. ★1 30%+, ★2 60%+, ★3 90%+.
+  - **Per-Food BPM Design**: Tier 1 BPM 70~110 (3~6 taps) / Tier 2 BPM 90~140 (5~8 taps). 다지기 가장 빠름(140), 통썰기 가장 느림(70), 양념 재우기 60 BPM (마사지 식).
+  - **Perfect window**: Perfect ±80ms (pm 권고) vs ±100ms (사용자 명시) — balance-config v0.3 placeholder, alpha 후 lock.
+  - **Tutorial 확장**: FTUE 5-step → 6-step (Round 1 BPM 60 + 2 taps + 시각 가이드 full → Round 4+ 정상 BPM).
+  - **갱신 파일 7종**:
+    - `docs/decisions.md` — ADR-005 본문 신설, 인덱스 ADR-005 행 추가, ADR-003 §Decision 옆 한 줄 註
+    - `CHANGELOG.md` — 본 항목
+    - `docs/systems/cooking-mechanics.md` v0.4 → **v0.5** (헤더 + §2 4-stage + §3 가중 평균 supersede + §X 재료 준비 placeholder)
+    - `docs/balance-config.md` v0.2 → **v0.3** (§5 4-factor weights / §6 Prep Rhythm window / §7 BPM by Tier / §8 Skip Bonus 신규)
+    - `docs/art-workload-estimate.md` v3.0 → **v3.1** (+25~35h pm reality check placeholder)
+    - `docs/GDD.md` v2.1 → **v2.2** (§2 Core Loop 4-stage sync / §6.3 prep_* + cut_variations / §13 R-A13~R-A16 4건)
+    - `docs/agent-roster.md` — sound-designer 신설 X, art-director sound 겸직 결정 명시
+- **왜**:
+  - 사용자 메이저 decision (2026-05-26) — 기존 Stage 2 단일 카드 선택의 메커닉 빈약함 재평가, 한식 cutting 기법(다지기/채썰기 등)이 게임 표현 기회로 미활용.
+  - rhythm tap + Knife indicator visual cue로 메커닉 깊이 추가 + K-stylistic touch 강화.
+  - Skip 옵션이 Rewarded Video 자연 트리거 → Stream A CTR ↑.
+  - Optional 설계로 캐주얼 진입장벽 유지 (어려우면 Skip → auto-perfect).
+- **결과/다음 단계**:
+  - **ADR 번호 확인 필요 (사용자 confirm)**: 사용자가 "ADR-006" 지정했으나 ADR-005가 비어있어 **ADR-005로 작성**. 의도가 다르면 알려주세요.
+  - **일정 reality check (둘 다 명시)**:
+    - 사용자 추정: +1주
+    - **pm 평가: +2~3주** — 근거 = audio engine (BPM 메트로놈 + latency calibration) + UI (Knife indicator + 도마 화면 + FTUE 확장) + art (칼/도마 1 set + cut style anim 3~4 frames × 6 + hero ingredient cut variation) + balance (4-factor 가중치 검증 + BPM/tap 음식별 매핑) + tutorial 확장. 5개 영역 cross-cutting.
+    - 결과: ADR-003 일정 3~4개월 → **3.5~4.5개월** (buffer 초과 가능성). M0 reality check 게이트에서 재평가.
+  - **신규 Risk 4건**:
+    - **R-A13** Mobile audio latency (기기별 ±100ms 차이) — 영향 중 / 가능성 중. 완화: visual cue 우선 + post-launch calibration UI.
+    - **R-A14** Art-style reset 의존 (현재 보류 상태) — 영향 중 / 가능성 고. 완화: art-director 작업 BLOCKED on art-style lock.
+    - **R-A15** Sound deferral 충돌 (ADR-003 M2~M3 deferred ↔ ADR-005 BPM 메트로놈 강의존) — 영향 중 / 가능성 중. 완화: M2 minimum 1~2주 sound 작업만 추가, 전체 사운드 deferred는 유지.
+    - **R-A16** 일정 +1~3주 out-of-bound — 영향 고 / 가능성 중. 완화: M0 reality check 게이트.
+  - **art-director BLOCKED**: 직전(2026-05-24) art-style reset 선언 + 새 reference 결정 보류. ADR-005 art 작업(칼/도마 + cut anim) 진입 불가, art-style lock 후로 격리.
+  - **Sound-designer 결정**: 신규 agent 신설 X. **art-director가 sound 겸직** (Phase 2 통합). 근거: 1~2주 sound 작업량, 별도 agent 오버헤드 불필요. agent-roster.md art-director 행에 "+ Phase 2 sound (BGM/SFX/rhythm) 겸직" 추가.
+  - **후속 sub-agent 우선순위**:
+    1. **game-designer**: foods-database.csv prep_* 4 컬럼 + ingredients-database.csv cut_variations 컬럼 + balance-config v0.3 정확 수치(BPM 음식별 / perfect window lock) + cooking-mechanics v0.5 본격 sprint (§X 재료 준비 룰 상세)
+    2. **ui-designer**: screen-flow v0.3 (도마 화면 + Knife indicator) + components.md CP-18/CP-19 신설 + ftue.md 6-step
+    3. **godot-dev** (M2 진입 시): Stage 2A rhythm tap 구현 + Knife indicator AnimationPlayer + Skip → Rewarded Video wire + 4-factor 가중 평균 채점
+    4. **art-director** (art-style lock 후): 칼/도마 art + cut style 애니메이션 + hero 재료 cut variation
+  - **사용자 confirm 필요**:
+    - ADR 번호 (006 vs 005) 의도 확인
+    - Perfect window 80ms vs 100ms 최종 lock 시점 (alpha 후 가능)
+
+---
+
 ## [2026-05-25] Godot env install — AAB smoke PASS, GitHub repo push, AppLovin signup gated
 - **무엇**:
   - **Godot 4.6.3 stable 설치 + 프로젝트 import** (사용자가 4.5.2 LTS 대신 4.6.3 stable 선택, ADR-004 범위 안). `project.godot` 4.5 → 4.6 feature 갱신, deprecated `[physics] enable_pause_aware_picking` 제거, header 주석 sync.

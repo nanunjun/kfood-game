@@ -19,9 +19,11 @@
 
 | Agent | 정의 파일 | 주요 책임 | 산출물 위치 |
 |-------|----------|----------|------------|
-| **art-director** | `.claude/agents/art-director.md` | 아트 스타일, Midjourney 프롬프트, 에셋 관리 | `docs/art-style-guide.md`, `docs/prompts-library.md`, `assets-raw/`, `assets-processed/` |
+| **art-director** | `.claude/agents/art-director.md` | 아트 스타일, Midjourney 프롬프트, 에셋 관리 **+ Phase 2 sound (BGM/SFX/rhythm) 겸직 (ADR-005 결정)** | `docs/art-style-guide.md`, `docs/prompts-library.md`, `docs/sound-guide.md` (신설 예정), `assets-raw/`, `assets-processed/` |
 | **marketing** | `.claude/agents/marketing.md` | ASO 키워드, 스토어 리스팅, 마케팅 카피 | `docs/aso-keywords.md`, `docs/store-listing-copy.md`, `marketing/` |
 | **data-analyst** | `.claude/agents/data-analyst.md` | KPI, A/B 테스트 설계, 분석 이벤트 정의 | `docs/kpi-dashboard.md`, `docs/analytics-events.md`, `docs/ab-test-plans.md` |
+
+> **sound-designer agent 신설 X** ([ADR-005](decisions.md#adr-005) 2026-05-26 결정). 1인 sprint sound 작업량 1~2주 추정 + 별도 agent 오버헤드 불필요 → **art-director가 Phase 2 sound 겸직**. ADR-005에 따라 M2 minimum 1~2주 sound 작업 (BPM 메트로놈 + 칼질 SFX) 진입 시 art-director에 위임.
 
 ## 위임 가이드 (Claude → sub-agent)
 

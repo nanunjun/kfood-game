@@ -1,8 +1,11 @@
 # Cooking Mechanics
 
-> 버전: **v0.4** · 작성일: 2026-05-23 · 최종 개정: 2026-05-23
+> 버전: **v0.5 (2026-05-26, supersedes v0.4)** — [ADR-005](../decisions.md#adr-005) 4-stage 추가
+> 작성일: 2026-05-23 · 최종 개정: 2026-05-26
 > 상위 문서: [`../GDD.md`](../GDD.md) §2 Core Loop / §3 Scoring System
-> 본 문서는 GDD §2의 3단계 cooking matching 루프를 **구현 가능한 수준**으로 상세화한다.
+> 본 문서는 GDD §2의 **4단계** cooking matching 루프를 **구현 가능한 수준**으로 상세화한다.
+>
+> ⚠️ **v0.5 high-level 갱신만**. §2 Core Loop / §3 Scoring 헤더 sync + §X 재료 준비 placeholder. 상세 룰(rhythm tap / Knife indicator / Perfect/Good/Miss 판정 / Skip 옵션 / FTUE rhythm 흐름 / 음식별 BPM·tap 매핑)은 **game-designer v0.5 본격 sprint**.
 
 ---
 
@@ -34,7 +37,14 @@
 
 ## 1. Round 구조
 
-**3-scene 구조** — 각 Stage는 명확한 공간 컨텍스트를 가진다.
+**3-scene / 4-stage 구조** ([ADR-005](../decisions.md#adr-005) 2026-05-26 갱신) — Scene 3종은 유지, Stage가 3 → 4로 확장 (Scene 2 키친 내 sub-flow로 Stage 2A 재료 준비 신설).
+
+**4-stage 흐름 요약**:
+- Scene 1 🏪 시장 → Stage 1 재료 선택
+- Scene 2 🍳 키친 → **Stage 2A 재료 준비 (rhythm tap, 1~2 hero ingredient)** / Stage 2B 조리 방법 / Stage 2C 조리 시간 (기존 Stage 3)
+- Scene 3 🍽 식탁 → 채점 + ★
+
+> 아래 다이어그램은 v0.4 3-stage 기준 그대로 보존 (history). 4-stage 흐름은 §X 재료 준비(아래)에서 별도 정리 — game-designer v0.5 본격 sprint에서 다이어그램 자체 재작성 예정.
 
 ```
 [요리 배정]
@@ -156,6 +166,31 @@ PENALTY_PER_WRONG = 0.15   // 튜닝 대상
 
 ---
 
+## 2A. Stage 2A — 재료 준비 (Ingredient Prep, rhythm tap) — ADR-005 신설 (v0.5 placeholder)
+
+> ⚠️ **High-level placeholder만** (v0.5 2026-05-26 ADR-005). 상세 룰은 **game-designer v0.5 본격 sprint**.
+
+**핵심 사양 요약**:
+- 음식당 **1~2개 "hero ingredient"** 만 prep (전체 재료 prep 부담 회피).
+- **Knife indicator visual cue**: 칼이 자동 위아래 움직임 → 도마 닿기 직전 = perfect tap 타이밍. 별도 rhythm UI 없이 게임 비주얼 통합.
+- **Cut Styles 6종 (한식)**: 다지기 / 채썰기 / 어슷썰기 / 통썰기 / 송송썰기 / 깍둑썰기.
+- **Per-Food BPM** (high-level, balance-config v0.3 §7 참조): Tier 1 BPM 70~110 (3~6 taps), Tier 2 BPM 90~140 (5~8 taps). 다지기 가장 빠름(140), 통썰기 가장 느림(70), 양념 재우기 60 BPM.
+- **판정** (balance-config v0.3 §6 참조): Perfect ±80ms(pm 권고) / ±100ms(사용자) → 100%, Good ±200ms → 60%, Miss → 0%. 전체 평균 = `accuracy_prep`.
+- **Skip 옵션**: 📺 Rewarded Video 시청 시 `accuracy_prep = 1.0` (auto-perfect). Stream A 자연 트리거.
+- **Mobile latency**: MVP는 visual cue 우선 + perfect window 넓게. post-launch에서 audio offset calibration UI.
+- **FTUE**: Round 1 BPM 60 + 2 taps + 시각 가이드 full → Round 2~3 BPM 80 점진 가이드 제거 → Round 4+ 정상 BPM.
+
+**상세 위임 항목 (game-designer 후속)**:
+- 음식 12 × hero ingredient 매핑 (foods-database.csv `prep_ingredient` 컬럼)
+- 음식별 cut_style 매핑 (`prep_cut_style`)
+- 음식별 BPM 정확 수치 (`prep_bpm`)
+- 음식별 tap count (`prep_tap_count`)
+- ingredients-database.csv `cut_variations` 컬럼 (각 재료 적용 가능 cut style)
+- Perfect/Good window 정확 수치 lock (alpha 후)
+- Skip 시 점수 100% vs 90% (auto-perfect 강도) — balance-config v0.3 lock 후 alpha 검증
+
+---
+
 ## 3. Stage 2 — 조리 방법 선택 (Cooking Method Selection)
 
 ### 3.1 목표
@@ -234,26 +269,45 @@ PENALTY_PER_WRONG = 0.15   // 튜닝 대상
 
 ### 5.2 채점 공식
 
-GDD §3 공식 적용:
+> ⚠️ **[ADR-005](../decisions.md#adr-005) 2026-05-26: 곱셈 모델 → 가중 평균으로 SUPERSEDE**. 4-stage 추가에 따라 Stage 2A(재료 준비) 가중치 포함.
+
+**v0.5 가중 평균 공식 (현행)**:
+
+```
+total = (accuracy_ingredients × 0.25)
+      + (accuracy_prep        × 0.20)   // Stage 2A 재료 준비 (rhythm tap)
+      + (accuracy_method      × 0.20)
+      + (accuracy_timing      × 0.35)
+
+★1 ≥ 30%, ★2 ≥ 60%, ★3 ≥ 90%
+```
+
+- Skip 옵션 (📺 Rewarded Video) 사용 시: `accuracy_prep = 1.0` (auto-perfect).
+- early_finish_bonus는 v0.5 본격 sprint에서 재검토 (가중 평균과 별도 가산 vs 가중치 안에 흡수).
+- ★ 임계 30/60/90은 ADR-005 사용자 명시 → balance-config v0.3 lock. v0.4의 50/75/90과 충돌하지만 ADR-005가 ground truth (가중 평균 모델로 점수 분포가 더 부드러워 임계도 완화).
+
+> **가중 평균 모델의 함의 (v0.5)**: 한 Stage가 0이어도 round 전체 0 아님 → 가족 정서 부드러움 + 캐주얼 진입장벽 유지 (C-4 lock 정신 ↔ 정합). Skip auto-perfect로 어려운 Stage 회피 가능 → Stream A Rewarded CTR ↑.
+
+---
+
+**v0.4 곱셈 모델 (보존 — superseded, 참고용)**:
 
 ```
 score_raw    = accuracy_ingredients × accuracy_method × accuracy_timing
 score_100    = round(score_raw × 100)
 
 early_finish_bonus = max(0, remaining_time_s1 / time_limit_s1) × 0.10
-                     // Stage 1에서 남긴 시간 비율 × 최대 10% 가산
-
 score_final  = clamp01(score_raw + early_finish_bonus) × 100
 ```
 
-별 등급 (GDD §3):
+별 등급 (v0.4):
 | 별 | 임계 | 보상 |
 |----|------|------|
 | ★☆☆ | ≥ 50 | 기본 보상 |
 | ★★☆ | ≥ 75 | 기본 ×1.5 |
 | ★★★ | ≥ 90 | 기본 ×2.0 |
 
-> **곱셈 모델의 함의**: 어느 한 Stage가 0이면 Round 전체 점수가 0. → 플레이어가 한 Stage라도 "포기"하지 않게 만드는 압력. 의도된 디자인이므로 유지.
+> v0.4 곱셈 모델의 함의: 어느 한 Stage가 0이면 Round 전체 점수가 0 → 한 Stage라도 "포기"하지 않게 만드는 압력. **ADR-005 채택으로 이 압력은 가중 평균 + Skip 옵션으로 대체됨.**
 
 ---
 
@@ -392,6 +446,7 @@ Dictionary<StoreType, List<Ingredient>> BuildStoreShelves(
 ---
 
 ## 11. 변경 이력
+- **2026-05-26 v0.5** (supersedes v0.4): [ADR-005](../decisions.md#adr-005) 반영. **3-stage → 4-stage** (Stage 2A 재료 준비 신설, rhythm tap + Knife indicator). §1 Round 구조에 4-stage 흐름 요약 추가. **§5.2 채점 공식 곱셈 모델 → 가중 평균 공식 supersede** (재료 25% × 준비 20% × 방법 20% × 시간 35%, ★1 30/★2 60/★3 90). **§2A 신설** (placeholder, rhythm tap / Knife indicator / Cut Styles 6종 / Per-Food BPM / Skip 옵션 / FTUE 흐름 high-level 요약). 상세 룰은 game-designer v0.5 본격 sprint 이월.
 - **2026-05-23 v0.4**: ADR-003 (MVP-first) 반영. §0에 MVP Scope callout 추가 — 5-tier 디자인 비전 유지, MVP 구현은 Tier 1~2 / 음식 10~15 / 친구 1~2 / 식탁 2종 / 다점포 5가게 유지. 메커닉 정의 자체는 변경 없음.
 - **2026-05-23 v0.3**: §10 12개 open question 일괄 resolve (game-designer). Scene 1을 **재래시장 다점포(가게 5종: 청과/정육/어물/곡물/잡화)** 메커닉으로 재작성 — §2 전면 개정(가게 매핑, UI 흐름, 룰, 디스트랙터 정책, 메커닉 함의). §8 데이터 의존성에 `store_type` 매핑 추가, §9 Remote Config 키 변경(`distractor_per_store_by_tier`). §10.2 다점포 follow-up 7항 신설.
 - **2026-05-23 v0.2**: 3-scene 구조 명시 (수퍼마켓 → 키친 → 식탁). 각 Stage UI에 scene 라벨, Section 5에 식탁 화면 구성(캐릭터 시식 연출, tier별 식탁) 신설. open questions에 트랜지션·아트 비용·meta-progression 5항 추가.

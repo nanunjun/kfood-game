@@ -1,7 +1,8 @@
 # K-Food Master GDD (Game Design Document)
 
-> 버전: **v2.1** · 최초 작성: 2026-05-23 · 최종 개정: 2026-05-23
+> 버전: **v2.2** · 최초 작성: 2026-05-23 · 최종 개정: 2026-05-26
 > 본 문서는 **K-Food Master**의 게임 디자인 문서.
+> v2.2 변경 요약: [ADR-005](decisions.md#adr-005) 반영 — 3-stage → 4-stage (Stage 2A 재료 준비, rhythm tap). §2 Core Loop 4-stage sync / §6.3 데이터 prep_* + cut_variations 컬럼 / §13 R-A13~R-A16 4건 추가.
 > v2.1 변경 요약: [ADR-004](decisions.md#adr-004) 반영 — Unity → Godot 4.6 (GDScript only) 엔진 전환, §8 Tech Stack / §6.3 데이터 형식 / §12.3 기술 의존성 / §13 R10 갱신.
 > v2.0 변경 요약: pm 관점의 KPI(§11) / 의존성(§12) / 리스크(§13) / Go-NoGo 판정 기준(§14) 신설.
 
@@ -13,27 +14,32 @@
 - **3-stream 수익 모델** (프로그래매틱 광고 + Store Ads + IAP), 캐주얼 모바일 게임. *(상세: §5)*
 
 ## 2. Core Loop (30~60초 1 cycle)
-Round는 **3-scene 구조**로 진행 (수퍼마켓 → 키친 → 식탁). 상세 UI/연출: [`systems/cooking-mechanics.md`](systems/cooking-mechanics.md) §1.
+Round는 **3-scene / 4-stage 구조** ([ADR-005](decisions.md#adr-005) 2026-05-26, 3-stage → 4-stage) — Scene 3종은 유지, Scene 2 키친 안에서 Stage 2A 재료 준비 sub-flow 신설. 상세 UI/연출: [`systems/cooking-mechanics.md`](systems/cooking-mechanics.md) §1 §2A.
 
 1. **요리 선택** (또는 자동 배정)
-2. 🏪 **재래시장 — 재료 선택 단계** (15~30초) *(가게 5종 순회: 청과/정육/어물/곡물/잡화)*
-3. 🍳 **키친 — 조리 방법 선택 단계** (5~10초)
-4. 🍳 **키친 — 조리 시간 단계** (타이밍 게임)
-5. 🍽 **식탁 — 캐릭터 시식 + 점수 계산 + ★ 등급 + 보상** *(tier에 따라 식탁 인원 변화: 혼밥→가족→친구→파티)*
+2. 🏪 **재래시장 — Stage 1 재료 선택** (15~30초) *(가게 5종 순회: 청과/정육/어물/곡물/잡화)*
+3. 🍳 **키친 — Stage 2A 재료 준비** (rhythm tap, 1~2 hero ingredient) *(Knife indicator visual cue, Skip 옵션 = 📺 Rewarded Video auto-perfect)*
+4. 🍳 **키친 — Stage 2B 조리 방법 선택** (5~10초)
+5. 🍳 **키친 — Stage 2C 조리 시간** (타이밍 게임)
+6. 🍽 **식탁 — 캐릭터 시식 + 점수 계산 + ★ 등급 + 보상** *(tier에 따라 식탁 인원 변화: 혼밥→가족→친구→파티)*
 
 ```
-[요리 배정] → [재료] → [방법] → [타이밍] → [채점/보상] → 다음 요리
-       ↑___________________________________________________|
+[요리] → [재료] → [재료 준비] → [방법] → [타이밍] → [채점/보상] → 다음 요리
+   ↑                  (Skip 옵션 📺)                                    |
+   |____________________________________________________________________|
 ```
 
 ## 3. Scoring System
-- **공식**: `재료 정확도 × 방법 정확도 × 시간 정확도 = 총점`
-- 각 항목 0.0 ~ 1.0 정규화 → 곱 후 100점 환산
-- **별 등급**
-  - ★☆☆ : 50점 이상
-  - ★★☆ : 75점 이상
+- **공식 (ADR-005 v0.5 가중 평균)**: `(재료 × 0.25) + (준비 × 0.20) + (방법 × 0.20) + (시간 × 0.35) = 총점`
+- 각 항목 0.0 ~ 1.0 정규화 → 가중 합산 후 100점 환산
+- **별 등급 (ADR-005 supersede)**
+  - ★☆☆ : 30점 이상
+  - ★★☆ : 60점 이상
   - ★★★ : 90점 이상
 - 별 3개 시 보상 ×2, 일정 별 누적 시 다음 tier 해금
+- Skip 옵션 사용 시 (📺 Rewarded Video) `accuracy_prep = 1.0` (auto-perfect)
+
+> **v1.0 곱셈 모델 supersede 노트**: 기존 `재료 × 방법 × 시간` 곱셈 모델은 ADR-005 채택으로 가중 평균으로 대체. 곱셈 모델의 "한 stage 0 → round 0" 압력은 가중 평균 + Skip 옵션의 escape valve로 부드러워짐. cooking-mechanics §5.2 v0.5에서 곱셈 모델 본문은 history로 보존.
 
 ## 4. Progression (5 tiers)
 
@@ -152,15 +158,24 @@ cooking_methods : CookingMethod[]
 cook_time_sec   : float
 region          : enum (서울/경상/전라/제주/북한/기타)
 difficulty      : int (1~5)
+
+// ADR-005 v2.2 신설 — Stage 2A 재료 준비 (rhythm tap)
+prep_ingredient : Ingredient[]   // hero ingredient 1~2개 (전체 ingredients 부분집합)
+prep_cut_style  : enum[]         // 다지기/채썰기/어슷썰기/통썰기/송송썰기/깍둑썰기 (hero 매칭)
+prep_bpm        : int            // 음식별 BPM (Tier 1: 70~110, Tier 2: 90~140)
+prep_tap_count  : int            // 음식별 tap 수 (Tier 1: 3~6, Tier 2: 5~8)
 ```
 
 ### 6.2 Ingredients (100+)
 ```
-id        : string
-name_ko   : string
-name_en   : string
-category  : enum (채소/육류/해산물/곡물/장류/양념/유제품/기타)
-image     : Sprite ref
+id              : string
+name_ko         : string
+name_en         : string
+category        : enum (채소/육류/해산물/곡물/장류/양념/유제품/기타)
+image           : Sprite ref
+
+// ADR-005 v2.2 신설 — 재료별 적용 가능 cut style
+cut_variations  : enum[]   // 적용 가능 cut style 리스트 (예: 양파 = [채썰기, 깍둑썰기, 다지기])
 ```
 
 ### 6.3 Friends (15+)
@@ -172,6 +187,7 @@ unlock_level  : int
 ```
 
 > 데이터는 Godot `Resource` (`.tres`) 또는 CSV/JSON → Resource 변환 파이프라인 권장 ([ADR-004](decisions.md#adr-004)).
+> ADR-005 신설 컬럼(`prep_*`, `cut_variations`)의 정확 매핑은 [`foods-database.csv`](foods-database.csv) / [`ingredients-database.csv`](ingredients-database.csv) game-designer 본격 sprint에서 lock.
 
 ## 7. Differentiation
 - **한식 특화**: K-food 한류 흐름 활용 (글로벌 인지도 증가 중)
@@ -330,6 +346,10 @@ unlock_level  : int
 | R8 | 한식 일러스트 라이선스 분쟁 (스톡 vs 자체 제작) | High | Low | 자체 제작 원칙, 외주 시 work-for-hire 계약 명문화 |
 | R9 | Google Play 정책 위반 (광고 disclosure 미흡) | Critical | Low | 런칭 전 정책 체크리스트 + 법무 1회 검토 |
 | R10 | ~~Unity LTS 라이프사이클 종료~~ → **ADR-004 채택으로 해소**. Godot 4.5.2 LTS / 4.6 라이프사이클 추적은 godot-dev follow-up | Low | Low | FOSS — 강제 마이그레이션 압력 없음, 분기별 release note 모니터링 |
+| **R-A13** | **ADR-005**: Mobile audio latency (기기별 ±100ms 차이) → rhythm tap 판정 왜곡 | Med | Med | visual cue 우선 (Knife indicator), perfect window 넓게 (±80~100ms placeholder), post-launch audio offset calibration UI |
+| **R-A14** | **ADR-005**: Art-style reset 의존 (현재 보류 상태) → cut animation 발주 BLOCKED | Med | High | art-director 작업은 art-style lock 후 진입. 그 전까지 game-designer / ui-designer 사양 작업만 진행 |
+| **R-A15** | **ADR-005**: Sound deferral 충돌 (ADR-003 M2~M3 deferred ↔ rhythm BPM 메트로놈 강의존) | Med | Med | M2에 minimum 1~2주 sound 작업만 추가 (BPM 메트로놈 + 칼질 SFX), 전체 사운드 (BGM/ambient) deferred는 유지. art-director sound 겸직 |
+| **R-A16** | **ADR-005**: 일정 +1~3주 out-of-bound 위험 (3~4개월 → 3.5~4.5개월) | High | Med | M0 reality check 게이트에서 ADR-003 일정 4개월 + 0.5 buffer 재평가. 초과 시 scope 추가 축소 검토 (cut style 6 → 3, hero 1~2 → 1, FTUE rhythm 간소화 등) |
 
 ## 14. Go / No-Go 판정 기준 (MVP 출시)
 
@@ -389,6 +409,7 @@ unlock_level  : int
 ---
 
 ## 변경 이력
+- **v2.2 (2026-05-26)** — [ADR-005](decisions.md#adr-005) 반영. §2 Core Loop **3-stage → 4-stage** sync (Stage 2A 재료 준비 신설, Knife indicator visual cue, Skip 옵션). §3 Scoring System 곱셈 모델 → **가중 평균 (25/20/20/35)** supersede + ★ 임계 30/60/90으로 변경. §6.1 Foods 스키마에 `prep_ingredient / prep_cut_style / prep_bpm / prep_tap_count` 4 컬럼 추가, §6.2 Ingredients 스키마에 `cut_variations` 컬럼 추가. §13 Risks 신규 4건 (R-A13 audio latency / R-A14 art-style reset 의존 / R-A15 sound deferral 충돌 / R-A16 일정 +1~3주 out-of-bound).
 - **v2.1 (2026-05-23)** — [ADR-004](decisions.md#adr-004) 반영. §8 Tech Stack을 Godot 4.6 + Godot Foundation plugin 셋(IAP / GPGS / StoreKit) + Godotx Firebase + AppLovin MAX 공식 Godot plugin으로 갱신. §6.3 데이터 형식 `ScriptableObject` → Godot `Resource (.tres)`. §12.3 기술 의존성 Godot 스택 반영, R10 Unity LTS 종료 리스크 해소.
 - **v2.0 (2026-05-23)** — pm 관점 §11~§14 신설: KPI 목표(retention/monetization/gameplay health), Dependencies(외부 계정·라이선스·기술), Risks 10개, MVP Go/No-Go 판정 기준.
 - **v1.0 (2026-05-23)** — 최초 작성. Concept, Core Loop, Scoring, 5-tier Progression(확정 표), 3-stream Monetization, Data Structure, Differentiation, Tech Stack, MVP Scope, Post-Launch Roadmap.

@@ -1,14 +1,25 @@
 # Balance Config — MVP
 
-> 버전: **v0.2 (2026-05-24, supersedes v0.1)** · 작성자: game-designer
-> Scope: **MVP (Tier 1~2, 음식 12개, 친구 1~2명)**.
-> 상위 문서: [`systems/cooking-mechanics.md` §9](systems/cooking-mechanics.md), [`systems/mvp-food-selection.md` v2.1 §3.1](systems/mvp-food-selection.md), [`foods-database.csv`](foods-database.csv), [`friends-system.md` v0.2](friends-system.md)
+> 버전: **v0.3 (2026-05-26, supersedes v0.2)** · 작성자: game-designer (v0.2 까지) / pm (v0.3 high-level 추가)
+> Scope: **MVP (Tier 1~2, 음식 12개, 친구 1~2명) + ADR-005 4-stage 메커닉**.
+> 상위 문서: [`systems/cooking-mechanics.md` v0.5](systems/cooking-mechanics.md), [`systems/mvp-food-selection.md` v2.1 §3.1](systems/mvp-food-selection.md), [`foods-database.csv`](foods-database.csv), [`friends-system.md` v0.2](friends-system.md), [`decisions.md` ADR-005](decisions.md#adr-005)
 >
 > 본 문서는 **공식·범위·갯수**만 lock한다. 정확한 튜닝 수치는 alpha 빌드 이후 데이터 기반 조정. 본 문서의 모든 숫자는 **placeholder default**.
+>
+> ⚠️ **v0.3 high-level 추가만**: §5 4-factor weights / §6 Prep Rhythm Window / §7 BPM by Tier / §8 Skip Bonus 신설. 음식별 정확 BPM/tap 수치는 **game-designer 본격 sprint** (foods-database.csv `prep_*` 컬럼 sync 후).
 
 ---
 
-## 0. v0.2 변경 요약 (vs v0.1)
+## 0. v0.3 변경 요약 (vs v0.2)
+
+| # | 항목 | 변경 내용 |
+|---|------|----------|
+| **ADR-005-A** | **4-Factor Scoring Weights** | **§5 신설** — 25/20/20/35 가중 평균. cooking-mechanics §5.2 곱셈 모델 supersede. ★ 임계 30/60/90으로 변경 (v0.2 50/75/90 supersede). |
+| **ADR-005-B** | **Prep Rhythm Window** | **§6 신설** — Perfect **±80ms LOCKED** (2026-05-26 pm 권고 채택) + Good ±200ms + Miss. |
+| **ADR-005-C** | **BPM/Tap Range by Tier** | **§7 신설** — Tier 1: 70~110 BPM·3~6 taps / Tier 2: 90~140 BPM·5~8 taps + Cut Style별 BPM 7종. |
+| **ADR-005-D** | **Skip Bonus** | **§8 신설** — Rewarded Video → `accuracy_prep=0.9` **LOCKED** (2026-05-26). Stream A 자연 트리거. |
+
+## 0.1 v0.2 변경 요약 (vs v0.1, 보존)
 
 | # | 항목 | 변경 내용 |
 |---|------|----------|
@@ -223,7 +234,106 @@ score_final = clamp01(score_pre + preference_modifier) × 100
 
 ---
 
-## 6. Hint 시스템 (cooking-mechanics §6 sync)
+## 5. 4-Factor Scoring Weights (ADR-005 v0.3 신설)
+
+> [ADR-005](decisions.md#adr-005) 2026-05-26 채택. cooking-mechanics v0.5 §5.2 가중 평균 공식 supersede.
+
+```
+total = (accuracy_ingredients × 0.25)
+      + (accuracy_prep        × 0.20)   // Stage 2A 재료 준비 (rhythm tap)
+      + (accuracy_method      × 0.20)
+      + (accuracy_timing      × 0.35)
+
+★1 ≥ 30%, ★2 ≥ 60%, ★3 ≥ 90%
+```
+
+**Remote Config 키 (신설)**:
+
+| 키 | 기본값 | 타입 | 설명 |
+|----|--------|------|------|
+| `scoring.factor_weights` | `{ingredient:0.25, prep:0.20, method:0.20, timing:0.35}` | object | 4-factor 가중치 (합 1.0) |
+| `scoring.star_thresholds_v05` | `[30, 60, 90]` | int[] | v0.5 ★ 임계 (v0.2 §2.1의 `scoring.star_thresholds=[50,75,90]`는 곱셈 모델 기준이라 supersede) |
+
+**v0.2 §2.1 `scoring.star_thresholds` 사용 중단 권고** — v0.3에서 `scoring.star_thresholds_v05`로 이관. godot-dev 본격 sprint에서 키 rename 또는 dual 운영 결정.
+
+---
+
+## 6. Prep Rhythm — Perfect/Good Window (ADR-005 v0.3 신설)
+
+| 판정 | 윈도 | accuracy_prep |
+|------|------|---------------|
+| Perfect | **±80ms** | 1.0 (100%) |
+| Good | ±200ms | 0.6 (60%) |
+| Miss | 그 외 | 0.0 (0%) |
+
+> ✅ **LOCKED 2026-05-26**: Perfect window **±80ms** 확정 (사용자 confirm, pm 권고 채택). 사용자 원안 ±100ms은 alpha에서 fail rate 검증 후 필요 시 Remote Config로 ±100ms 완화 옵션. Mobile audio latency(R-A13)는 visual cue(Knife indicator) 우선으로 mitigate.
+
+전체 평균 = `accuracy_prep` (모든 tap 평균).
+
+**Remote Config 키 (신설)**:
+
+| 키 | 기본값 | 타입 | 설명 |
+|----|--------|------|------|
+| `cooking.prep.perfect_window_ms` | `100` | int | Perfect 판정 윈도. pm 권고 80, 사용자 명시 100. alpha 후 lock |
+| `cooking.prep.good_window_ms` | `200` | int | Good 판정 윈도 |
+| `cooking.prep.tap_cooldown_ms` | `100` | int | 연속 탭 spam 방지 (§10.1 #2 cooldown 200ms 절반) |
+
+---
+
+## 7. BPM / Tap Range by Tier (ADR-005 v0.3 신설)
+
+| Tier | BPM 범위 | Tap 수 범위 | 비고 |
+|------|---------|-----------|------|
+| 1 | 70~110 | 3~6 | 캐주얼 입문 |
+| 2 | 90~140 | 5~8 | 다지기 등 빠른 cut style 도입 |
+
+**Cut Style별 BPM 가이드**:
+
+| Cut Style | BPM (한식) | 비고 |
+|-----------|-----------|------|
+| 다지기 | **140** (가장 빠름) | 마늘·생강 minced |
+| 채썰기 | 110~120 | 당근·양파 julienne |
+| 어슷썰기 | 90~110 | 파·고추 diagonal |
+| 송송썰기 | 100~120 | 파 fine slice |
+| 깍둑썰기 | 80~100 | 무·두부 cube |
+| 통썰기 | **70** (가장 느림) | 호박·당근 round slice |
+| 양념 재우기 (별도) | **60** (마사지 식) | 갈비구이 등, cut이 아닌 marinade rhythm |
+
+**Remote Config 키 (신설)**:
+
+| 키 | 기본값 | 타입 | 설명 |
+|----|--------|------|------|
+| `cooking.prep.bpm_range_by_tier` | `{1:[70,110], 2:[90,140]}` | object | Tier별 BPM 범위 |
+| `cooking.prep.tap_range_by_tier` | `{1:[3,6], 2:[5,8]}` | object | Tier별 tap 수 범위 |
+| `cooking.prep.bpm_by_cut_style` | `{다지기:140, 채썰기:115, 어슷썰기:100, 송송썰기:110, 깍둑썰기:90, 통썰기:70, 양념재우기:60}` | object | Cut style별 BPM 가이드 |
+
+> 음식별 정확 BPM/tap 수치는 `foods-database.csv` `prep_bpm` / `prep_tap_count` 컬럼 (game-designer 본격 sprint).
+
+---
+
+## 8. Skip Bonus — Rewarded Video (ADR-005 v0.3 신설)
+
+**Skip 옵션**: Stage 2A 재료 준비 화면에서 **📺 Rewarded Video 시청 시 `accuracy_prep = 0.9`** (skill bonus 명분 유지 — engage 시 추가 점수 상승 여지 보존).
+
+- **트리거**: Stage 2A 진입 시 또는 첫 miss 직후 (UX 결정은 ui-designer screen-flow v0.3에서).
+- **광고 종류**: Rewarded Video (Stream A — AppLovin MAX Godot plugin).
+- **사용 제한**: Round당 1회 (Hint와 별개 quota).
+- **점수 효과**: `accuracy_prep = 0.9` × 가중치 0.20 = 총점에 **+18% 보너스 효과** (전 stage 100% 가정 시 ★3 임계 90% 달성 가능, 단 다른 stage perfect 필요 → engage 동기 유지).
+- **밸런스 의도**: Skip은 어려운 음식(다지기 140 BPM 등) 회피 escape valve. Stream A CTR 자연 ↑.
+
+**Remote Config 키 (신설)**:
+
+| 키 | 기본값 | 타입 | 설명 |
+|----|--------|------|------|
+| `cooking.prep.skip_auto_perfect_score` | `0.9` | float | Skip 시 accuracy_prep 값 (LOCKED 2026-05-26 pm 권고 채택, 사용자 원안 1.0 override) |
+| `cooking.prep.skip_usage_per_round` | `1` | int | Round당 Skip 사용 횟수 |
+| `cooking.prep.skip_requires_rewarded_ad` | `true` | bool | Skip 시 광고 시청 필수 |
+
+> ✅ **LOCKED 2026-05-26**: Skip 점수 **0.9** 확정. 1.0이면 어려운 음식 회피 너무 강력 → cut style 노출 의미 약화 위험 (cut anim art workload +25~35h 대비 ROI 낮아짐). 0.9 = "engage하면 +10% 더, 광고 보면 빠르게 90%"의 균형. alpha에서 skip rate가 낮으면 1.0으로 완화 가능.
+
+---
+
+## 9. Hint 시스템 (cooking-mechanics §6 sync)
 
 | 키 | 기본값 | 설명 |
 |----|--------|------|
@@ -234,7 +344,7 @@ score_final = clamp01(score_pre + preference_modifier) × 100
 
 ---
 
-## 7. Economy (코인 보상)
+## 10. Economy (코인 보상) — v0.2 §7 renumbered
 
 | tier | ★1 | ★2 | ★3 |
 |:----:|:--:|:--:|:--:|
@@ -248,9 +358,9 @@ score_final = clamp01(score_pre + preference_modifier) × 100
 
 ---
 
-## 8. 다음 sprint reconciliation 항목 (v0.2 갱신)
+## 11. 다음 sprint reconciliation 항목 (v0.3 갱신)
 
-| # | 항목 | 결정 책임 | v0.2 상태 |
+| # | 항목 | 결정 책임 | v0.3 상태 |
 |---|------|----------|----------|
 | 1 | Stage 3 good/miss 분배 | game-designer | **C-4 lock 2026-05-24 (45/45)**. alpha 재조정 가능 |
 | 2 | Flip mechanic 채택 | game-designer + 사용자 | **C-3 lock 2026-05-24 (미도입 MVP)**. post-launch 이월 |
@@ -258,11 +368,17 @@ score_final = clamp01(score_pre + preference_modifier) × 100
 | 4 | 갈비구이 PERFECT 0.04 → 0.05~0.07 reconciliation | game-designer + qa-tester | open (alpha 후) |
 | 5 | FTUE 첫 음식 final lock (호떡 vs 라면) | game-designer + ui-designer + pm | open |
 | 6 | 인터스티셜 간격 3 round → A/B (2 vs 3 vs 4) | data-analyst | open |
-| 7 | cooking-mechanics.md §4.4 30/60 → 45/45 sync 갱신 | game-designer (cooking-mechanics 차기 개정 시) | **v0.2 lock 완료, cooking-mechanics 본문 sync 대기** |
+| 7 | cooking-mechanics.md §4.4 30/60 → 45/45 sync 갱신 | game-designer (cooking-mechanics 차기 개정 시) | cooking-mechanics v0.5 일부 sync 완료, 잔여 §4.4 본문 sync 대기 |
 | 8 | 양념치킨 post-launch M1 부활 검토 (튀기기 다양성·KFC viral) | pm + game-designer | open (soft launch 데이터 후) |
+| **9** | **ADR-005 음식별 prep_bpm / prep_tap_count / prep_cut_style / prep_ingredient lock** | game-designer | **open (v0.3 high-level만 lock, foods-database.csv sync 본격 sprint)** |
+| ~~10~~ | ~~ADR-005 perfect_window 80ms vs 100ms lock~~ | pm | **✅ resolved 2026-05-26 → ±80ms** |
+| ~~11~~ | ~~ADR-005 Skip auto_perfect_score 1.0 vs 0.9 lock~~ | pm | **✅ resolved 2026-05-26 → 0.9** |
+| **12** | **ADR-005 ★ 임계 (30/60/90) sync — `scoring.star_thresholds` (v0.2 50/75/90) vs `scoring.star_thresholds_v05` (30/60/90) 이중 운영 정리** | game-designer + godot-dev | **open** |
 
 ---
 
-## 9. 변경 이력
+## 12. 변경 이력
+- **2026-05-26 v0.3.1** — Perfect window **±80ms LOCKED** (사용자 confirm, pm 권고 채택). Skip `accuracy_prep = 0.9` **LOCKED** (사용자 원안 1.0 → 0.9, skill bonus 명분 유지). §6 표 dual-column 단일화, §8 Skip default 1.0→0.9, §11 open question #10·#11 resolved.
+- **2026-05-26 v0.3** (supersedes v0.2) — [ADR-005](decisions.md#adr-005) 반영. **§5 4-Factor Scoring Weights** 신설 (25/20/20/35 가중 평균 + `scoring.factor_weights` Remote Config 키 + ★ 임계 30/60/90으로 supersede). **§6 Prep Rhythm — Perfect/Good Window** 신설 (Perfect ±80ms pm권고/±100ms 사용자, Good ±200ms, Miss 그 외; `cooking.prep.perfect_window_ms` 등 3 키). **§7 BPM/Tap Range by Tier** 신설 (Tier 1: 70~110 BPM·3~6 taps / Tier 2: 90~140 BPM·5~8 taps; Cut Style별 BPM 가이드 7종). **§8 Skip Bonus** 신설 (Rewarded Video → `accuracy_prep=1.0`). §10 §11 §12 renumbered. 음식별 정확 prep 수치는 game-designer 본격 sprint 이월.
 - **2026-05-24 v0.2** (supersedes v0.1) — C-2 lock 적용 (§2.2.2 / §3.2 양념치킨 → 순두부찌개 행 교체). **C-3 lock**: 해물파전 flip mechanic 미도입(MVP), `flip_required_foods = []` 폴백, post-launch 도입 시 사양은 §4.2 별도. **C-4 lock**: Stage 3 good/miss 45/45 (perfect 10) 분배 + Remote Config 키 `cooking.stage3.band_distribution` 신설. cooking-mechanics §4.4 30/60 supersede 명시. 갈비구이 perfect_width 변동 없음(0.04).
 - **2026-05-23 v0.1 (superseded)** — 초안. Remote Config 키 catalog. Stage 1/3 음식별 12행. 갈비구이 0.04. 해물파전 flip mechanic 도입(v0.1 default). 친구 호불호 ±5% placeholder.
