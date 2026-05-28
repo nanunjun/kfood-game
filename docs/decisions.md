@@ -12,6 +12,7 @@
 | **003** | **MVP-first 전환 — 3~4개월 출시 + 점진 확대 (supersedes ADR-002)** | **Accepted** | **2026-05-23** |
 | **004** | **엔진 선택 — Godot 4.6 (GDScript only) 채택 (CLAUDE.md implicit Unity 정식 대체)** | **Accepted** | **2026-05-23** |
 | **005** | **메커닉 확장 — 3-stage → 4-stage (Stage 2A 재료 준비 신설, rhythm tap, Option C optional skill bonus)** | **Accepted** | **2026-05-26** |
+| **006** | **Art 생성 도구 pivot — Midjourney → ChatGPT (GPT-4o image / DALL-E 3)** | **Accepted** | **2026-05-27** |
 
 > **ADR-001 backfill 권장**: 재래시장 다점포 메커닉 결정은 `systems/cooking-mechanics.md` §2 + `CHANGELOG.md`에 기록됐으나 ADR 형식 미작성. 필요 시 사후 backfill.
 
@@ -49,6 +50,7 @@
 2. **Asset Store 구매 적극**: UI 아이콘, 사운드 팩, BGM 등 가능한 구매
    > → [ADR-004](#adr-004)에서 "Asset Store" 의미 재정의 (paid marketplace 아닌 engine-agnostic 무료 asset 소스 — Kenney / OpenGameArt / Itch / Freesound + Godot Asset Library 무료 항목).
 3. **AI 도구 활용**: Midjourney(이미지), Suno(BGM), Stable Diffusion(보조) 등
+   > → [ADR-006](#adr-006-art-생성-도구-pivot--midjourney--chatgpt-gpt-4o-image--dall-e-3) (2026-05-27)에서 Midjourney 부분만 **ChatGPT (GPT-4o image / DALL-E 3)**로 변경. Suno/Stable Diffusion 부분은 그대로 유지.
 4. **MVP full feature**: 다점포 5가게 / 친구 5명 / Scene 3 tier 5종 / 파티 모드 / Tier 5 콘텐츠 전부 MVP 포함
 5. **캐릭터 art 전략**: **마스코트 스타일 (Cookie Run / Chibi 풍)** 채택
    - 근거: MJ 친화적 일관성, K-게임 검증 스타일(쿠키런·라인프렌즈), viral 친화도
@@ -144,6 +146,7 @@ ADR-002의 결정 #1~3, #5는 유지. **결정 #4(MVP full feature, 8~12개월)�
 1. 외주 미사용 (자체 제작)
 2. Asset Store 구매 적극
 3. AI 도구 활용 (Midjourney, Suno, Stable Diffusion)
+   > → [ADR-006](#adr-006-art-생성-도구-pivot--midjourney--chatgpt-gpt-4o-image--dall-e-3) (2026-05-27)에서 Midjourney → **ChatGPT (GPT-4o image / DALL-E 3)** 변경. Suno는 M2~M3 deferred 유지, Stable Diffusion(보조)는 미사용 유지.
 5. 마스코트 캐릭터 스타일 (Chibi / Cookie Run / 라인프렌즈 풍)
 
 ### Consequences
@@ -515,7 +518,7 @@ total = (재료 × 0.25) + (준비 × 0.20) + (방법 × 0.20) + (시간 × 0.35
 현 `agent-roster.md`에 sound-designer 없음. 본 ADR에서 결정:
 
 - **결정: art-director가 sound 겸직 (sound-designer 신규 신설 X)**.
-- 근거: 1인 sprint sound 작업량 1~2주 추정. 별도 agent 오버헤드 (정의 파일 + 위임 가이드 + tool 권한 설계 등) 불필요. art-director가 이미 MJ/Suno 모두 다루는 AI 도구 전문가 (ADR-002).
+- 근거: 1인 sprint sound 작업량 1~2주 추정. 별도 agent 오버헤드 (정의 파일 + 위임 가이드 + tool 권한 설계 등) 불필요. art-director가 이미 ChatGPT/Suno 등 AI 도구를 다루는 전문가 (ADR-002 + ADR-006).
 - agent-roster.md 한 줄 추가 + art-director 행 역할 한 줄에 "+ Phase 2 sound (BGM/SFX/rhythm) 겸직" 명시.
 
 ### 관련 문서
@@ -526,3 +529,79 @@ total = (재료 × 0.25) + (준비 × 0.20) + (방법 × 0.20) + (시간 × 0.35
 - [agent-roster.md](agent-roster.md) — sound-designer 신설 X, art-director 겸직 결정
 - ADR-003 (MVP-first) — scope 정합성 검토 통과, 일정만 reality check 대상
 - ADR-004 (Godot 4.6) — engine 무관, 영향 없음
+
+---
+
+## ADR-006: Art 생성 도구 pivot — Midjourney → ChatGPT (GPT-4o image / DALL-E 3)
+
+- **Status**: **Accepted**
+- **Date**: 2026-05-27
+- **Deciders**: 사용자 (pm role 위임)
+- **Supersedes**: [ADR-002](#adr-002-자체-제작--ai-도구--마스코트-스타일--full-feature-mvp) §Decision #3 **일부** (Midjourney → ChatGPT). Suno(BGM)·Stable Diffusion(보조) 부분은 무변경. ADR-003 §"ADR-002에서 유지되는 결정" #3 carryover도 본 ADR에 의해 부분 갱신.
+- **상위 트리거**: 사용자 2026-05-23 MJ Standard $30/월 결제 → 5일 뒤(2026-05-27) ChatGPT pivot 결정. 사유 추정: ChatGPT 대화형 iteration 선호 + Discord UX 부담 + 이미 ChatGPT Plus 구독 예정(추가 비용 회피). art-style 결정 cycle에서 visual comparison test(`ai-comparison-test.md` v1.1)의 필요성도 강화.
+
+### Context
+
+ADR-002 #3은 art 생성 주력 도구로 Midjourney를 명시했고, ADR-003에서도 결정 #3로 carryover됐다. MJ Standard $30/월 결제(2026-05-23) 직후 사용자가 다음 5일간 사용성을 재평가:
+
+- **대화형 iteration 선호**: ChatGPT 자연어 대화 기반 reroll/refine이 사용자 작업 흐름에 맞음. MJ Discord UX는 채널/슬래시 명령 부담.
+- **비용 중복 회피**: 사용자 ChatGPT Plus $20/월 구매 예정 → MJ $30/월과 합치면 $50/월. ChatGPT 단일화 시 -$30/월.
+- **reference image upload 강점**: ChatGPT는 사용자가 올린 reference 이미지를 그대로 style transfer 입력으로 사용 가능 → 마스코트 anchor lock 시 visual continuity 통제 용이.
+- **art-comparison-test 형식 합치**: `docs/ai-comparison-test.md` v1.1이 이미 ChatGPT 형식으로 전환 완료.
+
+### Decision
+
+1. **Art 생성 도구 = ChatGPT (GPT-4o image / DALL-E 3)**.
+2. **Plan = ChatGPT Plus $20/월** (DALL-E 무제한 + GPT-4o image 액세스).
+3. **MJ Standard $30/월** = 다음 billing cycle 전 **취소** (main thread 실행).
+4. **Suno (BGM)** = 무변경 (M2~M3 deferred 유지, ADR-003).
+5. **Stable Diffusion (보조)** = 무변경 (현재 미사용 유지).
+6. **워크플로 변경**: sref(style reference) 코드 기반 lock 메커니즘 부재 → **subject anchor 자연어 통일 + reference image upload + master prompt 템플릿** 3종으로 대체.
+
+### Consequences
+
+**Positive**
+- **비용 -33%/월** ($30 → $20). MVP art 비용 추정 ~70% 절감 (MJ ~$60~90 vs ChatGPT ~$20~25, 4개월 MVP 기준).
+- **대화형 iteration 속도 ↑** — Discord 슬래시 명령 → 자연어 reroll/refine.
+- **reference image upload 정확도 ↑** — 마스코트 anchor lock 후 style transfer 일관성.
+- **단일 구독으로 통합** — tool/billing 단순화.
+
+**Negative**
+- **sref 기반 캐릭터 일관성 lock 메커니즘 부재** → subject anchor 자연어 통일 + reference image upload로 대체 (workflow 부담 약간 ↑).
+- **4-grid (MJ U/V) 손실** → 1 image fail 시 reroll 1~2회 trade-off.
+- **한글 텍스트 깨짐 위험** (간판/가격표 등). placeholder 영문 → 후처리 한글 합성 권장.
+- **워크로드 estimate 재산정 필요** (art-director 영역, 본 ADR scope 외).
+
+### Alternatives Considered
+
+| 대안 | 거절 이유 |
+|------|----------|
+| MJ Standard 유지 | 사용자 ChatGPT 선호 + 비용 중복 부담 |
+| Stable Diffusion 자체 호스팅 | 1인 dev 환경 셋업 부담, ChatGPT 익숙도 ↑ |
+| 양립 (MJ + ChatGPT 둘 다 사용) | tool fragmentation, 비용 중복 ($50/월), workflow 분산 |
+
+### Follow-up Actions
+
+#### art-director (병렬 진행 중)
+- [x] `docs/ai-comparison-test.md` v1.1 — ChatGPT 형식 완료 (사전)
+- [ ] 5종 art 문서 ChatGPT 영구 sync: `art-style-guide.md`, `prompts-library.md`, `ai-session-kit.md` (rename 후), `art-anchor-rubric.md`, `art-workload-estimate.md`
+
+#### main thread
+- [ ] MJ Standard 구독 취소 (다음 billing cycle 전)
+- [ ] `CHANGELOG.md` ADR-006 한 줄 추가
+
+#### pm (이번 turn 완료)
+- [x] ADR-002 §Decision #3 옆 cross-ref 註 추가
+- [x] ADR-003 §"ADR-002에서 유지되는 결정" #3 옆 cross-ref 註 추가
+- [x] ADR-005 §Sound-designer 본문 MJ 참조 한 줄 sync
+- [x] `.claude/agents/art-director.md` frontmatter + 본문 sync
+- [x] `docs/agent-roster.md` art-director 행 sync
+- [x] `docs/friends-system.md` MJ 참조 한 줄 sync
+- [x] `CLAUDE.md` grep 점검 (MJ 명시 없음 확인, 변경 없음)
+
+### 관련 문서
+- [ADR-002 §Decision #3](#adr-002-자체-제작--ai-도구--마스코트-스타일--full-feature-mvp) — Midjourney 부분 supersede 대상
+- [ADR-003 §"ADR-002에서 유지되는 결정"](#adr-003-mvp-first-전환--34개월-출시--점진-확대-supersedes-adr-002) — carryover 부분 갱신
+- [ai-comparison-test.md v1.1](ai-comparison-test.md) — ChatGPT 형식 변환 완료
+- art-director 5종 art 문서 (병렬 sync 중)
+

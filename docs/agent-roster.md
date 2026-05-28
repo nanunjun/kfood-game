@@ -19,7 +19,7 @@
 
 | Agent | 정의 파일 | 주요 책임 | 산출물 위치 |
 |-------|----------|----------|------------|
-| **art-director** | `.claude/agents/art-director.md` | 아트 스타일, Midjourney 프롬프트, 에셋 관리 **+ Phase 2 sound (BGM/SFX/rhythm) 겸직 (ADR-005 결정)** | `docs/art-style-guide.md`, `docs/prompts-library.md`, `docs/sound-guide.md` (신설 예정), `assets-raw/`, `assets-processed/` |
+| **art-director** | `.claude/agents/art-director.md` | 아트 스타일, **ChatGPT (GPT-4o image / DALL-E 3) 프롬프트** ([ADR-006](decisions.md#adr-006-art-생성-도구-pivot--midjourney--chatgpt-gpt-4o-image--dall-e-3) 2026-05-27 pivot, 이전 Midjourney deprecated), 에셋 관리 **+ Phase 2 sound (BGM/SFX/rhythm) 겸직 (ADR-005 결정)** | `docs/art-style-guide.md`, `docs/prompts-library.md`, `docs/ai-session-kit.md`, `docs/art-anchor-rubric.md`, `docs/art-workload-estimate.md`, `docs/sound-guide.md` (신설 예정), `assets-raw/`, `assets-processed/` |
 | **marketing** | `.claude/agents/marketing.md` | ASO 키워드, 스토어 리스팅, 마케팅 카피 | `docs/aso-keywords.md`, `docs/store-listing-copy.md`, `marketing/` |
 | **data-analyst** | `.claude/agents/data-analyst.md` | KPI, A/B 테스트 설계, 분석 이벤트 정의 | `docs/kpi-dashboard.md`, `docs/analytics-events.md`, `docs/ab-test-plans.md` |
 

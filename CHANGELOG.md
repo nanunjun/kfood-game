@@ -16,6 +16,63 @@
 
 ---
 
+## [2026-05-27] ADR-006: Art 생성 도구 영구 pivot — Midjourney → ChatGPT (GPT-4o image / DALL-E 3)
+- **무엇**:
+  - **ADR-006 Accepted** — Art 도구 = ChatGPT (Plus $20/월, DALL-E 무제한). MJ Standard $30/월 다음 billing 전 취소 (main thread reminder).
+  - **art-director 5종 art 문서 영구 sync**:
+    - `docs/art-style-guide.md` v1.0 → **v1.1** (§7 ChatGPT 약점 10항 재정의)
+    - `docs/prompts-library.md` v1.0 → **v1.1** (자연어 prompt 전면 재작성, `--sref` 운영 → subject anchor 단어 통일 + reference image upload)
+    - `docs/ai-session-kit.md` v1.0 → **v1.1** (rename + ChatGPT 워크플로, 4-grid/upscale 개념 제거)
+    - `docs/art-anchor-rubric.md` v1.0 → **v1.1** (G6 ChatGPT 약점 6~10항 sync)
+    - `docs/art-workload-estimate.md` v4.0 → **v4.1** (비용 ~$60~90 → ~$20~25, -67~78%)
+    - `docs/ai-comparison-test.md` v1.1 cross-ref 점검 (renamed from mj-)
+  - **pm sync 4종**:
+    - `docs/decisions.md` ADR-006 본문 신설 + 인덱스 추가 + ADR-002 #3 / ADR-003 §유지결정 #3 cross-ref 註
+    - `.claude/agents/art-director.md` ChatGPT 전면 sync
+    - `docs/agent-roster.md` art-director 행 sync + ADR-006 link
+    - `docs/systems/friends-system.md` line 82 도구 중립화
+  - **Main thread**:
+    - Bash mv: `mj-comparison-test.md` → `ai-comparison-test.md`, `mj-session-kit.md` → `ai-session-kit.md`
+    - CHANGELOG (본 항목)
+    - 메모리 sync (`feedback_ai_image_tool.md` 신설, `MEMORY.md` index 추가, `project_adr003.md` 미해결 항목 갱신 예정)
+- **왜**: 사용자 5/23 MJ Standard 결제 후 5일만에 ChatGPT pivot 확정. Discord UX 부담 + 대화형 iteration 선호 + 이미 ChatGPT 구독 (추가 비용 회피). visual comparison test 패턴(feedback_visual_decisions)과도 정합.
+- **결과/다음 단계**:
+  - **MVP art 비용 ~70% 절감** ($60~90 → $20~25, 4개월 기준)
+  - **가장 큰 trade-off**: sref 부재 → subject anchor 자연어 통일 + reference image upload 3축으로 보완
+  - **시간 ±10% 미세 변동** (4-grid 손실 vs 자연어 iteration 속도 상쇄, M1 ~67~73h / 총 ~75~85h 무변동)
+  - **사용자 다음 액션**: ChatGPT Plus $20/월 결제 → `ai-comparison-test.md` v1.1로 비교 세션 ~30~40분 → variant lock → ai-session-kit으로 Week 1 anchor ~1~1.5h
+  - **art-style 결정은 여전히 보류** — comparison test 결과 기반 lock 예정
+  - **MJ Standard 결제 취소 reminder**: 다음 billing 일자 확인 후 취소 (sunk cost ~$30 1개월)
+
+---
+
+## [2026-05-27] art-style reset COMPLETE — hyper-casual flat (Subway Surfers / Crossy Road / Stack 계열) scratch v1.0
+- **무엇**:
+  - **사용자 결정 (2026-05-27)**: art-style reference = **하이퍼캐주얼 flat** (단색 fill, geometric, bold outline, 최소 detail). 직전 mascot baseline(Cookie Run / 라인프렌즈) supersede.
+  - **art-director 5종 scratch v1.0 재작성**:
+    - `docs/art-style-guide.md` v0.2 → **v1.0** (flat 톤 baseline, MJ 약점 flat 특화 10항, ADR-005 cut anim 가이드, Week 1 게이트 7항 flat 기준)
+    - `docs/prompts-library.md` v0.3 → **v1.0** (v6.1 단일 모델 — niji 6 anime 톤 제거, 캐릭터 5 + 환경 5 prompts, M1 placeholder)
+    - `docs/art-anchor-rubric.md` v0.1 → **v1.0** (G5 단순성 / G7 모바일 가독성 재정의, G6 flat 특화 10항)
+    - `docs/mj-session-kit.md` v0.1 → **v1.0** (v6.1 단일, Step 0 sref 후보 2장, 예상 1.5~2.5h)
+    - `docs/art-workload-estimate.md` v3.1 → **v4.0** 재산정
+  - **art-workload v4.0 산정** (mascot 대비 큰 감소):
+    - MVP M1 ~67~73h + M0 사전 ~8~12h = **~75~85h total**
+    - mascot v3.1 baseline 대비 **-37~46% 감소** (M1 80h→55h, ADR-005 25~35h→12~18h)
+    - 일정 4~7주 → **3~5주**, MJ 비용 ~$120 → ~$60~90 (reroll 빈도 ↓)
+  - **모델 선택**: v6.1 **단일** 모델 (캐릭터 + 환경 통일). niji 6 anime 톤은 flat과 상극, v6.1은 `flat design` 안정적 + sref cross-호환.
+  - **ADR-005 cut anim 영향**: frame 수 mascot 18~24 → flat **12~18** (-25~33%), 단위 시간 0.5~0.7h → **0.3~0.4h** (-40~50%). ADR-005 합계 ~12~18h (mascot pm reality check 25~35h 대비 -48~52%).
+- **왜**: 사용자가 2026-05-24 mascot baseline reject ("너무 복잡함, 모바일게임스타일 필요"). 4시간+ 환경 셋업 + ADR-005 진행 동안 art-director BLOCKED. 2026-05-27 reference lock으로 art track 재개 + ADR-005 art 작업 재산정.
+- **결과/다음 단계**:
+  - **사용자 confirm 필요 3건**:
+    - **AR-1 ADR-002 §Decision #5 정합성** — art-director 판정 **(B) 카테고리 벗어남, ADR amendment 필요**. ADR-002 #5는 "Cookie Run / Chibi 마스코트"로 detail 톤 명시. Subway Surfers Jake도 mascot이나 detail/shading/outline 규약 본질적으로 다른 카테고리. pm 위임하여 ADR-006 신규 또는 ADR-002 #5 amendment record. **art 작업은 amendment 없이 진행 가능** (문서 정리 작업이라 비차단).
+    - **AR-2 주인공 성별 split 재추가** — 직전 사용자 directive (2026-05-24) "남/여 split"이 art-style reset과 함께 park됨. v1.0이 CH-01 단일로 회귀. 재추가 요청 시 M1 sprint +2~3h. **사용자 결정 필요**.
+    - **AR-3 MJ 세션 진입 타이밍** — art-director 판정 "즉시 ready". ADR amendment 없이도 art 생성 진행 가능 (문서 정리는 병행). **사용자 결정**: 즉시 vs amendment 후.
+  - **art-director BLOCKED 해소** — Week 1 anchor 게이트 진입 ready. 사용자 MJ Standard로 1.5~2.5h 세션 후 schema 인계 → art-director rubric 평가.
+  - **art-director 후속 sprint** (anchor lock 후): M1 본격 (음식 12 anchor + reaction variants ★1/2/3 어머니/아버지 6컷 + 재료 cut variation + cut style 6종 anim 12~18 frames + UI/VFX).
+  - **ADR-005 후속 sprint 우선순위 무변경**: game-designer (foods CSV prep_*) / ui-designer (도마 화면) / godot-dev (M2 진입 시).
+
+---
+
 ## [2026-05-26] ADR-005 confirm 3건 lock — 번호 005 유지, Perfect ±80ms, Skip 0.9
 - **무엇**:
   - **ADR 번호 = 005 유지** (사용자 confirm, typo 수용. 006 rename X). 구조적 인덱스 일관 — hole 없음.
