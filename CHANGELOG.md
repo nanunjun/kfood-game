@@ -16,6 +16,76 @@
 
 ---
 
+## [2026-05-28] M1 anchor 종합 22/22 LOCK — 음식 12 (R1~R8) + 환경 5 (v1.2→v4) + 캐릭터 5
+
+- **무엇**:
+  - **음식 12 LOCK** (`assets-raw/food_anchors_m1/F-01~F-12_*_v[1-8].png`):
+    - R1 v1 (DALL-E 3 시도 → org access X, gpt-image-1로 pivot): 12/12 PASS
+    - R2 v2 (사용자 피드백 10건 — 면 두께/밥알/cheese/배추 등): F-04, F-09 R1 LOCK 유지
+    - R3 v3 (사용자 R2 피드백 6건 — v1 base 회복 + 부분 fix): F-01/02/03/05/06/12 reroll
+    - R4~R8 (F-12 single anchor 7 round iteration): 갈비구이 reference image 진화 적용
+    - 최종 LOCK: F-01~F-11 R3 v3 또는 R2 v2 LOCK, **F-12 R8 v8 LOCK** (LA-cut strips + 칼집 + 대파 + 흰 plate)
+  - **환경 5 LOCK** (`assets-raw/bg_anchors_m1/BG-01_v4, BG-02_v4, BG-03_v5, BG-04_v4, BG-05_v4`):
+    - v1.2 base (Week 1 anchor candidate, commit 7a6cffb): red/green 줄무늬 천막 + 정면 view
+    - v2 한옥 풀세트 (한옥 frame + 옹기 + lantern + 처마 풀): 너무 많음 → 폐기
+    - v3 minimal patch (prompt-only generation): 5가게 구조 inconsistent + slight 7/8 perspective → 폐기
+    - **v4 image edit API 도입** (`tools/edit_bg_anchors_v4.py`): v1.2 base PNG를 input → gpt-image-1 edit으로 천막→기와 지붕 단일 fix → frontal view 유지 + 5가게 구조 정확 일관성 달성
+    - BG-03 v5 micro-fix: double-tier 지붕 → single layer 조정 (다른 4가게와 일관)
+    - 최종 LOCK: 5/5 PASS (검정 기와 곡선 지붕 + 처마 곡선 + 와당 + v1.2 카테고리 시그니처 + Cool Sage bg + icon+영어 minimal + frontal view)
+  - **캐릭터 5 LOCK** (`assets-raw/week1-anchors/CH-01~CH-05_*.png`, commit 7a6cffb): Week 1 anchor 작업에서 lock, M1 sprint 무영향.
+  - **갱신 docs (art-director batch sync)**:
+    - `docs/prompts-library.md` v1.3 → **v1.13** (F-12 v3~v8 7 round + BG-01~05 v1.2 archive + v2/v3 deprecated + v4 image edit approach)
+    - `docs/art-anchor-rubric.md` v1.3 → **v1.13** (G_food + G_user_visual_detail + G_env_v4 8 요소 + Decisions Log §6.3~§6.12)
+    - `tools/gen_food_anchors_m1.py` v1.0 → **v1.9 sync** (F-12 v8 body + STYLE_SUFFIX_FOOD)
+    - `tools/gen_bg_anchors_m1.py` 신설 (v1.12 v3 deprecated 후 archive 보존)
+    - `tools/edit_bg_anchors_v4.py` **신설** — gpt-image-1 image edit API wrapper (base image dimensions 검증 + PIL LANCZOS resize fallback)
+  - **DALL-E 3 cross-cultural 누수 회피 검증** (음식 risk top 5 → 5/5 LOCK):
+    - F-12 갈비구이 (일본 야키니쿠 + 미국 BBQ ribs 60%+30% default)
+    - F-03 김밥 (일본 maki sushi 70% default)
+    - F-06 콘도그 (미국 corn dog 80% default)
+    - F-11 잡채 (중식 lo mein 70% default)
+    - F-09 김치찌개 (중식 hot pot 50% default)
+    - 모두 explicit negative + signature feature 강조로 LOCK 달성
+- **왜**:
+  - M1 sprint art track 진입 prerequisite — anchor LOCK 후 M1 후반 (cut anim / ingredient cut / reaction 6컷 / UI / VFX) 및 M2 gameplay sprint kick-off 가능.
+  - F-12 7 round reroll iteration — 사용자 시각 의도 점진 명확화 (single bone at end → bone at edges → bone TOP LONG EDGE → bone SHORT EDGE → LA cross-cut + 대파 + wire mesh → 흰 plate). 정통 한식 갈비구이 정체성을 사용자 reference image 2건과 함께 정확 reverse-engineer.
+  - BG image edit API 도입 — prompt-only generation의 본질적 한계 (DALL-E가 매번 다르게 해석 → 5가게 구조 inconsistent) 우회. v1.2 base를 input으로 사용해 사용자 의도 ("원래 버전에서 지붕만 바꿈") 정확 매칭.
+- **결과/다음 단계**:
+  - **누적 비용**: ~$2.67 (음식 28 generations $1.71 + 환경 v2 $0.21 + v3 $0.21 + v4 BG-01 test $0.04 + BG-02~05 batch $0.17 + BG-03 v5 $0.04 + 기타)
+  - **누적 시간**: ~30분 generation time + 평가/iteration round trips
+  - **사용자 다음 액션 결정**:
+    - Track A — M1 후반 art sprint (칼/도마 → cut anim 6종 → 재료 cut variation 24장 → 양친 reaction 6컷 → UI ~7 → VFX ~4-5)
+    - Track B — M2 gameplay code sprint (foods CSV prep_* + balance-config BPM + Stage 2A rhythm tap + 4-factor 채점 + Knife indicator UI)
+    - 또는 Track A + B 병렬 (art-director + godot-dev/game-designer/ui-designer fan-out)
+  - **art-director / godot-dev / game-designer / ui-designer 대기**: 다음 sprint sub-agent 위임 우선순위 사용자 결정 대기.
+  - **commit 시점**: 본 LOCK 박제 후 git commit (재출발점 확보).
+
+---
+
+## [2026-05-27] M1 sprint kickoff — 음식 12 anchor prompt set + ChatGPT 세션 가이드 + G_food 평가 rubric
+
+- **무엇**:
+  - **art-director M1 prompt set 산출 4종**:
+    - `docs/prompts-library.md` v1.2 → **v1.3** — §0 anchor 표 F-01~F-12 12행 추가, **§2.4 STYLE_SUFFIX_FOOD 신설** (Cool Sage `#C8D5C0` / Cream-white `#FAFAFA` bg, white baekja/pale celadon bowl, no characters/hands/cooking action, cross-cultural negative 강제), **§5.1~§5.4 음식 12 anchor full prompt** (DALL-E 3 자연어, 식별 핵심 시각 요소 + Tier 1/2 abundance 단서 + 누수 risk + reroll 트리거), §5.5~§5.7 cut anim/reaction/UI placeholder 격리 (M1 후반/M2).
+    - `docs/ai-session-kit.md` v1.2 → **v1.3** — §M1 음식 12 세션 가이드 신설 (Step 0 F-01 anchor 시드 → Step 1 T1 6장 한 세션 → Step 2 T2 5장 새 세션, 인계 schema 12행, ~1.5~2.5h 소요).
+    - `docs/art-anchor-rubric.md` v1.2 → **v1.3** — §5.5 M1 음식 12 평가 가이드 신설 (G_food 신설, G2 chibi N/A, G6 W5/W6 가중치↑, F-01~F-12 평가 표). **LOCK 조건 = 10/12 PASS + F-01 PASS + risk top 5 중 4 LOCK**.
+    - `docs/art-style-guide.md` §4.1 bg `#FAEFD8`(deprecated) → **Cool Sage `#C8D5C0` / Cream-white `#FAFAFA`** sync, v1.3 cross-ref.
+  - **DALL-E 3 cross-cultural 누수 risk top 5** (한식 anchor 특화 G6 세분화):
+    1. **F-06 콘도그** → 미국 corn dog default ~80% — mozzarella stretch 2~3 strands + crispy panko + ketchup/mustard zigzag 강제
+    2. **F-03 김밥** → 일본 maki sushi ~70% — THICK 3cm + matte gim + cooked veggies + NO raw fish/wasabi/gari 강제
+    3. **F-11 잡채** → 중식 lo mein/chow mein ~70% — translucent brown-amber dangmyeon glass noodles + NOT yellow egg noodles 강제
+    4. **F-12 갈비구이** → 일본 야키니쿠 ~60% / 미국 BBQ ribs ~30% — **VISIBLE WHITE RIB BONE** + soy-pear-garlic marinade + LA-style cut + 상추 ssam
+    5. **F-09 김치찌개** → 중식 hot pot ~50% — 검정 ttukbaegi (rounded thick rim, individual) + gochugaru broth + NO raw thin-sliced meat around
+  - P2 risk 7종: F-05 (Chinese egg fried rice ~50%) / F-07 (Japanese okonomiyaki ~40%) / F-01 (Japanese ramen ~30%) / F-10 (Chinese mapo tofu ~30%) / F-04 (Chinese nian gao ~25%) / F-08 (Western Buddha bowl ~25%) / F-02 (Western pancake stack ~15%).
+- **왜**: ADR-006 lock(ChatGPT + DALL-E 3) + Week 1 캐릭터/환경 anchor 10장 candidate 완료 → M1 음식 anchor 트랙 즉시 진입 (Week 1 evaluation과 독립 병행). Final 12 음식 lock 상태 + art-style v1.2 modern + icon+English i18n + cross-cultural negative 강제로 음식 12장 hero shot anchor 작업 ready.
+- **결과/다음 단계**:
+  - **사용자 다음 액션**: ChatGPT Plus 세션 1회 ~1.5~2.5h 실행 — `ai-session-kit.md §M1` Step 0~2 순서. 결과 12 image + 인계 schema → art-director G_food rubric 평가 → LOCK/FAIL 판정.
+  - **음식 12장 anchor LOCK 후 M1 후반 sprint 진입**: cut style 6종 anim (12~18 frames) + hero ingredient cut variation ~24 sprite + 양친 reaction 6컷 + 재료 카드 ~20 + UI ~7 + VFX ~4~5 + 칼/도마 base anchor (ADR-005 Stage 2A prerequisite).
+  - **사용자 confirm 필요 없음** — art-director 영역 progressing.
+  - **F-03/F-06/F-11/F-12 reroll 2~3회 예상** — risk top 5 안의 4개 음식이 collapse 빈도 높음. 사용자 세션 시간 buffer 확보.
+
+---
+
 ## [2026-05-27] ADR-006: Art 생성 도구 영구 pivot — Midjourney → ChatGPT (GPT-4o image / DALL-E 3)
 - **무엇**:
   - **ADR-006 Accepted** — Art 도구 = ChatGPT (Plus $20/월, DALL-E 무제한). MJ Standard $30/월 다음 billing 전 취소 (main thread reminder).

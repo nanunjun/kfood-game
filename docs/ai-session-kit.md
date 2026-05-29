@@ -1,13 +1,17 @@
-# AI Session Kit — Week 1 Anchor Lock 실행 키트 (modern mobile casual, ChatGPT)
+# AI Session Kit — Week 1 Anchor Lock + M1 음식 12 실행 키트 (modern mobile casual, ChatGPT)
 
-> 버전: **v1.2 (2026-05-27, modern mobile casual sync) — supersedes v1.1**
+> 버전: **v1.3 (2026-05-27, M1 음식 12 세션 추가) — supersedes v1.2**
 > 파일명: **`ai-session-kit.md`**
 > 작성자: art-director
-> 상위 문서: [`art-style-guide.md` v1.2 §10](art-style-guide.md), [`prompts-library.md` v1.2 §3·§4](prompts-library.md), [`art-anchor-rubric.md` v1.2](art-anchor-rubric.md)
-> 본 문서 범위: 사용자(ChatGPT Plus $20/월 구독 예정)가 **ChatGPT 채팅창에서 copy-paste만으로** Week 1 anchor 10장(iter3)을 실행하기 위한 단계별 키트.
-> 게이트 통과 = M1 art sprint 진입 prerequisite.
+> 상위 문서: [`art-style-guide.md` v1.2 §10](art-style-guide.md), [`prompts-library.md` v1.3 §3·§4·§5.2](prompts-library.md), [`art-anchor-rubric.md` v1.3](art-anchor-rubric.md)
+> 본 문서 범위:
+>   - **Week 1 anchor 10장** (캐릭터 5 + 환경 5, §1~§8 v1.2 lock 유지)
+>   - **M1 음식 12장 hero shot plated dish** (§M1 v1.3 신설)
+> 게이트 통과 = M1/M2 art sprint 진입 prerequisite.
 
-> **v1.2 변경 (2026-05-27, modern mobile casual sync)**: iter2 사용자 진단 "올드함" 반영, prompts-library v1.2 sync. **Step 0 subject anchor 가이드 prompts-library v1.2 prompts 사용** — Step 0a CH-01 = modern mobile casual + bowl-cut + 프라이팬+spatula dynamic stirring + soft mint bg + light pink cheek (절구 회피 명시). Step 0b BG-01 = modern flat clean + 이탈리아 awning 회피 + cool tone sky + no characters. **워크플로 무변경** (1 image per request + 같은 채팅 세션 follow-up + reference image upload). **시간 무변경 (~1~1.5h)**. §7.1 ChatGPT 특화 사전 경고에 v1.2 신규 약점 추가: 베이지 default 강함 (Very High), Cookie Run frosting style 누수 (Med), 절구 traditional 누수 (Med).
+> **v1.3 변경 (2026-05-27, M1 음식 12 세션 추가)**: prompts-library v1.3 음식 12 anchor sync. §M1 신설 — 사용자가 ChatGPT 세션 1~2회로 음식 12장 hero shot plated dish를 실행하는 copy-paste 순서. 생성 순서 = T1 단순 → T2 어려움 (라면 anchor 시드 → 호떡 → ... → 갈비구이 마지막). 예상 소요 ~1.5~2.5h. subject anchor 단어 통일 = "modern mobile casual game food card illustration of Korean [음식명]" 공통. reference image upload = F-01 lock 후 F-02~F-12 모두에 첨부. 결과 인계 schema = food_id / image URL / Round / 평가 메모 12행. §1~§8 (Week 1 anchor 워크플로) 무변경.
+
+> **v1.2 변경 (2026-05-27, modern mobile casual sync)** (archived): iter2 사용자 진단 "올드함" 반영, prompts-library v1.2 sync. Step 0a/0b prompt 갱신, ChatGPT 특화 약점 3종 추가 (베이지/Cookie Run frosting/절구).
 
 ---
 
@@ -607,8 +611,244 @@ follow-up 횟수 (reroll): 0 / 1 / 2
 
 ---
 
+---
+
+## M1 — 음식 12 Anchor 세션 가이드 (v1.3 신설)
+
+> Week 1 anchor 10장 lock candidate 이후 진행. **Week 1 lock candidate evaluation과 병행 진행 가능** (다른 anchor 사용 — 음식 카드는 캐릭터 anchor에 reference 의존 X).
+> 본 §M1은 사용자가 ChatGPT 세션 1~2회로 12장 음식 hero shot plated dish를 실행하는 키트.
+
+### M1.1 한 줄 목적
+
+> **"라면 anchor 1장 lock → 그 image reference upload + 11개 prompt copy-paste → 12장 식탁 plated dish 완성."**
+
+### M1.2 세션 흐름 (총 2 Step + 평가)
+
+```
+[M1 Step 0] F-01 Ramyeon anchor 시드 lock (1 image)
+                  │
+                  ▼  best 1장 → FOOD_ANCHOR_FILE 확보
+                  │
+[M1 Step 1] T1 음식 6장 follow-up (F-02 Hotteok ... F-07 Pajeon) — 한 세션 / FOOD_ANCHOR_FILE reference upload
+[M1 Step 2] T2 음식 5장 follow-up (F-08 Bibimbap ... F-12 Galbi-gui) — 새 세션 / FOOD_ANCHOR_FILE reference upload
+                  │
+                  ▼
+[M1 Step 3] art-director 평가 (G1~G7 + G_new + G_food, art-anchor-rubric.md §5.5 음식 평가 적용)
+                  │
+                  ▼  종합 LOCK / minor reroll / 재작성 판정
+        PASS → prompts-library §0 표 F-01~F-12 행 영구 기록 → M1 ingredient/UI sprint kick-off
+        FAIL → 실패 음식 집중 follow-up reroll, 최대 3 라운드
+```
+
+### M1.3 도구 통일
+
+| Step | 대상 | 도구 |
+|------|------|------|
+| M1 Step 0 | F-01 Ramyeon anchor 시드 (1 image) | **ChatGPT (GPT-4o image / DALL-E 3)** |
+| M1 Step 1 | T1 음식 6장 (F-02~F-07) follow-up | ChatGPT + FOOD_ANCHOR_FILE reference upload |
+| M1 Step 2 | T2 음식 5장 (F-08~F-12) follow-up | ChatGPT + FOOD_ANCHOR_FILE reference upload (새 세션) |
+
+> **세션 분기 권장**: 한 세션 안 12장 follow-up은 ChatGPT context 한계 (~6장 안정). **T1 6장 한 세션 + T2 5장 한 세션** 분리 권장. 새 세션 시작 시 FOOD_ANCHOR_FILE 재upload.
+
+### M1.4 생성 순서 (난도 오름차순 + 한식↔타국 risk 고려)
+
+| 순서 | 슬롯 | 음식 (English) | Tier | 난도 / 누수 risk |
+|-----|------|---------------|------|-----------------|
+| 1 (anchor 시드) | F-01 | **Ramyeon** | T1 | 쉬움 / 일본 ramen 누수 M |
+| 2 | F-02 | Hotteok | T1 | 쉬움 / 누수 L |
+| 3 | F-04 | Tteokbokki | T1 | 중간 / 중식 nian gao 누수 M |
+| 4 | F-05 | Kimchi Fried Rice | T1 | 중간 / **중식 fried rice 누수 HIGH** |
+| 5 | F-07 | Haemul Pajeon | T1 | 중간 / 일본 okonomiyaki 누수 H |
+| 6 | F-09 | Kimchi Jjigae | T2 | 중간 / **중식 hot pot 누수 HIGH** |
+| 7 (T2 새 세션) | F-10 | Sundubu Jjigae | T2 | 중간 / 중식 mapo tofu 누수 M |
+| 8 | F-03 | Kimbap | T1 | 어려움 / **일본 maki sushi 누수 VERY HIGH** |
+| 9 | F-08 | Bibimbap | T2 | 어려움 / Western Buddha bowl 누수 M |
+| 10 | F-11 | Japchae | T2 | 어려움 / **중식 lo mein 누수 VERY HIGH** |
+| 11 | F-06 | Korean Corn Dog | T1 | 어려움 / **미국 corn dog 누수 VERY HIGH** |
+| 12 | F-12 | Galbi-gui | T2 | 가장 어려움 / **일본 야키니쿠 + 미국 BBQ 누수 VERY HIGH** |
+
+> **세션 분기 권장 cut**: 1~6 한 세션 / 7~12 새 세션 (위 6항이 T2 + 어려운 risk 후순위로 한 세션).
+
+### M1.5 M1 Step 0 — F-01 Ramyeon anchor 시드 (가장 먼저)
+
+**왜 라면이 음식 anchor**: 시각 단순 (그릇 + 면 + 국물 + 노른자), 글로벌 SS 인지도, FTUE 2순위. 11장 reference 시드로 plate/bowl 스타일 통일.
+
+**ChatGPT 채팅창에 붙여넣기** (prompts-library §5.2 F-01 + STYLE_SUFFIX_FOOD 풀어쓴 형태):
+```
+A modern mobile casual game food card illustration of Korean Ramyeon (spicy noodle soup), top-down view.
+A white round porcelain bowl (Korean baekja style, clean white, NOT black Japanese ramen bowl) is filled
+with vibrant orange-red spicy gochugaru broth. Yellow wavy curly egg noodles emerge from the broth
+in a soft swirl (Korean instant ramyeon style, NOT straight Japanese ramen noodles).
+A single sunny-side-up egg with a bright yellow yolk sits in the center.
+3-5 small green spring onion (pa) chopped dots float on the surface as garnish.
+One small red chili pepper slice as accent.
+Single subtle ambient ellipse shadow under the bowl.
+
+Format: square 1:1.
+View: top-down (overhead) — Royal Match food card aesthetic.
+Style: modern mobile casual game food card, clean 2D illustration in Royal Match (Dream Games 2021)
+plated dish aesthetic. Hero shot of a finished plated Korean dish.
+Slim bold dark outline 2-3px (warm dark #2D1D14), single color fill with optional soft 1-layer cel shading
+and one small specular highlight on the broth surface (juicy appetite).
+Vibrant saturated colors at 80-90 percent saturation, warm food + cool plate balance.
+Background is solid Cool Sage (#C8D5C0) cool tone.
+
+Important: this is Korean Ramyeon, NOT Japanese ramen, NOT miso ramen, NOT tonkotsu.
+The broth is bright vibrant orange-red (gochugaru spicy), NOT brown miso, NOT pale white tonkotsu.
+The noodles are visibly curly wavy yellow, NOT straight thin Japanese ramen noodles.
+The bowl is clean white Korean baekja, NOT a black Japanese donburi bowl with bamboo accents.
+NO narutomaki pink spiral fish cake, NO nori seaweed sheet on top, NO chashu pork slices.
+Avoid beige background, cream paper background, scrapbook, storybook, kraft paper, vintage texture,
+golden hour, sunset warm lighting, Cookie Run frosting style, Toca Boca, Toon Blast over-cartoony,
+realistic or photorealistic, 3D render, octane, unreal engine, food photography,
+any texture, noise, grain, painterly, hand-painted, watercolor, gradient mesh,
+multi-layer complex shading, hyperdetailed, cinematic, gritty,
+human characters, hands holding the food, cooking action, kitchen environment background,
+any English or Korean text legibly readable on the dish.
+```
+
+**절차**:
+1. ChatGPT 새 채팅 시작 → 위 prompt 붙여넣고 1 image 생성 (~10~30s)
+2. 결과 image 다운로드 → `C:\Projects\kfood-game\assets-raw\2026-05-2x_F-01_v1.png` 저장
+3. `FOOD_ANCHOR_FILE = <파일 경로>` 메모
+
+**판단 기준** (1 image 결과):
+- bowl 흰 백자 (검정 Japanese donburi = 탈락)
+- 면 꼬불꼬불 curly (직선 thin = 탈락)
+- broth bright orange-red (갈색 miso/흰 tonkotsu = 탈락)
+- 노른자 중앙 1개 (없음 = 탈락)
+- bg Cool Sage `#C8D5C0` 또는 Cream-white (베이지/scrapbook = 즉시 탈락)
+- saturation 80~90% (muted = 탈락)
+- slim outline 2~3px (heavy 4px+ = 탈락)
+- no characters/hands (캐릭터 등장 = 탈락)
+- narutomaki/nori/chashu 없음 (등장 = 탈락)
+
+**탈락 시 follow-up reroll** (같은 채팅 세션):
+- 일본 ramen 누수: "이 이미지를 다시 그려줘. Korean Ramyeon으로 명확히 — 흰 백자 bowl + 꼬불꼬불 curly yellow noodles + bright orange-red gochugaru broth. NOT Japanese ramen, NOT miso, NOT tonkotsu, NOT narutomaki, NOT chashu, NOT nori sheet."
+- 베이지 누수: "이 이미지를 다시 그려줘. 배경을 Cool Sage `#C8D5C0` solid color로 교체, 베이지/크림/scrapbook 톤 완전 제거."
+- 캐릭터 누수: "이 이미지를 다시 그려줘. NO characters, NO hands, NO cooking action. 식탁 위 plated dish hero shot만."
+
+### M1.6 M1 Step 1 — T1 음식 6장 follow-up (F-02~F-07, F-09 포함)
+
+> 같은 채팅 세션 안에서 FOOD_ANCHOR_FILE을 첫 message에 첨부 → 각 음식 prompt를 차례로 follow-up.
+
+**세션 시작 message** (FOOD_ANCHOR_FILE 첨부 후):
+```
+이 reference image는 우리 게임의 음식 카드 anchor야. 흰 백자 bowl / Cool Sage 배경 / slim 2-3px outline /
+saturation 80-90% / no characters / Korean K-food plated hero shot 톤을 유지해. 다음 11개 음식 카드를
+같은 visual style로 생성할 거야.
+
+먼저 F-02 Hotteok부터 시작하자:
+
+[F-02 Hotteok prompt — prompts-library §5.2 F-02 full prompt copy-paste]
+```
+
+**copy-paste 순서** (각 음식마다 1 image → 평가 → 다음 prompt):
+
+1. **F-02 Hotteok** — `prompts-library.md §5.2 F-02` 전체 prompt
+2. **F-04 Tteokbokki** — `prompts-library.md §5.2 F-04` 전체 prompt
+3. **F-05 Kimchi Fried Rice** — `prompts-library.md §5.2 F-05` 전체 prompt
+4. **F-07 Haemul Pajeon** — `prompts-library.md §5.2 F-07` 전체 prompt
+5. **F-09 Kimchi Jjigae** — `prompts-library.md §5.2 F-09` 전체 prompt
+6. (T2 첫 1장 — 한 세션 안 6장 분담) **F-10 Sundubu Jjigae** — `prompts-library.md §5.2 F-10` 전체 prompt
+
+**각 음식 prompt 끝에 추가 instruction** (subject anchor 일관성 강화):
+```
+... (prompt 본문) ...
+
+Important also: maintain the same visual style as the reference image I attached at the start of this session
+(Korean K-food plated hero shot, white baekja or pale celadon plate/bowl, slim 2-3px outline,
+Cool Sage #C8D5C0 background, saturation 80-90%, no characters, no hands, no cooking action).
+```
+
+**각 음식 1차 결과 평가** (~10초):
+- 그 음식의 식별 핵심 시각 요소 (§5.2 각 음식 항목 참조) 충족?
+- 한식↔타국식 누수 없음? (음식별 누수 risk 명시 참조)
+- bg / outline / saturation 톤이 anchor와 일치?
+- 캐릭터/손/cooking action 없음?
+
+**탈락 시 즉시 follow-up** (그 음식 prompt §5.2 reroll 트리거 직접 copy-paste).
+
+### M1.7 M1 Step 2 — T2 음식 5장 follow-up (F-08, F-03, F-11, F-06, F-12)
+
+> 새 ChatGPT 채팅 세션 시작 (T1 세션 context 분리). FOOD_ANCHOR_FILE 재첨부.
+
+**세션 시작 message**: M1.6와 동일 (reference 첨부 + style 일관성 instruction).
+
+**copy-paste 순서** (난도 오름차순):
+
+7. **F-03 Kimbap** — `prompts-library.md §5.2 F-03` 전체 prompt (일본 maki sushi 누수 risk VERY HIGH, 첫 시도 reroll 2~3회 예상)
+8. **F-08 Bibimbap** — `prompts-library.md §5.2 F-08` 전체 prompt
+9. **F-11 Japchae** — `prompts-library.md §5.2 F-11` 전체 prompt (중식 lo mein 누수 risk VERY HIGH)
+10. **F-06 Korean Corn Dog** — `prompts-library.md §5.2 F-06` 전체 prompt (미국 corn dog 누수 risk VERY HIGH)
+11. **F-12 Galbi-gui** — `prompts-library.md §5.2 F-12` 전체 prompt (일본 야키니쿠 + 미국 BBQ 누수 risk VERY HIGH, 최대 3 reroll 예상)
+
+> 위 5장 모두 누수 risk HIGH+ → 각 음식 평균 follow-up 2~3회 예상. F-12가 가장 까다로움 (마지막에 배치, 사용자 fatigue 시 다음 세션 분리 가능).
+
+### M1.8 사용자 결과 인계 schema (12장 12행 메모장)
+
+> 음식 12 평가 인계 schema. 각 음식 1세트.
+
+```
+Anchor ID: F-01 (또는 F-02 등)
+food_id: t1_002 (foods-database.csv 매핑)
+음식 (English): Ramyeon (Spicy Noodle Soup)
+ChatGPT 세션 URL: https://chatgpt.com/c/... (share link)
+이미지 파일 경로: C:\Projects\kfood-game\assets-raw\2026-05-2x_F-01_v1.png
+Round: R1 (또는 R2 / R3)
+follow-up 횟수 (reroll): 0 (또는 1, 2, 3)
+한식 식별 PASS? (yes/no): yes
+한식↔타국식 누수? (특정 risk 명시 가능): no (또는 "Japanese ramen 누수, ttukbaegi 아닌 검정 donburi")
+Tier 시각 구분 PASS? (T1=단순 / T2=풍성): yes
+사용자 1차 평가 메모 (선택): "면 직선으로 빠졌으나 1회 reroll로 회수, 노른자 위치 OK"
+```
+
+**전체 묶음 권장**: 메모장 또는 마크다운 1장에 12개 블록. assets-raw/ 폴더에 모든 image 저장.
+
+### M1.9 예상 소요 시간 (1차 시도 기준)
+
+| 단계 | 작업 | 예상 시간 |
+|------|------|----------|
+| M1 Step 0 | F-01 Ramyeon anchor 시드 (1 image + 평가) | 5~10분 |
+| M1 Step 1 | T1 6장 (F-02/04/05/07/09/10) × (1 image + 평가 + reroll) | 40~60분 (평균 1~2 reroll) |
+| M1 Step 2 | T2 5장 (F-03/08/11/06/12) × (1 image + 평가 + reroll) | 50~80분 (평균 2~3 reroll, F-06/F-12가 무거움) |
+| 파일 저장/메모 정리 | 12행 schema 메모장 작성 | 15~20분 |
+| **총합 (reroll 포함 현실 예상)** | | **1.5~2.5시간 (90~150분)** |
+
+> ChatGPT Plus $20/월 한계 비용 0 (DALL-E 무제한). 1 image 생성 ~10~30s × 평균 18~25 generations = ~5~10분 순 생성 시간 + 평가/메모 시간 dominant.
+
+### M1.10 까다로움 사전 경고 (음식 12 특화)
+
+| 경고 | 빈도 | 대응 |
+|------|------|------|
+| **F-03 Kimbap → Japanese maki sushi 누수** | **Very High (~70%)** | THICK 3cm + matte gim + cooked vegetables + danmuji yellow + NO raw fish/wasabi/gari 강제. R1에서 2~3회 reroll 예상. |
+| **F-06 Korean Corn Dog → 미국 corn dog 누수** | **Very High (~80%)** | mozzarella cheese stretch + crispy panko crumb + ketchup AND mustard zigzag 강제. American smooth cornmeal negative. |
+| **F-11 Japchae → 중식 lo mein 누수** | **Very High (~70%)** | translucent brown-amber sweet potato glass noodles (dangmyeon, see-through) + 깨 generous sprinkle + NOT yellow egg noodles 강제. |
+| **F-12 Galbi-gui → 일본 야키니쿠 + 미국 BBQ 누수** | **Very High (~60% + 30%)** | VISIBLE WHITE RIB BONE running through each meat piece (대문자) + shiny brown soy-pear marinade + 상추 ssam side. 가장 어려움. |
+| **F-09 Kimchi Jjigae → 중식 hot pot 누수** | **High (~50%)** | 검정 ttukbaegi (rounded thick rim, individual portion) + red-orange gochugaru. |
+| **F-05 Kimchi Fried Rice → 중식 fried rice 누수** | **High (~50%)** | red-orange kimchi color dominant + sunny-side-up whole egg on top + NO peas/carrots Western mirepoix. |
+| **F-07 Haemul Pajeon → Japanese okonomiyaki 누수** | **High (~40%)** | long thick green scallions dominant + 새우/오징어 + NO mayo squiggle/bonito flakes/aonori. |
+| **anchor 일관성 lock 약화** (T1/T2 세션 분기 시) | Med | T2 새 세션 시작 시 FOOD_ANCHOR_FILE 재첨부 + style 일관성 instruction 명시 필수 |
+| **plate/bowl 컬러 안 통일됨** | Med | "white baekja or pale celadon" + reference image upload + "same plate style as reference" 강조 |
+| **Tier 1/2 시각 구분 약함** | Med | T1 = "single bowl, 2-3 garnish" / T2 = "Tier 2 abundance, generously filled" 명시. T2는 6+ vegetable color 또는 3+ rib pieces 등 abundance 키워드. |
+
+### M1.11 사용자 체크리스트 (M1 세션 시작 전)
+
+- [ ] **Week 1 anchor lock candidate evaluation 결과 무관**으로 진행 가능 (음식 카드는 캐릭터/환경과 독립)
+- [ ] `prompts-library.md §5.2 F-01~F-12` 12장 전체 prompt 한 화면에 열어두기
+- [ ] 메모장 열어두기 — 12행 schema (food_id / 파일 경로 / Round / follow-up 횟수 / 평가 메모)
+- [ ] `assets-raw/` 폴더 준비 (`2026-05-2x_F-01_v1.png` ~ `2026-05-2x_F-12_v1.png` 12장 저장)
+- [ ] M1 Step 0 (F-01 Ramyeon) 먼저 lock → 그 후 F-02~F-12 follow-up
+- [ ] T1 (1~6) 한 세션 / T2 (7~12) 새 세션 분리 권장
+- [ ] 새 세션 시작 시 FOOD_ANCHOR_FILE (F-01 lock image) 재첨부 + style 일관성 instruction 명시
+- [ ] 음식별 누수 risk 명시 (§M1.10 참조) — F-03/F-06/F-11/F-12 4종은 reroll 2~3회 예상
+- [ ] 결과 12장 image + 12행 schema 메모장을 art-director에게 인계
+
+---
+
 ## 9. 변경 이력
 
+- **2026-05-27 v1.3** (M1 음식 12 세션 추가, supersedes v1.2) — prompts-library v1.3 음식 12 anchor sync. **§M1 신설** — F-01 Ramyeon anchor 시드 lock (Step 0) → T1 6장 한 세션 follow-up (Step 1, F-02/04/05/07/09/10) → T2 5장 새 세션 follow-up (Step 2, F-03/08/11/06/12). 생성 순서 = 난도 오름차순 + 누수 risk 후순위. subject anchor 단어 통일 = "modern mobile casual game food card illustration of Korean [음식명]" 공통. reference image upload = F-01 lock 후 11장 모두 첨부 + style 일관성 instruction 명시. 결과 인계 schema = food_id / image URL / Round / follow-up 횟수 / 한식 식별 PASS / Tier 시각 구분 PASS / 평가 메모 12행. 예상 소요 ~1.5~2.5h. §M1.10 까다로움 사전 경고 — F-03 Kimbap (Japanese maki sushi VH 70%) / F-06 Corn Dog (American VH 80%) / F-11 Japchae (Chinese lo mein VH 70%) / F-12 Galbi-gui (Japanese yakiniku VH 60% + American BBQ 30%) / F-09 Kimchi Jjigae (Chinese hot pot H 50%) / F-05 Kimchi Fried Rice (Chinese H 50%) / F-07 Pajeon (Japanese okonomiyaki H 40%). §1~§8 Week 1 anchor 워크플로 무변경.
 - **2026-05-27 v1.2** (modern mobile casual sync, supersedes v1.1) — iter2 사용자 진단 "올드함" 반영, prompts-library v1.2 sync. **Step 0a CH-01 prompt 갱신** — bowl-cut hair LOCK + 프라이팬+spatula dynamic stirring (절구 회피 명시) + soft mint cool bg + light pink cheek + slim 2~3px outline + 80~90% saturation + 베이지/Cookie Run/storybook/scrapbook 회피 LOCK. **Step 0b BG-01 prompt 갱신** — modern flat clean (재래시장 손맛 texture 제거) + awning solid + 1 trim (이탈리아 회피) + cool tone sky + no people/no shop owner LOCK. **판단 기준 갱신** — 베이지 즉시 탈락 / 이탈리아 awning 즉시 탈락 / Cookie Run frosting 탈락 / 절구 탈락 추가. 워크플로 / 세션 분기 / 시간 (~1~1.5h) / 비용 모두 무변경. §7.1 ChatGPT 특화 사전 경고에 v1.2 신규 약점 3종 추가 (베이지 default Very High / Cookie Run frosting Med / 절구 traditional Med). Step 1~2 (CH-02~05, BG-02~05) prompt는 prompts-library §3·§4 v1.2 prompt 사용 (본 키트는 Step 0a/0b만 inline, 나머지는 prompts-library 참조).
 - **2026-05-27 v1.1** (ChatGPT 영구 sync from MJ, supersedes v1.0) — art 도구 영구 변경 (사용자 confirm 2026-05-27). 파일명 `mj-session-kit.md` → `ai-session-kit.md` (main thread 처리). MJ Discord `/imagine` + 4-grid + upscale 개념 제거, ChatGPT 채팅창 + 1 image per request + follow-up 대화 reroll로 재구성. §1.2 도구 통일 (MJ v6.1 → ChatGPT 단일 model, 모델 선택 param 없음 자동). §2 Step 0 sref anchor 후보 → **subject anchor 정의 + 선택적 reference image upload**로 재작성 — sref URL placeholder 모두 제거, 파일 경로 + subject anchor 문장으로 대체. §3 캐릭터 5장 ChatGPT 자연어 prompt + reference image upload 절차 + follow-up 대화 reroll 형식으로 전면 재작성. §4 환경 5장 동일 재작성. §5 사용자 인계 schema "4-grid 선택 칸" 컬럼 제거, "ChatGPT 세션 URL + 이미지 파일 경로 + subject anchor 문장 + reference upload 사용 여부 + follow-up 횟수" 컬럼 보강. §6 reroll 트리거 G6 ChatGPT 약점 10항(W1~W10) 재구성 — W1 한글 텍스트 깨짐 (Very High), W2 photoreal, W3 painterly, W7 복잡 composition multi-character, W9 캐릭터 일관성 lock 실패 (sref 부재) 신규. §7 예상 소요 시간 MJ 1.5~2.5h → **ChatGPT ~1~1.5h** (4-grid 손실 vs 자연어 iteration 속도 + DALL-E 무제한 + 1 image 생성 속도 빠름). 비용 MJ Standard $30/월 fast hour 소비 → ChatGPT Plus $20/월 한계 비용 0. §7.1 ChatGPT 특화 사전 경고 (한글 깨짐 Very High, 캐릭터 일관성 lock High). §8 체크리스트 MJ Standard → ChatGPT Plus 구독 확인. §3.6 양친 reaction placeholder 무변경 (U-2 sync, reference upload 운영).
 - **2026-05-27 v1.0** (archived; MJ 기반) — scratch rewrite, hyper-casual flat, v6.1 single model, MJ Discord copy-paste 키트.

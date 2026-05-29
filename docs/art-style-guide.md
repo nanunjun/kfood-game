@@ -136,19 +136,19 @@
 
 ---
 
-## 4. 음식 가이드 (Final 12 — mvp-food-selection v2.1)
+## 4. 음식 가이드 (Final 12 — mvp-food-selection v2.1, v1.3 prompts-library §5.2 sync)
 
-> 음식 12개 anchor prompts는 M1 sprint(`prompts-library.md` §4). 본 sprint(Week 1)는 톤 가이드만 정의.
+> 음식 12개 anchor prompts는 M1 sprint([`prompts-library.md` v1.3 §5.2](prompts-library.md)). 본 §4는 톤 가이드.
 
-### 4.1 음식 카드 공통 룰
+### 4.1 음식 카드 공통 룰 (v1.3 베이지 회피 sync)
 
 - **카드 비율**: 1:1 (512×512)
-- **배경**: 단색 크림 `#FAEFD8` (모든 카드 통일) — 종이 텍스처 X (flat 톤)
+- **배경**: **Cool Sage `#C8D5C0`** (1순위) 또는 **Cream-white `#FAFAFA`** (보조) — v1.3 베이지 `#FAEFD8` deprecated (베이지 회피 LOCK sync §7). 종이 텍스처 X.
 - **시점**: top-down 또는 7/8 top-down (음식 실루엣 명확)
-- **shadow**: 카드 하단 단일 ellipse 1개 (선택)
-- **outline**: 2~3px black/Soy Dark
-- **specular highlight**: 음식 표면 1점만 허용 (juicy 표현 — flat 톤이라도 음식 식욕은 중요)
-- **그릇/접시**: 단색 (백자 흰색 또는 분청 연회색) + bold outline. 무늬 X.
+- **shadow**: 카드 하단 단일 ambient ellipse 1개 (#000 ~25% alpha)
+- **outline**: 2~3px Soy Dark `#2D1D14` (warm dark, slim)
+- **specular highlight**: 음식 표면 1점만 허용 (juicy 표현 — modern flat이라도 음식 식욕은 중요)
+- **그릇/접시**: **white baekja 흰색** 또는 **pale celadon `#E8F0E8` 연회색** + bold outline. 무늬 X. 검정 일본식 donburi/ramen bowl 회피.
 
 ### 4.2 12 음식 단순화 가이드
 
