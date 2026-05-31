@@ -1,8 +1,8 @@
 # Balance Config — MVP
 
-> 버전: **v0.3 (2026-05-26, supersedes v0.2)** · 작성자: game-designer (v0.2 까지) / pm (v0.3 high-level 추가)
-> Scope: **MVP (Tier 1~2, 음식 12개, 친구 1~2명) + ADR-005 4-stage 메커닉**.
-> 상위 문서: [`systems/cooking-mechanics.md` v0.5](systems/cooking-mechanics.md), [`systems/mvp-food-selection.md` v2.1 §3.1](systems/mvp-food-selection.md), [`foods-database.csv`](foods-database.csv), [`friends-system.md` v0.2](friends-system.md), [`decisions.md` ADR-005](decisions.md#adr-005)
+> 버전: **v0.3.3 (2026-05-31, supersedes v0.3.2)** · 작성자: game-designer
+> Scope: **MVP (Tier 1~2, 음식 12개, 친구 1~2명) + ADR-005 4-stage 메커닉 + C-2 basic_pantry 정책**.
+> 상위 문서: [`systems/cooking-mechanics.md` v0.6](systems/cooking-mechanics.md), [`systems/mvp-food-selection.md` v2.2 §3.1](systems/mvp-food-selection.md), [`foods-database.csv`](foods-database.csv), [`store-distribution.md` v1.3](store-distribution.md), [`friends-system.md` v0.3](friends-system.md), [`decisions.md` ADR-005 + ADR-007 (pending)](decisions.md#adr-005)
 >
 > 본 문서는 **공식·범위·갯수**만 lock한다. 정확한 튜닝 수치는 alpha 빌드 이후 데이터 기반 조정. 본 문서의 모든 숫자는 **placeholder default**.
 >
@@ -10,7 +10,25 @@
 
 ---
 
-## 0. v0.3 변경 요약 (vs v0.2)
+## 0. v0.3.3 변경 요약 (vs v0.3.2)
+
+| # | 항목 | 변경 내용 |
+|---|------|----------|
+| **C-2** | **basic_pantry 5종 정책 lock** (간장/고추장/설탕/참기름/소금) | **§X.1 신설** — `cooking.basic_pantry_ingredient_ids` Remote Config 신규 (`["ing_x_003","ing_x_004","ing_x_005","ing_x_006","ing_x_007"]`). `cooking.stage1.exclude_basic_pantry = true` / `cooking.accuracy.exclude_basic_pantry = true` 2 키 신설. 잡화점 SKU pool 17 → 12 (-29%). |
+| **C-2 sync** | §2.2.2 Stage 1 time_limit 음식별 재산정 | 떡볶이 t1_003 22s → **18s** (4가게 → 3가게 강등 + 정답 재료 1 감소) / 잡채 t2_010 30s → **25s** (4가게 → 3가게 강등 + 정답 재료 2 감소) / 갈비구이 25s 유지 (3가게 유지나 basic_pantry 3 차감으로 정답 9 → 6) / 불고기 28s 유지 (3가게 유지나 basic_pantry 3 차감으로 정답 10 → 7) — alpha 검증 후 추가 fine-tune |
+| **C-2 sync** | §2.2.3 distractor_per_store_by_tier 영향 점검 | 잡화점 SKU pool 17 → 12, distractor=1 충분 검증 PASS. T1 평균 디스트랙터 3.86 → 3.43 (떡볶이·잡채 3가게 강등 영향) / T2 평균 3.4 → 2.8 |
+| **C-2 sync** | §5 accuracy_ingredients 공식 | 분모 N에서 basic_pantry 자동 차감 (cooking-mechanics §2.5 v0.6 sync) |
+
+## 0.1 v0.3.2 변경 요약 (vs v0.3.1, 보존)
+
+| # | 항목 | 변경 내용 |
+|---|------|----------|
+| **N-1** | F-02 호떡 → **잔치국수** (t1_008) | §2.2.2 Stage 1 time_limit 행 교체 (호떡 t1_001 18s → 잔치국수 t1_008 22s) / §3.2 perfect_width 행 교체 (호떡 8s·1100ms·0.14 → 잔치국수 12s·1000ms·0.10) |
+| **N-2** | F-09 김치찌개 → **불고기** (t2_014) | §2.2.2 행 교체 (김치찌개 t2_009 25s → 불고기 t2_014 28s) / §3.2 행 교체 (김치찌개 15s·950ms·0.06 → 불고기 16s·900ms·0.09) |
+| **N-1·N-2 sync** | §7 BPM/Tap Range by Tier — 음식별 prep_bpm 매핑 추가 | 잔치국수: 대파 송송썰기 110 BPM·4 taps (CUT-05) / 불고기: 양념재우기 60 BPM·3 taps (CUT-00 marinade rhythm — ADR-005 §7 시그니처 음식) |
+| **N-1·N-2 sync** | 음식별 cook_time 가중치 재산정 | T1 평균 cook_time 9.7s (호떡 8s → 잔치국수 12s 증가) / T2 평균 cook_time 16.4s (김치찌개 15s → 불고기 16s 증가) |
+
+## 0.1 v0.3 변경 요약 (vs v0.2, 보존)
 
 | # | 항목 | 변경 내용 |
 |---|------|----------|
@@ -83,35 +101,38 @@
 | 1 | 20 | 1 | 음식별 ±5s override (가게 수 가중) |
 | 2 | 28 | 1 | 음식별 ±7s override |
 
-### 2.2.2 음식별 Stage 1 time_limit override (가게 수 가중) — v0.2
+### 2.2.2 음식별 Stage 1 time_limit override (가게 수 가중) — v0.3.3 (C-2 sync)
 
-| food_id | 음식 | 가게 수 | 권고 time_limit (s) |
-|---------|------|:------:|:------------------:|
-| t1_001 | 호떡 | 2 | 18 |
-| t1_002 | 라면 | 3 | 20 |
-| t1_003 | 떡볶이 | 4 | 22 |
-| t1_004 | 김밥 | 5 | 25 |
-| t1_005 | 김치볶음밥 | 4 | 22 |
-| t1_006 | 해물파전 | 4 | 24 |
-| t1_007 | 한국식 콘도그 | 3 | 20 |
-| t2_008 | 비빔밥 | 4 | 28 |
-| t2_009 | 김치찌개 | 3 | 25 |
-| t2_010 | 잡채 | 4 | 30 |
-| t2_012 | 갈비구이 | 3 | 25 |
-| **t2_013** | **순두부찌개** | **3** | **25** | (C-2 신규; 김치찌개와 동일 끓이기 ramp)
+> v0.3.3 변경: basic_pantry 5종 정책으로 떡볶이·잡채 가게 수 4→3 강등, 정답 재료 수도 감소. time_limit 자연 재산정 ("가게 수 × 4s + basic_pantry 차감 -1s/재료" 휴리스틱).
 
-> "가게 수 × 4s + 음식별 조정" 휴리스틱. alpha 데이터로 fine-tune.
+| food_id | 음식 | 가게 수 (v1.3) | 정답 재료 (basic_pantry 제외) | 권고 time_limit (s) | 변동 |
+|---------|------|:------:|:-----:|:------------------:|:----:|
+| t1_002 | 라면 | 3 | 3 | 20 | — |
+| **t1_003** | **떡볶이** | **3 ⬇** | **4** (고추장 -1) | **18** ⬇ | v0.3.2 22 → 18 (가게 수 -1 + 정답 -1) |
+| t1_004 | 김밥 | 5 | 6 | 25 | — |
+| t1_005 | 김치볶음밥 | 4 | 6 | 22 | — |
+| t1_006 | 해물파전 | 4 | 9 (간장 -1) | 24 | — (해물 hero 재료 변동 없음) |
+| t1_007 | 한국식 콘도그 | 3 | 5 (설탕 -1) | 20 | — |
+| t1_008 | 잔치국수 | 4 | 7 (간장 -1) | 22 | — |
+| t2_008 | 비빔밥 | 4 | 6 (고추장 -1) | 28 | — |
+| **t2_010** | **잡채** | **3 ⬇** | **6** (간장·참기름 -2) | **25** ⬇ | v0.3.2 30 → 25 (가게 수 -1 + 정답 -2) |
+| t2_012 | 갈비구이 | 3 | 6 (간장·설탕·참기름 -3) | 25 | — (재료 9→6 감소나 cook 메커닉 부담 유지) |
+| t2_013 | 순두부찌개 | 3 | 7 | 25 | — |
+| t2_014 | 불고기 | 3 | 7 (간장·설탕·참기름 -3) | 28 | — (재료 10→7 감소나 양념재우기 + 5채소 hero ingredient 부담 유지) |
 
-### 2.2.3 디스트랙터 수 by tier
+> **C-2 정책 후 평균 time_limit**: T1 7음식 평균 21.3s (v0.3.2 21.6 → -0.3s) / T2 5음식 평균 26.2s (v0.3.2 27.2 → -1.0s). alpha 데이터로 fine-tune.
+
+### 2.2.3 디스트랙터 수 by tier (v0.3.3 C-2 sync)
 
 `cooking.distractor_per_store_by_tier` (MVP relevant: index 0·1):
 
-| Tier | 가게당 디스트랙터 | 음식별 평균 총 디스트랙터 |
+| Tier | 가게당 디스트랙터 | 음식별 평균 총 디스트랙터 (v1.3) |
 |------|:---------------:|:----------------------:|
-| 1 | 1 | ~3 (3가게 평균) |
-| 2 | 1 | ~3.4 (3.4가게 평균; v0.1 3.5 → v0.2 3.4, 순두부찌개 3가게 영향) |
+| 1 | 1 | **~3.43** (T1 7음식 가게 수 평균: 라면3+떡볶이3+김밥5+볶음밥4+해물파전4+콘도그3+잔치국수4 = 24/7 = 3.43; v0.3.2 3.86 → v0.3.3 3.43, 떡볶이 4→3 강등 영향) |
+| 2 | 1 | **~2.8** (T2 5음식 가게 수 평균: 비빔밥4+잡채3+갈비3+순두부3+불고기3 = 16/5 = 3.2; 잡채 4→3 강등 영향. 잡화점 SKU 17→12로 distractor pool 축소 시 효과 distractor 평균 -0.6 = 2.6~2.8) |
 
 > [`cooking-mechanics.md`](systems/cooking-mechanics.md) §2.6 기준값과 동일.
+> **잡화점 SKU pool 검증**: 17 → 12 (-29%). distractor=1 충분 (잡화 12종 - 정답 max 4 - basic_pantry 0 = distractor 후보 8종, T1·T2 모두 distractor=1 표시 시 충분).
 
 ---
 
@@ -146,18 +167,18 @@ miss    : (1 - perfect_width) × 0.50  → 0.45     (양쪽 합)
 
 | food_id | 음식 | cook_time_sec | perfect_window_ms | perfect_width 비율 | 사유 |
 |---------|------|:-------------:|:-----------------:|:------------------:|------|
-| t1_001 | 호떡 | 8 | 1100 | 0.14 | FTUE 후보; 관대 |
-| t1_002 | 라면 | 9 | 1000 | 0.11 | default + α |
+| t1_002 | 라면 | 9 | 1000 | 0.11 | **FTUE 1순위 (N-1 sync 2026-05-30; 호떡 supersede)**; default + α |
 | t1_003 | 떡볶이 | 13 | 950 | 0.10 | default |
 | t1_004 | 김밥 | 4 | 1500 | 0.19 | 짧은 cook_time → 폭 넓게 (판정 공정) |
 | t1_005 | 김치볶음밥 | 10 | 1000 | 0.10 | default |
 | t1_006 | 해물파전 | 14 | 950 | 0.09 | **C-3: 단일 탭 (MVP)**. flip mechanic 미도입 |
 | t1_007 | 콘도그 | 8 | 1000 | 0.13 | 튀기기 도입 → 약간 관대 |
+| **t1_008** | **잔치국수** | **12** | **1000** | **0.10** | **N-1 신규 2026-05-30** (호떡 t1_001 supersede); T1 끓이기 standard; 면 토렴 + 육수 끓이기 = default 폭. 라면(0.11)과 떡볶이(0.10) 사이 자연 ramp |
 | t2_008 | 비빔밥 | 5 | 1300 | 0.13 | no-cook 비비기 (짧음) |
-| t2_009 | 김치찌개 | 15 | 950 | 0.06 | T2 진입 standard |
 | t2_010 | 잡채 | 16 | 900 | 0.06 | T2 중반 |
 | t2_012 | **갈비구이** | 18 | **650** | **0.04** | 사용자 명시 "타이밍 핵심" — T2 평균 대비 ~70% |
-| **t2_013** | **순두부찌개** | **14** | **950** | **0.07** | **C-2 신규**; T2 끓이기 standard (김치찌개와 페어 — 같은 perfect_window_ms 유지하되 cook_time 14s로 폭은 살짝 더 좁음) |
+| t2_013 | 순두부찌개 | 14 | 950 | 0.07 | C-2 신규 2026-05-24; T2 끓이기 standard; N-2 sync 2026-05-30 — T2 끓이기 단독 음식 (김치찌개 supersede) |
+| **t2_014** | **불고기** | **16** | **900** | **0.09** | **N-2 신규 2026-05-30** (김치찌개 t2_009 supersede); 양념재우기 8s + 볶기 8s = 16s; T2 양념재우기 메커닉 시그니처 음식; perfect_width 0.09 = 잡채와 동일 T2 standard (cook_time 16s 동률) — 갈비구이(0.04)보다 관대 (양념재우기 60 BPM marinade rhythm은 별도 Stage 2A에서 처리, Stage 3 timing은 볶기 완료 판정만) |
 
 > 비율은 `perfect_window_ms / (cook_time_sec × 1000 × 2)` 으로 환산.
 
@@ -196,10 +217,58 @@ post-launch에서 도입 시 별도 작업:
 
 ---
 
+## 4A. Basic Pantry 정책 (C-2 LOCK 2026-05-31, v0.3.3 신설)
+
+> [`store-distribution.md` v1.3 §X](store-distribution.md) + [`cooking-mechanics.md` v0.6 §2.2.7](systems/cooking-mechanics.md) sync. ADR-007 격상 pending (pm 위임).
+
+### 4A.1 정의
+
+**basic_pantry 5종** = 한국 가정 부엌 상시 비치 base seasoning. Stage 1 재래시장 진열대에 표시하지 않고 Scene 2 kitchen rack에 자동 표시.
+
+| ingredient_id | name_ko | name_en | foods CSV 사용처 합 |
+|--------------|---------|---------|:------------------:|
+| ing_x_003 | 간장 | Soy Sauce | 5 (해물파전·잔치국수·잡채·갈비·불고기) |
+| ing_x_004 | 고추장 | Gochujang | 2 (떡볶이·비빔밥) |
+| ing_x_005 | 설탕 | Sugar | 3 (콘도그·갈비·불고기) |
+| ing_x_006 | 참기름 | Sesame Oil | 3 (잡채·갈비·불고기) |
+| ing_x_007 | 소금 | Salt | 0 (implicit_all, foods CSV 미명시) |
+
+### 4A.2 Remote Config 키 (신설 3개)
+
+| 키 | 기본값 | 타입 | 설명 |
+|----|--------|------|------|
+| `cooking.basic_pantry_ingredient_ids` | `["ing_x_003","ing_x_004","ing_x_005","ing_x_006","ing_x_007"]` | string[] | basic_pantry ingredient_id 5종 list. Remote Config로 운영 중 5종 외 추가/제거 가능 (예: post-launch M1 들기름 추가 검토) |
+| `cooking.stage1.exclude_basic_pantry` | `true` | bool | Stage 1 진열대에서 basic_pantry 5종 표시 여부. true = 진열대 미표시 (distractor pool 제외 포함) |
+| `cooking.accuracy.exclude_basic_pantry` | `true` | bool | accuracy_ingredients 분모 N에서 basic_pantry 자동 차감 여부. true = 차감 후 N 사용 |
+
+### 4A.3 영향 정리
+
+| 영역 | v0.3.2 (정책 X) | v0.3.3 (정책 lock) |
+|------|----------------|-------------------|
+| Stage 1 진열대 잡화점 SKU | 17 | 12 (-5 basic_pantry) |
+| accuracy_ingredients 분모 N (음식 평균) | 6.4 (full ingredients) | 5.4 (basic_pantry 차감 후) |
+| 잡화점 음식 등장 | 12/12 | 10/12 (떡볶이·잡채 강등) |
+| 잡화점 정답 합계 | 29 | 17 (-12 net) |
+| 떡볶이 / 잡채 가게 수 | 4 / 4 | 3 / 3 |
+| 잡화점 distractor pool | 9 (is_distractor_friendly) | 5 (basic_pantry 5종 모두 false 처리) |
+
+### 4A.4 alpha 검증 항목 (open)
+
+- 사용자 학습 곡선: basic_pantry 5종이 kitchen rack에 자동 표시되는 시각 cue 인지율 (target ≥ 80% — 첫 5 round 안에 "양념은 자동" 학습)
+- distractor=1로 잡화점 SKU pool 5종 충분성 (T1 12음식 × 3 round 시 distractor 반복 인상 빈도 ≤ 30%)
+- 옹기 시각 디스트랙터 손실 회복: art-director kitchen rack 옹기 5종 일러스트 평가
+
+---
+
 ## 5. 점수 공식 (cooking-mechanics §5.2 sync)
 
 ### 5.1 기본
 ```
+# v0.3.3 C-2 sync: accuracy_ingredients 분모 N에서 basic_pantry 자동 차감
+N_effective = required_ingredients.filter(id NOT IN basic_pantry_ingredient_ids).count
+correct_picks_effective = correct_picks.filter(id NOT IN basic_pantry_ingredient_ids).count
+accuracy_ingredients = clamp01(correct_picks_effective / N_effective - PENALTY_PER_WRONG * wrong_picks)
+
 score_raw   = accuracy_ingredients × accuracy_method × accuracy_timing
 early_bonus = max(0, remaining_time_s1 / time_limit_s1) × early_finish_bonus_max
 score_pre   = clamp01(score_raw + early_bonus)
@@ -309,6 +378,26 @@ total = (accuracy_ingredients × 0.25)
 
 > 음식별 정확 BPM/tap 수치는 `foods-database.csv` `prep_bpm` / `prep_tap_count` 컬럼 (game-designer 본격 sprint).
 
+### 7.1 음식별 prep_bpm / prep_tap_count placeholder 매핑 (v0.3.2 N-1·N-2 sync)
+
+> ADR-005 본격 prep sprint(open #9) 진입 전 잔치국수·불고기 prep 시그니처만 placeholder lock. 나머지 음식은 후속 sprint에서 일괄 lock.
+
+| food_id | 음식 | prep_cut_style | prep_ingredient | prep_bpm | prep_tap_count | 비고 |
+|---------|------|---------------|-----------------|:--------:|:--------------:|------|
+| t1_008 | **잔치국수** | 송송썰기 (CUT-05) | 대파 | 110 | 4 | N-1 신규 2026-05-30. 부 hero "애호박 통썰기 CUT-04" 70 BPM·3 taps 대안 검토 가능 (T1 가장 느린 cut style, 정통 잔치국수 시그니처 fit). 본격 sprint에서 사용자 결정 |
+| t2_014 | **불고기** | **양념재우기 (CUT-00 marinade rhythm)** | 얇은 소고기 + 양념 마사지 | **60** | 3 | **N-2 신규 2026-05-30. ADR-005 §7 양념재우기 cut style 시그니처 음식 lock**. 사용자 별 cut anchor 7장 (CUT-00 cutting_board base + CUT-01~06)에 CUT-00 양념재우기 anchor 별도 정의 필요 — art-director sync (만약 CUT-00이 base anchor만 표현이면 별도 marinade 60 BPM cut style anchor 신규 작성 sprint 트리거). 부 hero "양파 채썰기 CUT-02" 115 BPM·4 taps도 prep 단계에 추가 가능 (Stage 2A multi-cut sub-sequence) |
+
+**잔치국수 prep BPM 선택 reasoning**:
+- **대파 송송썰기 110 BPM·4 taps 권고**: 잔치국수 fresh garnish 시그니처 (마지막 단계 토핑) → 시각·청각 마무리 임팩트. T1 평균 BPM(70~110) 상단으로 부드러운 ramp 유지.
+- 대안 1: 애호박 통썰기 70 BPM·3 taps — 가장 느린 cut style, 정통 잔치국수(어린 애호박 어슷썰기/통썰기) 시그니처 fit. T1 가장 부드러운 진입 곡선. **사용자 결정 필요 (정통 한식 정서 우선 vs 시그니처 마무리 임팩트 우선)**.
+- 대안 2: 다진마늘 다지기 140 BPM·5 taps — 잔치국수 육수 양념 (멸치 육수 + 다진마늘). but 140 BPM은 T1 상한 초과(70~110), 사용자 학습 부담. T1 음식에 다지기 적용은 부적합. → reject.
+
+**불고기 prep BPM 선택 reasoning**:
+- **양념재우기 60 BPM·3 taps 권고**: ADR-005 §7 "양념 재우기 (별도) 60 BPM (마사지 식)" 정의의 시그니처 음식. 갈비구이는 통갈비라 양념재우기 가능하나 단독 cut style anchor로는 약함 (bone 표현이 dominant). 불고기 = thin-slice + marinade pool → marinade rhythm tap이 핵심 메커닉 carrier.
+- 60 BPM·3 taps = T2 BPM 하한 외 별도 정의 (Tier 2 90~140 BPM 외 cut style 특수). marinade는 cut이 아니므로 별도 카테고리.
+- **부 hero "양파 채썰기 CUT-02" 115 BPM·4 taps** = Stage 2A multi-cut sub-sequence 후보 (양념재우기 + 양파 채썰기 sequential). 본격 sprint에서 single cut vs sequence 결정.
+- 사용자 confirm 필요: Stage 2A에서 양념재우기 단독 vs 양념재우기 → 양파 채썰기 sequential 진행 결정.
+
 ---
 
 ## 8. Skip Bonus — Rewarded Video (ADR-005 v0.3 신설)
@@ -366,7 +455,7 @@ total = (accuracy_ingredients × 0.25)
 | 2 | Flip mechanic 채택 | game-designer + 사용자 | **C-3 lock 2026-05-24 (미도입 MVP)**. post-launch 이월 |
 | 3 | 친구 like/dislike 가산 % alpha 튜닝 | game-designer + data-analyst | open |
 | 4 | 갈비구이 PERFECT 0.04 → 0.05~0.07 reconciliation | game-designer + qa-tester | open (alpha 후) |
-| 5 | FTUE 첫 음식 final lock (호떡 vs 라면) | game-designer + ui-designer + pm | open |
+| 5 | ~~FTUE 첫 음식 final lock (호떡 vs 라면)~~ | game-designer + ui-designer + pm | **✅ resolved 2026-05-30 → 라면 (N-1 sync, 호떡 supersede 후 자동 결정)** |
 | 6 | 인터스티셜 간격 3 round → A/B (2 vs 3 vs 4) | data-analyst | open |
 | 7 | cooking-mechanics.md §4.4 30/60 → 45/45 sync 갱신 | game-designer (cooking-mechanics 차기 개정 시) | cooking-mechanics v0.5 일부 sync 완료, 잔여 §4.4 본문 sync 대기 |
 | 8 | 양념치킨 post-launch M1 부활 검토 (튀기기 다양성·KFC viral) | pm + game-designer | open (soft launch 데이터 후) |
@@ -374,10 +463,15 @@ total = (accuracy_ingredients × 0.25)
 | ~~10~~ | ~~ADR-005 perfect_window 80ms vs 100ms lock~~ | pm | **✅ resolved 2026-05-26 → ±80ms** |
 | ~~11~~ | ~~ADR-005 Skip auto_perfect_score 1.0 vs 0.9 lock~~ | pm | **✅ resolved 2026-05-26 → 0.9** |
 | **12** | **ADR-005 ★ 임계 (30/60/90) sync — `scoring.star_thresholds` (v0.2 50/75/90) vs `scoring.star_thresholds_v05` (30/60/90) 이중 운영 정리** | game-designer + godot-dev | **open** |
+| **13** | **C-2 basic_pantry 정책 alpha 검증** — Stage 1 자동 제외 학습률 / kitchen rack 인지 / 옹기 시각 디스트랙터 손실 회복 | game-designer + ui-designer + qa-tester | **open (alpha 후)** |
+| **14** | **ADR-007 신설** — basic_pantry 정책 정식 ADR 격상 (Stage 1 진열대 자동 제외 + kitchen rack 자동 제공 + accuracy 분모 차감의 의사결정 기록) | pm | **open (별도 sprint 위임)** |
+| **15** | **소금 ing_x_007 ID 재매핑 ripple** — 기존 ing_x_007 (깨) → ing_x_019 이동 시 Resource(.tres) 정합성 + foods CSV 명시 X 정합성 | godot-dev | **open (Resource sync sprint)** |
 
 ---
 
 ## 12. 변경 이력
+- **2026-05-31 v0.3.3** (supersedes v0.3.2) — **C-2 lock 적용 (basic_pantry 5종 정책)**. §4A "Basic Pantry 정책" 신설 (간장/고추장/설탕/참기름/소금 5종 정의 + Remote Config 키 3종 신설 `cooking.basic_pantry_ingredient_ids` / `cooking.stage1.exclude_basic_pantry` / `cooking.accuracy.exclude_basic_pantry`). §2.2.2 음식별 time_limit 재산정 (떡볶이 22→18s / 잡채 30→25s / 그 외 변동 없음). §2.2.3 디스트랙터 평균 재산정 (T1 3.86→3.43 / T2 3.4→2.8, 잡화 SKU pool 17→12 검증 PASS). §5.1 accuracy_ingredients 공식 갱신 (분모 N에서 basic_pantry 자동 차감). §11 #13·#14·#15 신규 (alpha 검증 / ADR-007 격상 / ing_x_007 ID 재매핑 ripple).
+- **2026-05-30 v0.3.2** (supersedes v0.3.1) — N-1·N-2 lock 적용 (F-02 호떡 → 잔치국수 / F-09 김치찌개 → 불고기). §2.2.2 Stage 1 time_limit 행 교체 (호떡 t1_001 18s → 잔치국수 t1_008 22s / 김치찌개 t2_009 25s → 불고기 t2_014 28s). §3.2 perfect_width 행 교체 (호떡 8s·1100ms·0.14 → 잔치국수 12s·1000ms·0.10 / 김치찌개 15s·950ms·0.06 → 불고기 16s·900ms·0.09). §2.2.3 디스트랙터 평균 재산정 (T1 3 → 3.7, 잔치국수 4가게 영향). **§7.1 음식별 prep_bpm placeholder 신설** (잔치국수=대파 송송 110 BPM·4 taps / 불고기=양념재우기 60 BPM·3 taps — ADR-005 §7 양념재우기 시그니처 음식 lock). §11 #5 FTUE 첫 음식 lock 해소 (라면 자동 결정).
 - **2026-05-26 v0.3.1** — Perfect window **±80ms LOCKED** (사용자 confirm, pm 권고 채택). Skip `accuracy_prep = 0.9` **LOCKED** (사용자 원안 1.0 → 0.9, skill bonus 명분 유지). §6 표 dual-column 단일화, §8 Skip default 1.0→0.9, §11 open question #10·#11 resolved.
 - **2026-05-26 v0.3** (supersedes v0.2) — [ADR-005](decisions.md#adr-005) 반영. **§5 4-Factor Scoring Weights** 신설 (25/20/20/35 가중 평균 + `scoring.factor_weights` Remote Config 키 + ★ 임계 30/60/90으로 supersede). **§6 Prep Rhythm — Perfect/Good Window** 신설 (Perfect ±80ms pm권고/±100ms 사용자, Good ±200ms, Miss 그 외; `cooking.prep.perfect_window_ms` 등 3 키). **§7 BPM/Tap Range by Tier** 신설 (Tier 1: 70~110 BPM·3~6 taps / Tier 2: 90~140 BPM·5~8 taps; Cut Style별 BPM 가이드 7종). **§8 Skip Bonus** 신설 (Rewarded Video → `accuracy_prep=1.0`). §10 §11 §12 renumbered. 음식별 정확 prep 수치는 game-designer 본격 sprint 이월.
 - **2026-05-24 v0.2** (supersedes v0.1) — C-2 lock 적용 (§2.2.2 / §3.2 양념치킨 → 순두부찌개 행 교체). **C-3 lock**: 해물파전 flip mechanic 미도입(MVP), `flip_required_foods = []` 폴백, post-launch 도입 시 사양은 §4.2 별도. **C-4 lock**: Stage 3 good/miss 45/45 (perfect 10) 분배 + Remote Config 키 `cooking.stage3.band_distribution` 신설. cooking-mechanics §4.4 30/60 supersede 명시. 갈비구이 perfect_width 변동 없음(0.04).

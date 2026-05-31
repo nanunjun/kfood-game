@@ -1,10 +1,12 @@
 # Friends System — MVP
 
-> 버전: **v0.2 (2026-05-24, supersedes v0.1)** · 작성자: game-designer
+> 버전: **v0.3 (2026-05-30, supersedes v0.2)** · 작성자: game-designer
 > Scope: **MVP — 가족 단위 1~2명** ([ADR-003](decisions.md#adr-003-mvp-first-전환--34개월-출시--점진-확대-supersedes-adr-002)).
-> 상위 문서: [`GDD.md` §4·§6.3](GDD.md), [`systems/cooking-mechanics.md` §5.1](systems/cooking-mechanics.md), [`systems/mvp-food-selection.md` v2.1](systems/mvp-food-selection.md), [`art-style-guide.md` §3](art-style-guide.md), [`balance-config.md` v0.2 §2 §5.1](balance-config.md), [`ui/ftue.md` §7](ui/ftue.md), [`ui/tier-1-2-flow.md`](ui/tier-1-2-flow.md)
+> 상위 문서: [`GDD.md` §4·§6.3](GDD.md), [`systems/cooking-mechanics.md` §5.1](systems/cooking-mechanics.md), [`systems/mvp-food-selection.md` v2.2](systems/mvp-food-selection.md), [`art-style-guide.md` §3](art-style-guide.md), [`balance-config.md` v0.3.2 §2 §5.1](balance-config.md), [`ui/ftue.md` v0.3 §7](ui/ftue.md), [`ui/tier-1-2-flow.md`](ui/tier-1-2-flow.md)
 >
-> **v0.2 변경**: C-2 lock 적용 — t2_011 양념치킨 → **t2_013 순두부찌개** 호불호 axis 치환. 매운 카테고리(고춧가루) 유지로 어머니 dislike 일관성 보존.
+> **v0.3 변경 (N-1·N-2 sync)**: F-02 호떡 → **잔치국수 (t1_008)** 호불호 axis 치환 (sweet+oily → mild+salty). F-09 김치찌개 → **불고기 (t2_014)** 호불호 axis 치환 (spicy+salty → sweet+salty+oily(light)). 어머니/아버지 net 보정 + 가족 합산 재계산. 가족 최고 선호 음식(+2) 그룹 +1 (불고기 추가).
+>
+> **v0.2 변경 (보존)**: C-2 lock 적용 — t2_011 양념치킨 → **t2_013 순두부찌개** 호불호 axis 치환.
 
 ---
 
@@ -117,18 +119,18 @@
 
 | food_id | 음식 | spicy | sweet | salty | oily | mild |
 |---------|------|:-----:|:-----:|:-----:|:----:|:----:|
-| t1_001 | 호떡 | | ✅ | | ✅ | |
 | t1_002 | 라면 | ✅ | | ✅ | | |
 | t1_003 | 떡볶이 | ✅ | ✅ | | | |
 | t1_004 | 김밥 | | | ✅ | | ✅ |
 | t1_005 | 김치볶음밥 | ✅ | | ✅ | ✅ | |
 | t1_006 | 해물파전 | | | ✅ | ✅ | |
 | t1_007 | 콘도그 | | ✅ | ✅ | ✅ | |
+| t1_008 | **잔치국수** ⭐ | | | ✅ | | ✅ |
 | t2_008 | 비빔밥 | ✅ | | | | ✅ |
-| t2_009 | 김치찌개 | ✅ | | ✅ | | |
 | t2_010 | 잡채 | | ✅ | ✅ | | ✅ |
 | t2_012 | 갈비구이 | | ✅ | ✅ | ✅ | |
 | t2_013 | 순두부찌개 | ✅ | | ✅ | | ✅ |
+| t2_014 | **불고기** ⭐ | | ✅ | ✅ | ✅ (light) | |
 
 ### 3.3 친구별 preference 매트릭스
 
@@ -144,27 +146,31 @@
 
 ### 3.4 사용자 명시 trait 반영
 
-사용자 힌트: **"매운 거 못 먹는 친구는 호떡/갈비구이/김밥/잡채 좋아함"** (유지).
+사용자 힌트 (v0.2): **"매운 거 못 먹는 친구는 호떡/갈비구이/김밥/잡채 좋아함"** — v0.3 호떡 supersede로 trait 매핑 조정.
 
-→ **어머니의 trait**:
-- spicy `dislike`
-- 호떡(sweet+oily): sweet `like` 트리거 → ✅ 좋아함 (oily dislike 있으나 sweet like가 우선; §3.5 우선순위 룰)
-- 갈비구이(sweet+salty+oily): sweet `like` 트리거 → ✅ 좋아함
+→ **어머니의 trait (v0.3 갱신)**:
+- spicy `dislike` (유지)
+- 갈비구이(sweet+salty+oily): sweet `like` 트리거 → ✅ 좋아함 (oily dislike 있으나 sweet like가 우선; §3.5 우선순위 룰)
 - 김밥(salty+mild): mild `like` → ✅ 좋아함
 - 잡채(sweet+salty+mild): mild + sweet `like` → ✅ 좋아함
 
-**v0.2 추가 (C-2 lock)**:
-- **순두부찌개(spicy+salty+mild)** = 어머니 dislike 후보: spicy(D=-1) + salty(N=0) + mild(L=+1) → net 0 (matrix balanced)
-- 매운 카테고리 일관성 유지: 양념치킨이 어머니 dislike axis(spicy+oily)였던 것과 달리, 순두부찌개는 mild(L)가 상쇄 → "어머니가 매운 게 부담스럽지만 두부라서 한 입은 먹음" 정서.
-- 양념치킨 dislike axis 매핑(spicy+oily 동시 dislike) 삭제, 순두부찌개로 치환.
+**v0.3 추가 (N-1·N-2 sync)**:
+- **잔치국수(salty+mild)** = 어머니 추가 like 후보: salty(N=0) + mild(L=+1) → net +1 (mild dominant). "어머니가 명절·잔치 때 끓이는 음식, 담백 + 짠 정도가 부드러움" 정서 카피 hook. v0.2 호떡(net 0, sweet+oily 상쇄)보다 어머니 친화 ↑.
+- **불고기(sweet+salty+oily light)** = 어머니 갈비구이 유사 패턴: sweet(L=+1) + salty(N=0) + oily(D=-1) → net 0 (sweet like + oily dislike 상쇄). "어머니가 단 양념은 좋아하지만 기름은 부담" 정서 — 갈비구이와 동일 정서로 가족 식탁 정합.
 
-사용자 trait 정확히 매핑 완료 (v0.2).
+**v0.2 lock 유지**:
+- **순두부찌개(spicy+salty+mild)** = 어머니 net 0 (spicy D + mild L 상쇄). "어머니가 매운 게 부담스럽지만 두부라서 한 입은 먹음" 정서.
+
+**호떡 trait 사라짐 영향**: v0.2 사용자 힌트 4음식 중 호떡 제거 → "어머니 호불호 명확 음식" 4 → 3개로 약화. **잔치국수 net +1 보강 (mild dominant)** + 가족 식탁 명절 정서 hook으로 보상. 사용자 trait 의도는 유지(매운 거 dislike + 담백·단 like).
+
+사용자 trait 정확히 매핑 완료 (v0.3).
 
 ### 3.5 우선순위 룰 (한 음식이 like + dislike 동시 트리거)
 
 각 친구별로 한 음식이 like axis와 dislike axis 양쪽에 걸리면 **like 우선** (정서 톤 친화):
-- 어머니가 호떡(sweet=like, oily=dislike) 먹을 때 → **like 1, dislike 0** (단맛 우선)
+- 어머니가 갈비구이(sweet=like, oily=dislike, salty=neutral) 먹을 때 → sweet=like 우선 (단맛 양념 우선, oily 1 상쇄 = net 0)
 - 어머니가 콘도그(sweet+salty+oily) 먹을 때 → sweet=like, oily=dislike → **like 1, dislike 1 동시** (서로 상쇄, 점수 영향 0)
+- 어머니가 **불고기**(sweet+salty+oily light) 먹을 때 → sweet=like, oily=dislike(light) → **net 0** (갈비구이와 동일 정서 패턴)
 
 **최종 효과**:
 - net_likes = max(0, like_axis_count - dislike_axis_count)
@@ -174,27 +180,34 @@
 
 | food_id | 음식 | 어머니 axis | 어머니 net | 아버지 axis | 아버지 net | 합산 |
 |---------|------|-------------|:---------:|-------------|:---------:|:----:|
-| t1_001 | 호떡 | sweet(L)+oily(D) | +1·-1 → 0 | (none) | 0 | 0 |
 | t1_002 | 라면 | spicy(D)+salty(N) | -1 | spicy(L)+salty(L) | +2 | net +1 |
 | t1_003 | 떡볶이 | spicy(D)+sweet(L) | 0 | spicy(L) | +1 | +1 |
 | t1_004 | 김밥 | salty(N)+mild(L) | +1 | salty(L)+mild(N) | +1 | +2 |
 | t1_005 | 김치볶음밥 | spicy(D)+salty(N)+oily(D) | -2 | spicy(L)+salty(L)+oily(L) | +3 | +1 |
 | t1_006 | 해물파전 | salty(N)+oily(D) | -1 | salty(L)+oily(L) | +2 | +1 |
 | t1_007 | 콘도그 | sweet(L)+salty(N)+oily(D) | 0 | salty(L)+oily(L) | +2 | +2 |
+| **t1_008** | **잔치국수** ⭐ | salty(N)+mild(L) | **+1** | salty(L)+mild(N) | +1 | **+2** |
 | t2_008 | 비빔밥 | spicy(D)+mild(L) | 0 | spicy(L) | +1 | +1 |
-| t2_009 | 김치찌개 | spicy(D)+salty(N) | -1 | spicy(L)+salty(L) | +2 | +1 |
 | t2_010 | 잡채 | sweet(L)+salty(N)+mild(L) | +2 | salty(L) | +1 | +3 |
 | t2_012 | 갈비구이 | sweet(L)+salty(N)+oily(D) | 0 | salty(L)+oily(L) | +2 | +2 |
 | t2_013 | 순두부찌개 | spicy(D)+salty(N)+mild(L) | 0 | spicy(L)+salty(L)+mild(N) | +2 | +2 |
+| **t2_014** | **불고기** ⭐ | sweet(L)+salty(N)+oily(D light) | **0** | sweet(N)+salty(L)+oily(L) | +2 | **+2** |
 
-**관찰 (v0.2 갱신)**:
-- **아버지는 거의 모든 음식 like** (T1·T2 12음식 중 11개 net positive). → "아빠는 가리지 않음" 캐릭터 성격 일치. 순두부찌개도 spicy+salty 둘 다 like → +2.
-- **어머니는 호불호 명확**. 사용자 명시 4음식(호떡/갈비/김밥/잡채) 중 김밥·잡채가 net positive, 호떡·갈비는 0 (oily 상쇄). 순두부찌개도 net 0 (spicy dislike + mild like 상쇄) → "엄마는 매운 거 부담스럽지만 두부니까 한 입은" 정서 카피 hook.
-- **양친 합산 음식 차이**: 김밥·잡채·콘도그·갈비·**순두부찌개** = +2 (가족 최고 선호 그룹), 라면·떡볶이·해물파전·비빔밥·김찌 = +1 (적정), 호떡 = 0 (어머니 단독 음식 선호 메뉴 후보).
-- **v0.1 대비 변동**: 양념치킨(+1) 제거 → 순두부찌개(+2) 등장. T2 가족 최고 선호 음식이 1개 늘어남(갈비·순두부 페어 = "가족 식탁 어머니의 끓이기 + 아버지의 굽기" 정서 arc).
+**관찰 (v0.3 갱신)**:
+- **아버지는 거의 모든 음식 like** (T1·T2 12음식 중 11개 net positive). 잔치국수도 salty+mild 둘 다 +1, 불고기도 salty+oily 둘 다 +2 → "아빠는 가리지 않음" 캐릭터 성격 유지.
+- **어머니는 호불호 명확**. v0.3 사용자 명시 trait 갱신: 갈비·김밥·잡채 + **잔치국수(+1)** 신규 like 음식. 호떡(net 0) 폐기로 어머니 명확 like 음식 4개 → 4개 (잔치국수가 정확히 대체).
+- **양친 합산 음식 차이 (v0.3)**:
+  - **가족 최고 선호 그룹 (+2)**: 김밥·**잔치국수**·콘도그·잡채·갈비·순두부찌개·**불고기** = **7개** (v0.2 5개 → +2)
+  - 적정 (+1): 라면·떡볶이·김치볶음밥·해물파전·비빔밥 = 5개
+  - 어머니 단독 음식 선호 메뉴 후보: 없음 (호떡 net 0 폐기)
+- **v0.2 대비 변동**: 호떡(0) 제거 → 잔치국수(+2) 등장 = 가족 합산 +1. 김치찌개(+1) 제거 → 불고기(+2) 등장 = 가족 합산 +1. **순 가족 선호 임팩트 +2**. T2 가족 최고 선호 음식 그룹 풍부(불고기 추가) → "가족 식탁 어머니의 끓이기 + 아버지의 굽기 + **양친 모두 좋아하는 양념재우기 메인 dish (불고기)**" 정서 arc 완성.
+- **잔치국수 정서 hook**: "명절·잔치 음식을 가족이 함께 먹는다" — Tier 1 후반 (L11 Tier 2 unlock 전) 가족 정서 미리보기 음식으로 활용 가능 (UI Voice 카피 후보).
+- **불고기 정서 hook**: "어머니 마사지로 재운 양념 + 아버지가 좋아하는 단·짠·기름진 카테고리" — Tier 2 양친 함께 마련하는 식탁 정서.
 
-⚙️ **alpha 조정 후보**: 어머니 oily dislike를 neutral로 완화하면 호떡·갈비가 +1로 상승. 의도된 trait 강도 유지 vs 정서 톤 부드러움 trade-off.
-> v0.2 추가 후보: 어머니 mild like를 strong-like(+2 weight)로 부스트 시 순두부찌개·김밥·잡채가 강화. balance-config v0.2 C-4 lock(Stage 3 부드러움)과 정합.
+⚙️ **alpha 조정 후보 (v0.3 갱신)**:
+- 어머니 oily dislike를 neutral로 완화하면 갈비·불고기·콘도그·해물파전이 +1로 상승. 의도된 trait 강도 유지 vs 정서 톤 부드러움 trade-off.
+- 어머니 mild like를 strong-like(+2 weight)로 부스트 시 잔치국수·순두부찌개·김밥·잡채가 강화. balance-config v0.3.2 C-4 lock(Stage 3 부드러움)과 정합.
+- 어머니 sweet like를 strong-like(+2 weight) 부스트 시 불고기·갈비구이 net +1로 상승 (oily 상쇄 후에도 sweet dominant). "어머니가 단 음식 좋아함" 정서 강화.
 
 ### 3.7 점수 영향 공식
 
@@ -299,5 +312,6 @@ ADR-003 post-launch Month 3~4에 친구 +3~5명 추가 예정. 본 MVP 설계가
 ---
 
 ## 7. 변경 이력
+- **2026-05-30 v0.3** (supersedes v0.2) — N-1·N-2 lock 적용. §3.2 axis 매트릭스에서 t1_001 호떡 행 → t1_008 잔치국수 행 치환 (sweet+oily → salty+mild) / t2_009 김치찌개 행 → t2_014 불고기 행 치환 (spicy+salty → sweet+salty+oily light). §3.4 어머니 trait 갱신 (잔치국수 net +1 mild dominant / 불고기 net 0 갈비구이 동일 패턴). §3.5 우선순위 룰에 불고기 예시 추가. §3.6 net effect 표 갱신 — 잔치국수 어머니 +1 / 아버지 +1 / 합산 +2, 불고기 어머니 0 / 아버지 +2 / 합산 +2. 가족 최고 선호 음식(+2) 그룹 5 → 7개로 확장. 호떡 정서 hook(어머니 단독 like) 손실 + 잔치국수 명절 정서 hook 신규 + 불고기 양친 함께 양념 정서 hook 신규. art-director reaction 6컷(어머니/아버지 ★1/2/3) anchor 영향 없음 (axis matrix만 변동).
 - **2026-05-24 v0.2** (supersedes v0.1) — C-2 lock 적용. §3.2 axis 매트릭스에서 t2_011 양념치킨 행 → t2_013 순두부찌개 행 치환 (axis: spicy+salty+mild). §3.4 어머니 trait에 순두부찌개 dislike(spicy) + mild(L) 상쇄 일관성 명시. §3.6 net effect 표 갱신 — 순두부찌개 어머니 net 0 / 아버지 +2 / 합산 +2 (가족 최고 선호 그룹 +1). post-launch 친구 axis 확장 hook 무변경. 사용자 trait("매운 거 못 먹는 친구") 매핑 유지.
 - **2026-05-23 v0.1 (superseded)** — 초안. 양친(어머니+아버지) 2명 채택. L11 동시 unlock 결정(U-2). 호불호 5 axis. 음식 12개 axis 태깅. 친구별 preference 매트릭스. 사용자 명시 trait 어머니에 반영. 점수 ±5% per net point. Scene 3 reaction Subtle/Happy 매핑.

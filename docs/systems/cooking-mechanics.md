@@ -1,11 +1,11 @@
 # Cooking Mechanics
 
-> 버전: **v0.5 (2026-05-26, supersedes v0.4)** — [ADR-005](../decisions.md#adr-005) 4-stage 추가
-> 작성일: 2026-05-23 · 최종 개정: 2026-05-26
+> 버전: **v0.6 (2026-05-31, supersedes v0.5)** — [ADR-005](../decisions.md#adr-005) 4-stage + **C-2 basic_pantry 정책 lock**
+> 작성일: 2026-05-23 · 최종 개정: 2026-05-31
 > 상위 문서: [`../GDD.md`](../GDD.md) §2 Core Loop / §3 Scoring System
 > 본 문서는 GDD §2의 **4단계** cooking matching 루프를 **구현 가능한 수준**으로 상세화한다.
 >
-> ⚠️ **v0.5 high-level 갱신만**. §2 Core Loop / §3 Scoring 헤더 sync + §X 재료 준비 placeholder. 상세 룰(rhythm tap / Knife indicator / Perfect/Good/Miss 판정 / Skip 옵션 / FTUE rhythm 흐름 / 음식별 BPM·tap 매핑)은 **game-designer v0.5 본격 sprint**.
+> ⚠️ **v0.6 갱신**: **§2.2 basic_pantry 자동 제외 룰 신설** + **§2.2.7 Kitchen rack 자동 제공 신설** + **§2.5 accuracy_ingredients 공식 분모 N에서 basic_pantry 차감** + **§X 양념재우기 메커닉 정합 명시** (양념 "고르기" 행위 X) + **§8 store_type mapping에 `pantry` 카테고리 추가**.
 
 ---
 
@@ -98,9 +98,30 @@
 | 정육점 | 🥩 | 육류 |
 | 어물전 | 🐟 | 해산물 |
 | 곡물상 | 🌾 | 곡물 |
-| 잡화점 | 🫙 | 장류, 양념, 유제품, 기타 |
+| 잡화점 | 🫙 | 장류 (basic_pantry 제외), 양념 (basic_pantry 제외), 유제품, 기타 |
 
 > Post-launch 확장 후보: 잡화점 → 양념가게 + 잡화점 분리 (장류 비중 ↑ 시), 떡집/방앗간 신설.
+
+### 2.2.1 basic_pantry 자동 제외 룰 (v0.6 C-2 LOCK 2026-05-31)
+
+> [`store-distribution.md` v1.3 §X](../store-distribution.md) + [`balance-config.md` v0.3.3 §4A](../balance-config.md) sync.
+
+**basic_pantry 5종** = 한국 가정 부엌 상시 비치 base seasoning. Stage 1 재래시장 진열대에 **표시하지 않는다**.
+
+| ingredient_id | name_ko | name_en |
+|--------------|---------|---------|
+| ing_x_003 | 간장 | Soy Sauce |
+| ing_x_004 | 고추장 | Gochujang |
+| ing_x_005 | 설탕 | Sugar |
+| ing_x_006 | 참기름 | Sesame Oil |
+| ing_x_007 | 소금 | Salt |
+
+**룰**:
+- Stage 1 가게 진열대 build 시, `is_basic_pantry == true` 재료는 `correct_set`에서 자동 차감 (사용자 픽업 대상 X).
+- Stage 1 distractor pool에서도 basic_pantry 5종 제외 (`is_distractor_friendly = false` + `distractor_weight = 0` 정합).
+- foods-database CSV의 `ingredients[]`에 basic_pantry가 포함되어 있어도 Stage 1 인지 부담 없음 (kitchen rack에 자동 표시 — §2.2.7).
+- Remote Config `cooking.stage1.exclude_basic_pantry = true` (default lock).
+- 정당화: 한국 가정 모든 요리에 base로 들어가는 양념을 매 음식마다 잡화점에서 픽업하는 반복 노동 제거 → 음식별 unique signature 재료(어물 멸치 / 정육 얇은소고기 / 곡물 소면 등)에 집중.
 
 ### 2.3 UI 흐름
 
@@ -133,18 +154,24 @@
   - 단, 튜토리얼 단계(FTUE)에서는 첫 1~2 round 안내 표시.
 - 한 가게에서 모든 정답 재료 픽업 시 자동 입구 복귀 가능 여부: **권장 ON** (탭 절약).
 
-### 2.5 Accuracy 계산
+### 2.5 Accuracy 계산 (v0.6 C-2 sync)
+
 ```
-correct_picks    = 선택한 재료 중 정답 개수
-wrong_picks      = 선택한 재료 중 오답 개수
-required         = 정답 재료 총 개수 (N)
+# v0.6 C-2 LOCK 2026-05-31: 분모 N에서 basic_pantry 자동 차감
+required_effective = food.ingredients.filter(id NOT IN basic_pantry_ingredient_ids)
+N_effective        = required_effective.count  // basic_pantry 5종 차감 후
+
+correct_picks_effective = correct_picks.filter(id NOT IN basic_pantry_ingredient_ids).count
+wrong_picks             = 선택한 재료 중 오답 개수
 
 accuracy_ingredients =
-    clamp01( correct_picks / required  -  PENALTY_PER_WRONG * wrong_picks )
+    clamp01( correct_picks_effective / N_effective  -  PENALTY_PER_WRONG * wrong_picks )
 
 PENALTY_PER_WRONG = 0.15   // 튜닝 대상
 ```
+
 > 다점포 도입은 accuracy 공식 자체에는 영향 없음. 오답 가게 진입은 accuracy에 무관 (시간만 손해).
+> **v0.6 C-2 효과**: foods CSV ingredients 배열에 간장·고추장·설탕·참기름·소금이 포함되어 있어도 사용자가 픽업할 필요 없으며, 분모 N에서 자동 차감되므로 미픽업 페널티 없음. 예: 갈비구이 ingredients = 9개(LA갈비/꽃갈비/마늘/배/대파/간장/설탕/참기름/깨) → N_effective = 6개(간장·설탕·참기름 -3). Remote Config `cooking.accuracy.exclude_basic_pantry = true`.
 
 ### 2.6 디스트랙터 정책 (재작성 — 다점포 영향 반영)
 
@@ -163,6 +190,23 @@ PENALTY_PER_WRONG = 0.15   // 튜닝 대상
 - **공간 기억 학습**: 반복 플레이로 "김치찌개는 정육점+청과+잡화" 같은 멘탈 맵 형성 → 후반 tier에서 효율적 의사결정 = 숙련도 보상.
 - **요리별 가게 조합이 fingerprint**: 라면 = 곡물상+잡화점 (2 store), 한정식 = 5 store 모두 = tier difficulty의 자연 표현.
 - **재방문 가치**: 같은 요리도 디스트랙터 랜덤화로 매 round 변주.
+
+### 2.2.7 Kitchen Rack 자동 표시 (v0.6 C-2 LOCK 2026-05-31)
+
+> ui-designer 별도 sprint로 위치/스타일 결정 (open follow-up).
+
+**룰**:
+- Scene 1 → Scene 2 transition (Stage 1 종료 → kitchen 진입) 시점에 **kitchen rack UI에 basic_pantry 5종 자동 표시**.
+- 표시는 **시각 cue만** — 사용자 선택/탭 행위 X (수동 인터랙션 없음).
+- art-director sprint 권고: 옹기 5종 일러스트로 표현 (간장 옹기 / 고추장 옹기 / 설탕 단지 / 참기름 호리병 / 소금 항아리). Stage 1 잡화점 옹기 시각 디스트랙터 손실(간장↔고추장 페어) 회복 차원.
+- Stage 2A 양념재우기 메커닉 (불고기·갈비구이) 진입 시 kitchen rack의 해당 양념이 highlight + Stage 2A rhythm tap area로 자동 이동 (양념 자동 제공 정합 — §X 참조).
+- Stage 2A rhythm tap 중에는 kitchen rack 옹기가 dimmed (포커스 전환).
+- Scene 3 식탁 transition 시 kitchen rack hidden.
+
+**구현 의존**:
+- godot-dev: `is_basic_pantry == true` Resource 자동 fetch + Scene 2 kitchen rack 노드에 instantiate. AnimationPlayer로 fade-in 0.3s.
+- ui-designer: kitchen rack 위치 (좌측 상단 vs 우측 상단 vs 가스레인지 옆 선반 vs 도마 뒤 배경) — 별도 sprint.
+- art-director: 옹기 5종 anchor (Post-M1 sprint, kitchen rack 시각 identity).
 
 ---
 
@@ -188,6 +232,22 @@ PENALTY_PER_WRONG = 0.15   // 튜닝 대상
 - ingredients-database.csv `cut_variations` 컬럼 (각 재료 적용 가능 cut style)
 - Perfect/Good window 정확 수치 lock (alpha 후)
 - Skip 시 점수 100% vs 90% (auto-perfect 강도) — balance-config v0.3 lock 후 alpha 검증
+
+### 2A.X 양념재우기 정합 명시 — C-2 basic_pantry × Stage 2A 통합 룰 (v0.6 LOCK 2026-05-31)
+
+> 불고기 t2_014 / 갈비구이 t2_012 marinade rhythm 메커닉이 C-2 basic_pantry 정책과 충돌 가능성 점검 결과 = **정합 OK**.
+
+**룰**:
+- **양념 "고르기" 행위 X**: 사용자는 Stage 1에서 간장·설탕·참기름을 픽업하지 않는다 (basic_pantry 정책으로 kitchen rack에 자동 제공).
+- **Stage 2A 진입 시 양념 자동 제공**: 불고기·갈비구이 Stage 2A 진입 시 kitchen rack의 간장+설탕+참기름이 자동으로 marinade bowl로 이동 + 사용자는 marinade rhythm tap만 수행 (60 BPM·3 taps).
+- **Stage 2A rhythm tap 메커닉 = "재우기" 행위 단독**: 양념 종류 선택 / 양념 분량 조절 / 양념 순서 결정 같은 sub-mechanic 없음. 마사지 식 60 BPM tap 단독.
+- **hero ingredient = 얇은 소고기 (불고기) / LA갈비 (갈비구이)**: marinade rhythm tap의 대상 = thin-slice beef + 양념 마사지 통합 행위. 양념 5종은 backdrop visual (옹기에서 marinade bowl로 자동 흘러 들어가는 cue만).
+- **부 hero (선택사항)**: 양파 채썰기 CUT-02 (115 BPM·4 taps) — Stage 2A multi-cut sub-sequence 후보 (open question, balance-config v0.3.3 §11 #9 본격 sprint 결정 대기).
+- **accuracy_prep 계산**: 양념재우기 60 BPM 단독 tap 시 = 평균(tap1, tap2, tap3). 양념 종류 픽업/선택 행위 없으므로 accuracy_prep는 marinade rhythm 정확도 단일 dimension.
+
+**정합 검증**:
+- C-2 basic_pantry "양념 자동 제공" ↔ Stage 2A "양념재우기 60 BPM rhythm tap" = **메커닉 카테고리 다름** (재료 픽업 vs marinade 마사지). 충돌 없음.
+- basic_pantry 정책이 양념재우기 메커닉을 약화시키지 않음 — 오히려 강화: 사용자가 "양념을 고르는 인지 부하" 없이 "양념 마사지 rhythm"에 집중 가능.
 
 ---
 
@@ -352,15 +412,17 @@ GDD §6 스키마 기반. 본 메커닉이 요구하는 필드:
 | `Ingredient.category` | **`store_type` 결정** (가게 매핑) | 1 |
 
 ### Ingredient.category → store_type 매핑 (다점포)
-| category | store_type |
-|----------|-----------|
-| 채소 | `vegetable_shop` (🥬 청과상) |
-| 육류 | `butcher` (🥩 정육점) |
-| 해산물 | `seafood_shop` (🐟 어물전) |
-| 곡물 | `grain_shop` (🌾 곡물상) |
-| 장류, 양념, 유제품, 기타 | `general_store` (🫙 잡화점) |
+| category | store_type | 비고 |
+|----------|-----------|------|
+| 채소 | `vegetable_shop` (🥬 청과상) | |
+| 육류 | `butcher` (🥩 정육점) | |
+| 해산물 | `seafood_shop` (🐟 어물전) | |
+| 곡물 | `grain_shop` (🌾 곡물상) | |
+| 장류·양념·유제품·기타 (basic_pantry 제외) | `general_store` (🫙 잡화점) | basic_pantry 5종은 별도 `pantry`로 분리 (v0.6 C-2 lock) |
+| **basic_pantry 5종 전용 (간장/고추장/설탕/참기름/소금)** | **`pantry` (🏺 kitchen rack 자동)** | **v0.6 신규 C-2 LOCK 2026-05-31**. ingredients-database.csv `store_type = pantry` field 5종 한정. Stage 1 진열대 미표시 + Scene 2 kitchen rack 자동 표시. Remote Config `cooking.basic_pantry_ingredient_ids` 운영. |
 
 > GDD §6.2 신규 파생 필드. 매핑은 런타임 enum 또는 Remote Config로 노출하여 post-launch 가게 분할 시 유연성 확보.
+> **v0.6 신규 `pantry` 카테고리**: 5가게 진열대 schema와 별도. godot-dev Resource(.tres) 스키마에 `store_type: StringName = &"pantry"` enum value 추가 필요. UI 측에서는 5가게 그리드에 표시되지 않고 Scene 2 kitchen rack 노드로 직접 instantiate.
 
 ### 디스트랙터 선정 알고리즘 (의사코드, 다점포 버전)
 ```csharp
@@ -446,6 +508,7 @@ Dictionary<StoreType, List<Ingredient>> BuildStoreShelves(
 ---
 
 ## 11. 변경 이력
+- **2026-05-31 v0.6** (supersedes v0.5): **C-2 basic_pantry 정책 lock** ([`store-distribution.md` v1.3](../store-distribution.md) + [`balance-config.md` v0.3.3](../balance-config.md) sync). **§2.2.1 basic_pantry 자동 제외 룰 신설** (간장·고추장·설탕·참기름·소금 5종 Stage 1 진열대 미표시 + distractor pool 제외). **§2.2.7 Kitchen rack 자동 표시 신설** (Scene 1→2 transition 시 basic_pantry 5종 자동 표시, 시각 cue만, art-director 옹기 5종 anchor 후속). **§2.5 accuracy_ingredients 공식 갱신** (분모 N_effective = required.filter(NOT IN basic_pantry)). **§2A.X 양념재우기 정합 명시 신설** (양념 자동 제공 상태에서 marinade rhythm tap만, 양념 "고르기" 행위 X — 불고기/갈비구이 메커닉 정합 lock). **§8 store_type mapping에 `pantry` 카테고리 추가** (basic_pantry 5종 전용 enum, Resource(.tres) 스키마 sync 필요).
 - **2026-05-26 v0.5** (supersedes v0.4): [ADR-005](../decisions.md#adr-005) 반영. **3-stage → 4-stage** (Stage 2A 재료 준비 신설, rhythm tap + Knife indicator). §1 Round 구조에 4-stage 흐름 요약 추가. **§5.2 채점 공식 곱셈 모델 → 가중 평균 공식 supersede** (재료 25% × 준비 20% × 방법 20% × 시간 35%, ★1 30/★2 60/★3 90). **§2A 신설** (placeholder, rhythm tap / Knife indicator / Cut Styles 6종 / Per-Food BPM / Skip 옵션 / FTUE 흐름 high-level 요약). 상세 룰은 game-designer v0.5 본격 sprint 이월.
 - **2026-05-23 v0.4**: ADR-003 (MVP-first) 반영. §0에 MVP Scope callout 추가 — 5-tier 디자인 비전 유지, MVP 구현은 Tier 1~2 / 음식 10~15 / 친구 1~2 / 식탁 2종 / 다점포 5가게 유지. 메커닉 정의 자체는 변경 없음.
 - **2026-05-23 v0.3**: §10 12개 open question 일괄 resolve (game-designer). Scene 1을 **재래시장 다점포(가게 5종: 청과/정육/어물/곡물/잡화)** 메커닉으로 재작성 — §2 전면 개정(가게 매핑, UI 흐름, 룰, 디스트랙터 정책, 메커닉 함의). §8 데이터 의존성에 `store_type` 매핑 추가, §9 Remote Config 키 변경(`distractor_per_store_by_tier`). §10.2 다점포 follow-up 7항 신설.

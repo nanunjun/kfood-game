@@ -13,6 +13,7 @@
 | **004** | **엔진 선택 — Godot 4.6 (GDScript only) 채택 (CLAUDE.md implicit Unity 정식 대체)** | **Accepted** | **2026-05-23** |
 | **005** | **메커닉 확장 — 3-stage → 4-stage (Stage 2A 재료 준비 신설, rhythm tap, Option C optional skill bonus)** | **Accepted** | **2026-05-26** |
 | **006** | **Art 생성 도구 pivot — Midjourney → ChatGPT (GPT-4o image / DALL-E 3)** | **Accepted** | **2026-05-27** |
+| **007** | **기본 양념 자동 제공 — Basic Pantry SKU 분리 (Stage 1 진열대 제외 + Kitchen 자동 rack)** | **Accepted** | **2026-05-31** |
 
 > **ADR-001 backfill 권장**: 재래시장 다점포 메커닉 결정은 `systems/cooking-mechanics.md` §2 + `CHANGELOG.md`에 기록됐으나 ADR 형식 미작성. 필요 시 사후 backfill.
 
@@ -381,6 +382,8 @@ ADR-002의 결정 #1~3, #5는 유지. **결정 #4(MVP full feature, 8~12개월)�
 
 ### Decision
 
+> 註 (2026-05-31): **[ADR-007](#adr-007-기본-양념-자동-제공--basic-pantry-sku-분리-stage-1-진열대-제외--kitchen-자동-rack) 양념 자동 제공으로 Stage 2A marinade rhythm 정합 명시** — 양념(간장/고추장/참기름/설탕/소금) 자동 제공된 상태에서 불고기 60 BPM 양념재우기는 마사지 rhythm으로 유지. ADR-005 4-stage 흐름 / Cut Styles 6종 / 가중 평균 공식 / Skip 옵션 등 본문 변경 없음.
+
 **Option C — optional skill bonus rhythm tap 4-stage 채택**.
 
 #### 4-stage 흐름 (Scene 변경 없음, Scene 2 내 sub-flow)
@@ -604,4 +607,98 @@ ADR-002 #3은 art 생성 주력 도구로 Midjourney를 명시했고, ADR-003에
 - [ADR-003 §"ADR-002에서 유지되는 결정"](#adr-003-mvp-first-전환--34개월-출시--점진-확대-supersedes-adr-002) — carryover 부분 갱신
 - [ai-comparison-test.md v1.1](ai-comparison-test.md) — ChatGPT 형식 변환 완료
 - art-director 5종 art 문서 (병렬 sync 중)
+
+---
+
+## ADR-007: 기본 양념 자동 제공 — Basic Pantry SKU 분리 (Stage 1 진열대 제외 + Kitchen 자동 rack)
+
+- **Status**: **Accepted** (사용자 default 수용 2026-05-31)
+- **Date**: 2026-05-31
+- **Deciders**: 사용자 (pm role 위임)
+- **Supersedes**: 없음. **[ADR-005](#adr-005-메커닉-확장--3-stage--4-stage-stage-2a-재료-준비-신설-rhythm-tap-option-c-optional-skill-bonus) scope amendment** — Stage 2A 양념재우기는 marinade rhythm으로 유지, ADR-005 본문 변경 없음 명시.
+- **상위 트리거**: game-designer 보고(2026-05-30) "양념 제거 ripple 분석" — 사용자 verbatim 제안 "간장, 고추장, 참기름, 소금, 설탕과 같은 기본 양념은 구매하러 가지 않아도 되고 그냥 제공하는게 어때?"
+
+### Context
+
+- 사용자 verbatim: "간장, 고추장, 참기름, 소금, 설탕과 같은 기본 양념은 구매하러 가지 않아도 되고 그냥 제공하는게 어때?"
+- 게임 cooking matching 부담 ↓ + UX 단순화 의도 (Stage 1 시간 단축, 양념 찾기 mini-game 제거).
+- 잡화점 SKU 양념 비중 = **45% (13/29 정답)** — 양념 제거 시 잡화점 floor 12 → 10, 떡볶이/잡채 4 → 3가게 강등 (game-designer ripple 분석 인용).
+- ADR-005 4-stage 흐름 중 Stage 2A 양념재우기(불고기 60 BPM CUT-00)는 marinade rhythm — 양념이 자동 제공된 상태에서 마사지 rhythm으로 정합 유지 가능.
+
+### Decision
+
+1. **`is_basic_pantry: bool` 컬럼 신설** (`docs/ingredients-database.csv`).
+2. **기본 양념 5종** (간장 / 고추장 / 참기름 / 설탕 / 소금) = `is_basic_pantry = true`.
+3. **Stage 1 잡화점 진열대에서 basic_pantry 재료 제외** (사용자 선택 X — 진열대 노출 자체 차단).
+4. **`accuracy_ingredients` 공식 분모 N에서 basic_pantry 제외** (Stage 1 채점 영향 0).
+5. **Scene 2 키친 진입 시 basic_pantry rack 자동 배치** (시각만, 사용자 인터랙션 X — 한식 정서 시각 강화).
+6. **Stage 2A 양념재우기 (불고기 60 BPM CUT-00) marinade rhythm 유지** (양념 자동 제공된 상태에서 마사지 rhythm — ADR-005 정합).
+
+### Consequences
+
+**Positive**
+- **사용자 부담 ↓** — 양념 찾기 mini-game 제거.
+- **UX 단순화** — Stage 1 시간 단축.
+- **Kitchen 양념 rack** — 한식 정서 시각 강화 (간장 / 고추장 항아리 등 visual presence).
+
+**Negative**
+- **잡화점 SKU 다양성 ↓** (29 정답 → 17, 12개 항목 감소).
+- **떡볶이 · 잡채 4가게 → 3가게 강등** (다점포 다양성 minor ↓, store-distribution v1.3에서 반영).
+- **Art 자산 변경** — 가게 양념 진열 art 제거 + kitchen 양념 rack art 신설 (art-director follow-up).
+- **balance-config Remote Config 키 신설**:
+  - `cooking.basic_pantry_ingredient_ids` (list of ingredient id)
+  - `cooking.stage1.exclude_basic_pantry` (bool, default true)
+  - `cooking.accuracy.exclude_basic_pantry` (bool, default true)
+
+### Alternatives Considered
+
+| 대안 | 거절 이유 |
+|------|----------|
+| **양념도 Stage 1에서 모두 선택** (현 default 유지) | UX 부담 + 양념 찾기 mini-game 가치 낮음 (한식 양념은 기본 가정) |
+| **basic_pantry 양념 일부만 자동 제공** (예: 소금/설탕만) | scope 모호, Remote Config 복잡도 ↑, 사용자 verbatim 5종 명시 |
+| **양념 카테고리 전체 자동 제공** (basic_pantry 외 양념도 포함) | 음식별 hero 양념(예: 고춧가루) 차별화 상실, scope creep |
+
+### ADR-005 정합성
+
+- ADR-005 §Decision 본문 (4-stage 흐름 / Cut Styles 6종 / 가중 평균 25/20/20/35 / Skip 옵션 / Knife indicator / BPM 설계) **무변경**.
+- Stage 2A 양념재우기(불고기 60 BPM CUT-00 marinade rhythm)는 양념이 자동 제공된 상태에서 **마사지 rhythm**으로 유지 — ADR-007에 의해 정합.
+- ADR-005 §Decision 헤더 옆에 cross-ref 한 줄 註 추가 (본 ADR과 동시).
+
+### Follow-up Actions
+
+#### 1순위 — game-designer (즉시)
+- [ ] `docs/ingredients-database.csv` — `is_basic_pantry` 컬럼 신설, 간장 / 고추장 / 참기름 / 설탕 / 소금 = true.
+- [ ] `docs/foods-database.csv` — 12음식 정답 재료 중 basic_pantry 5종 표기 분리 (accuracy_ingredients 분모 산정용).
+- [ ] `docs/store-distribution.md` v1.3 — 잡화점 floor 12 → 10, 떡볶이 / 잡채 가게 수 4 → 3 강등 반영.
+- [ ] `docs/balance-config.md` — Remote Config 키 신설:
+  - `cooking.basic_pantry_ingredient_ids`
+  - `cooking.stage1.exclude_basic_pantry` (default true)
+  - `cooking.accuracy.exclude_basic_pantry` (default true)
+- [ ] `docs/systems/cooking-mechanics.md` — Stage 1 §재료 선택에 basic_pantry 제외 룰 명시 + accuracy_ingredients 분모 공식 갱신.
+
+#### 2순위 — ui-designer (game-designer 병렬)
+- [ ] `docs/ui/screen-flow.md` — Scene 2 키친 진입 시 basic_pantry rack 자동 배치 (시각만, 인터랙션 X) 명시.
+- [ ] `docs/ui/components.md` — **CP-20 BasicPantryRack** 신규 컴포넌트 (간장 / 고추장 / 참기름 / 설탕 / 소금 항아리 5종 visual presence).
+- [ ] `docs/ui/ftue.md` — Stage 1 튜토리얼에서 basic_pantry 양념은 "이미 제공됨" 한 줄 안내 (사용자 선택 X 명시).
+
+#### 3순위 — art-director (**BLOCKED on art-style reset 일부, ADR-005 R-A14 carryover**)
+- [ ] 가게 양념 진열 art **제거** (잡화점 양념 SKU art 미사용 처리).
+- [ ] **kitchen basic_pantry rack art 신설** (간장 항아리 / 고추장 항아리 / 참기름 병 / 설탕 통 / 소금 통 — 5종 visual set).
+- [ ] art-workload-estimate v3.2 — 가게 art -X, kitchen rack +Y 산정.
+
+#### 4순위 — godot-dev (M2 sprint 진입 시)
+- [ ] `is_basic_pantry` 컬럼 Resource(.tres) 로드 + Stage 1 진열대 filter 구현.
+- [ ] `accuracy_ingredients` 분모에서 basic_pantry 제외 공식 구현.
+- [ ] Scene 2 키친 BasicPantryRack 자동 배치 (사용자 인터랙션 X — 시각만).
+- [ ] Remote Config 3개 키 wire (`cooking.basic_pantry_ingredient_ids` / `cooking.stage1.exclude_basic_pantry` / `cooking.accuracy.exclude_basic_pantry`).
+
+### 관련 문서
+- [ADR-003 §MVP scope](#adr-003-mvp-first-전환--34개월-출시--점진-확대-supersedes-adr-002) — MVP 음식 12 / Tier 1~2 무변경
+- [ADR-005 §Decision](#adr-005-메커닉-확장--3-stage--4-stage-stage-2a-재료-준비-신설-rhythm-tap-option-c-optional-skill-bonus) — Stage 2A marinade rhythm 정합 cross-ref
+- [ingredients-database.csv](ingredients-database.csv) — `is_basic_pantry` 컬럼 신설 대상
+- [foods-database.csv](foods-database.csv) — accuracy_ingredients 분모 산정용 basic_pantry 분리
+- [store-distribution.md v1.3](store-distribution.md) — 떡볶이 / 잡채 3가게 강등 반영
+- [balance-config.md](balance-config.md) — Remote Config 키 신설
+- [systems/cooking-mechanics.md](systems/cooking-mechanics.md) — Stage 1 basic_pantry 제외 룰 명시
+- game-designer 보고 (2026-05-30 양념 제거 ripple 분석)
 

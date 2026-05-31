@@ -1,14 +1,22 @@
 """
 K-Food Master — M1 sprint 음식 12장 anchor 자동 생성.
 
-ADR-006 (ChatGPT/DALL-E) 기반. art-director docs/prompts-library.md v1.9
+ADR-006 (ChatGPT/DALL-E) 기반. art-director docs/prompts-library.md v1.17
 §2.4 STYLE_SUFFIX_FOOD + §5.2 F-01~F-12 12장 prompt를 그대로 inline 임베드.
+
+v1.17 sync (2026-05-30, mvp-food-selection v2.2 trigger — game-designer 2026-05-28 완료):
+- F-02 호떡 → 잔치국수 (Janchi-guksu) 전면 교체. T1, 소면 hero (white wheat thin noodles),
+  멸치 dashi clear broth + 계란 지단 + 김 strips + 애호박 garnish. 호떡 본문 deprecated.
+- F-09 김치찌개 → 불고기 (Bulgogi) 전면 교체. T2, 얇은 marbled 소고기 hero (thin-sliced beef
+  fanned in soy-pear-garlic marinade pool), 양파+대파+당근+표고 mixed in same cast-iron pan.
+  김치찌개 본문 deprecated. CRITICAL F-12 갈비 차별화: NO bone-in LA cut, NO wire mesh grate.
 
 v1.9 sync (2026-05-28): F-12 R7 reroll LA-cut long strip form + multiple cross-section bone
 discs along length + green scallion rounds + wire mesh grill grate + 7/8 perspective 5건 fix.
-F-01/F-02/F-03/F-05/F-06 5건은 v1.5 R3 본문 유지 (R3 LOCK candidate).
+F-01/F-03/F-05/F-06 4건은 v1.5 R3 본문 유지 (R3 LOCK candidate).
 F-07/F-08/F-10/F-11 4장은 R2 v2 LOCK candidate 유지 (본문 무변경).
-F-04 떡볶이 / F-09 김치찌개 2장은 R1 LOCK 유지 (본문 무변경).
+F-04 떡볶이는 R1 LOCK 유지 (본문 무변경).
+F-02 / F-09는 v1.17 mvp v2.2로 전면 교체 (위 참조).
 
 v1.9 패치 핵심 (F-12 only, v6 → v7, 사용자 또 다른 reference image 기준 5건 fix):
 - Fix 1 form 전면 교체 (small square pieces grid → LA-cut long strips):
@@ -161,34 +169,61 @@ NO narutomaki pink spiral fish cake, NO nori seaweed sheet on top, NO chashu por
     },
     {
         "id": "F-02",
-        "name": "hotteok",
-        # v1.5 = v2 contained filling 유지 + 표면 topping syrup drizzle 추가
-        "body": """A modern mobile casual game food card illustration of Korean Hotteok (sweet pancake), 7/8 top-down view.
-A golden-brown round flat disc (one or two stacked) sits on a small white plate or a simple paper cup
-(Korean street market style). The disc has a slightly chewy edge with subtle grill marks.
-In the center top, a tiny hint of dark brown sugar filling barely peeks through a small slit
-in the surface — the filling is mostly contained INSIDE the disc, only a small dark dot or thin sliver
-of brown sugar visible at the slit (realistic Hotteok appearance — the filling is enclosed, not pouring out).
-On the golden-brown surface of the disc, a small drizzle of glossy dark brown sugar syrup
-is gently swirled on top as a finishing touch (a light decorative drizzle, like syrup on a pancake,
-a thin glossy ribbon resting on the surface, NOT a flood, NOT pouring out from inside,
-NOT a large pool, just a delicate topping accent).
-Optional: 1-2 small chopped peanut or sesame dots scattered on top as accent.
-Single subtle ambient ellipse shadow under the plate.
+        "name": "janchi_guksu",
+        # v1.17 mvp v2.2 = 호떡 → 잔치국수 전면 교체 (game-designer 2026-05-28 mvp-food-selection v2.2)
+        # hero ingredient = 소면 (white wheat thin noodles). 부 hero = 멸치 dashi broth / 계란 지단 / 김 strips / 애호박.
+        # 호떡 본문은 archive (deprecated 2026-05-30, mvp v2.2 trigger).
+        "body": """A modern mobile casual game food card illustration of Korean Janchi-guksu (잔치국수,
+Korean celebration noodle soup with anchovy broth), top-down view.
+A wide clean white round shallow bowl (Korean baekja porcelain, gently sloped wide rim, large enough
+for noodles + clear broth + garnish, NOT a deep narrow Japanese ramen donburi, NOT a Vietnamese pho
+deep wide soup plate) is filled with light golden-amber clear anchovy dashi broth (멸치 육수,
+warm pale brown-yellow gentle tone — the gentle clear broth made from dried anchovies + dried kelp,
+NOT a thick brown miso, NOT a pale white tonkotsu, NOT a vibrant spicy red gochugaru, NOT a
+dark soy-based broth, NOT a vivid Vietnamese pho cinnamon-clove tinted broth).
+THIN delicate white wheat noodles (소면 somen-style Korean white thin wheat noodles, fine slim strands)
+emerge in a soft swirled nest at the center of the bowl, the noodles forming a gentle rounded mound
+that rises just above the broth surface (the noodles are clearly visible as the hero element, the
+broth pools around the noodle mound).
+GARNISH on top of the noodle mound (Korean janchi-guksu signature, arranged in clean separated
+strips fanning out from the center):
+(1) bright YELLOW EGG RIBBON strips (지단 julienned egg crepe, thin yellow rectangular strips
+~3-5cm long × ~3mm wide, 5-7 strips fanning across one side of the noodle mound, a hero garnish),
+(2) dark green-black GIM SEAWEED STRIPS (얇게 자른 김, thin rectangular black-green seaweed strips
+~3-5cm long × ~3mm wide, 5-7 strips on the opposite side of the egg ribbon, matte NOT glossy),
+(3) thin GREEN ZUCCHINI ROUNDS or julienned light-green zucchini (애호박, 3-4 thin pale green
+diagonal slices ~2cm long × ~1cm wide × very thin, scattered as accent),
+(4) optional 1-2 small DRIED ANCHOVY (멸치) garnish on the rim or beside the bowl as a hint of the
+broth ingredient (small slim silver-gray fish ~2-3cm long, OPTIONAL minor accent),
+(5) optional 1 RED CHILI PEPPER SLICE (small thin red diagonal slice as color accent, OPTIONAL).
+Single subtle ambient ellipse shadow under the bowl.
 
 %s
 
-Important also: this is Korean Hotteok (street market sweet pancake with brown sugar filling),
-NOT a Western pancake stack with maple syrup, NOT a Chinese cong you bing (scallion pancake),
-NOT a Japanese dorayaki (red bean filled). The brown sugar filling is mostly CONTAINED INSIDE the disc,
-with only a tiny hint peeking through a small slit — NO excessive syrup overflow from the slit,
-NO molten lava-like outpour from inside, NO large pool of syrup pooled on the plate,
-NO sauce flooding out of the disc interior.
-The small syrup drizzle on top is okay as a separate topping accent (like pancake syrup decoration,
-visually distinct from the contained filling — the topping drizzle rests on the surface,
-the filling stays enclosed inside).
-The filling is brown molten sugar (barely visible at the slit), NOT chocolate, NOT cream.
-The disc has a chewy fried golden-brown surface, NOT fluffy soufflé style.""",
+Important also: this is Korean Janchi-guksu (잔치국수, celebration noodle soup with clear anchovy
+dashi broth), NOT Japanese somen (Japanese somen is served cold with tsuyu dipping sauce in a
+separate cup + ice cubes + green onion garnish, NOT in a hot anchovy broth bowl with egg ribbon +
+gim + zucchini), NOT Japanese udon (udon noodles are THICK chunky white strands, janchi-guksu is
+THIN delicate strands), NOT Japanese ramen (ramen has curly yellow egg noodles + miso/tonkotsu/shoyu
+broth + narutomaki/chashu/nori sheet, NOT clear anchovy broth + egg ribbon/gim/zucchini garnish),
+NOT Japanese soba (soba is buckwheat brown-gray noodles, janchi-guksu is white wheat noodles).
+NOT Vietnamese pho (pho has clear cinnamon-clove beef broth + raw beef slices + lime wedge + bean
+sprouts + Thai basil + cilantro + hoisin/sriracha side, janchi-guksu has anchovy broth + egg ribbon
++ gim + zucchini, NO lime, NO bean sprouts, NO basil/cilantro herbs, NO sliced beef).
+NOT Chinese egg noodle soup or wonton soup (those use yellow egg noodles + char siu pork / wontons,
+NOT thin white wheat noodles + Korean garnish set).
+NOT Korean instant Ramyeon (F-01 with vibrant orange-red gochugaru spicy broth + curly yellow
+noodles + sunny-side-up egg + spring onion — janchi-guksu is the OPPOSITE: clear gentle anchovy
+broth + thin white wheat noodles + egg ribbon strips + gim strips, gentle vs spicy, white vs yellow,
+clear vs red).
+The ESSENTIAL signature features are: (a) wide clean white Korean baekja shallow bowl + (b) LIGHT
+GOLDEN-AMBER clear anchovy broth + (c) THIN delicate WHITE wheat noodles swirled mound + (d) bright
+YELLOW EGG RIBBON STRIPS as hero garnish + (e) dark GIM SEAWEED STRIPS contrast garnish + (f) thin
+green zucchini accent. The combination of clear anchovy broth + thin white wheat noodles + yellow
+egg ribbon + dark gim strips is the unmistakable Korean janchi-guksu signature.
+NO Japanese ceramic pink spiral narutomaki, NO chashu pork, NO seaweed sheet on top (gim is in
+JULIENNED STRIPS, not a sheet), NO wasabi, NO gari, NO bonito flakes, NO mayo, NO lime wedge,
+NO bean sprouts, NO herbs (basil/cilantro), NO sliced raw beef.""",
     },
     {
         "id": "F-03",
@@ -354,25 +389,80 @@ NO Japanese pickled umeboshi plum, NO bamboo chopsticks placed on top.""",
     },
     {
         "id": "F-09",
-        "name": "kimchi_jjigae",
-        "body": """A modern mobile casual game food card illustration of Korean Kimchi Jjigae (kimchi stew), 7/8 top-down view.
-A black Korean stone pot (ttukbaegi 뚝배기, the signature Korean stew vessel, rounded with a thick rim,
-NOT a wide Chinese hot pot, NOT a Japanese donabe) is filled with bubbling vibrant red-orange spicy kimchi broth.
-Inside the pot: 2-3 white tofu (dubu) square blocks visible at the surface,
-2-3 red kimchi leaf chunks, optional 1-2 brown pork belly slices, scattered green spring onion dots on top.
-1-2 subtle steam swirl lines rising from the surface (optional).
-The pot sits on a simple dark wooden trivet or directly on the surface.
-Tier 2 abundance: tofu 3 blocks + kimchi 3 chunks + pork visible, pot looks generously filled.
+        "name": "bulgogi",
+        # v1.17 mvp v2.2 = 김치찌개 → 불고기 전면 교체 (game-designer 2026-05-28 mvp-food-selection v2.2)
+        # hero ingredient = 얇은 marbled 소고기 (thin-sliced sirloin, soy-pear-garlic marinade glaze).
+        # 부 hero = 양파/대파/당근/표고. 김치찌개 본문은 archive (deprecated 2026-05-30, mvp v2.2 trigger).
+        # F-12 갈비구이와 차별화 CRITICAL: NO bone-in LA cut, NO visible white rib bone, NOT grilled on grate.
+        # 불고기 = thin sliced beef + marinade pool + mixed vegetables in SAME PAN/DISH.
+        "body": """A modern mobile casual game food card illustration of Korean Bulgogi (불고기, marinated
+thin-sliced beef stir-cooked with onions, served on a plate), top-down view (overhead).
+
+The dish is served on a GRAY-CHARCOAL CERAMIC ROUND SERVING PLATE (dark gray modern ceramic plate
+with subtle slim rim, ~22-26cm diameter, matte gray finish #6B6B70 — NOT a cast-iron pan, NOT a
+white plate, NOT a wooden tray, NOT a hot pot bowl — this is a finished plated dish, ready to eat).
+
+HERO — CRUMBLED / TORN BEEF CHUNKS (the signature plated bulgogi appearance):
+- The plate is generously filled (~80% area) with MANY SMALL CRUMBLED / TORN BEEF PIECES scattered
+  messy and natural — each piece is a small irregular torn chunk ~2-4cm long, irregular organic
+  shapes (NOT clean rectangular slices, NOT perfectly fanned strips, NOT large intact slices —
+  the beef has been cooked + naturally torn into bite-size pieces by stirring in the marinade).
+- Dark cooked brown beef color (#5C3A26 to #4A2C1A range, deeper brown from soy-marinade caramelization).
+- Each beef chunk is GLAZED with a glossy sticky brown soy-pear-garlic marinade coating (간장+배+
+  마늘+설탕+참기름 양념 glaze), thin coating sheen on each piece — NOT a pool of liquid marinade
+  underneath, NOT a broth bath, NOT a flowing sauce. The marinade is REDUCED to a sticky glaze.
+- Some beef chunks show subtle marbled fat hints (slim pale white veins on edges) where natural,
+  but mostly the beef appears as a unified caramelized brown crumbled-mess.
+
+VEGETABLES — onion only (simple, mixed in with beef):
+- 5-8 THIN WHITE ONION SLICES (양파, thin half-moon strips ~3-5cm long × ~0.5-1cm wide, slightly
+  translucent pale white-gold caramelized, scattered AND mixed in among the crumbled beef pieces —
+  some visible at the top of the pile, some half-buried in beef).
+- NO carrot, NO mushroom, NO scallion segments, NO dangmyeon glass noodles, NO bell pepper — just
+  onion as the only mixed-in vegetable (simple home-style bulgogi).
+
+GARNISH on top (signature):
+- DOMINANT CHOPPED GREEN SCALLION ROUNDS (송송 sliced 대파, MANY small bright green disc-shaped
+  rounds ~1-2mm thick × 5-8mm diameter, heavily scattered all over the top of the beef pile — at
+  least 15-20 scallion rounds clearly visible, the HERO garnish that pops bright green against the
+  dark brown beef).
+- a few WHITE SESAME SEEDS (깨) sprinkled lightly as MINOR accent (5-10 visible, NOT dominant —
+  scallion rounds are the hero garnish, sesame is just a small accent).
+
+Single subtle ambient ellipse shadow under the gray ceramic plate.
 
 %s
 
-Important also: this is Korean Kimchi Jjigae (kimchi stew in ttukbaegi stone pot),
-NOT a Chinese hot pot (huoguo, which is a wide shallow pan with raw ingredients around),
-NOT Sichuan mala soup, NOT Japanese nabe, NOT shabu-shabu.
-The black ttukbaegi pot (rounded, thick rim, individual portion size) is the ESSENTIAL identifying feature.
-The broth is bright vibrant red-orange (kimchi + gochugaru), NOT brown soy-based dashi,
-NOT clear Sichuan mala oil layer. NO raw thin-sliced meat slices around the pot,
-NO Chinese mala peppercorns floating, NO chopstick-held raw vegetables on the side.""",
+Important also: this is Korean Bulgogi (불고기, plated home-style — thin marinated beef stir-cooked
+with onions and served plated, garnished with chopped scallion). The ESSENTIAL signature features
+are: (a) GRAY-CHARCOAL CERAMIC ROUND PLATE (NOT cast-iron pan, NOT bowl, NOT hot pot, NOT grill
+grate) + (b) CRUMBLED/TORN small beef chunks scattered messy (NOT fanned thin slices, NOT large
+intact slices) + (c) GLOSSY STICKY BROWN soy-pear-garlic marinade GLAZE coating each beef chunk
+(NOT a pooling liquid marinade, NOT a broth) + (d) ONION ONLY as mixed vegetable (translucent
+half-moon slices) + (e) DOMINANT chopped scallion rounds garnish (15-20+ bright green rounds, hero
+garnish) + a few sesame seeds (minor accent).
+
+CRITICAL — F-12 갈비구이 차별화 (이 요리는 갈비 NOT 갈비):
+- NO BONE-IN LA CUT — bulgogi uses BONELESS thin-sliced beef, ABSOLUTELY NO visible white rib bone,
+  NO bone cross-section discs, NO single long bone. Any rib bone = immediate FAIL.
+- NOT GRILLED ON METAL GRATE — bulgogi is stir-cooked and plated, NOT on a wire mesh grill grate.
+- NOT FANNED STRIPS — bulgogi has CRUMBLED/TORN small chunks, NOT large thin slices arranged
+  parallel or fanned. This is the home-style stir-cooked plated bulgogi, NOT a presentation cut.
+
+NOT a CAST-IRON PAN COOKING SCENE — this is the FINISHED PLATED DISH ready to eat on a serving
+plate, NOT cooking-in-progress in a pan.
+NOT Japanese SUKIYAKI (deeper broth bath + raw egg dipping bowl + tofu cubes + napa cabbage).
+NOT Japanese SHABU-SHABU (clear simmering broth pot + dipping sauce setup).
+NOT Japanese YAKINIKU (grilled boneless thin beef on tabletop grill grate with dipping sauce).
+NOT Chinese BEEF STIR-FRY (wok hei char + thick cornstarch sauce + Chinese cabbage / bok choy /
+bean sprouts vegetable set + chopsticks).
+NOT American BBQ RIBS (red BBQ sauce + thick slab + bone).
+NOT Korean Kimchi Jjigae F-09 deprecated (red broth + ttukbaegi + 두부 cubes).
+
+The combination of GRAY ceramic plate + CRUMBLED brown beef chunks (messy scattered) + STICKY
+brown soy-pear-garlic GLAZE coating + ONION ONLY translucent slices mixed in + DOMINANT chopped
+scallion rounds garnish (bright green hero, 15-20+ visible) + a few sesame seeds is the
+unmistakable Korean plated home-style bulgogi signature.""",
     },
     {
         "id": "F-10",
@@ -544,8 +634,8 @@ not the score marks. Score marks are deprioritized to optional for R7 v7.)""",
 
 
 def build_prompt(body: str) -> str:
-    """body의 %s 자리에 STYLE_SUFFIX_FOOD를 끼워 넣어 최종 prompt 완성."""
-    return body % STYLE_SUFFIX_FOOD
+    """body의 첫 %s를 STYLE_SUFFIX_FOOD로 교체. body의 다른 %는 보존."""
+    return body.replace("%s", STYLE_SUFFIX_FOOD, 1)
 
 
 def main() -> None:

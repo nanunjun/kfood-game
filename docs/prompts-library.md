@@ -1,12 +1,28 @@
 # Prompts Library — K-Food Master MVP
 
-> 버전: **v1.13 (2026-05-28, M1 환경 BG-01~05 v4 image edit — v1.2 base + 지붕만 교체, frontal view, 5가게 구조 일관성, gpt-image-1 edit API 도입) — supersedes v1.12**
+> 버전: **v1.21 (2026-05-31, M1 후반 reaction 6컷 v3 image edit — CH-02/CH-03 base + 코믹 amplification 3축 [눈/입/body+icons], 사용자 verbatim "reaction을 코믹하게 만드는게 어때? 지금 reaction 이미지는 너무 심심해" trigger, v2 family IP consistency LOCK 유지 + 표정 amplification 강화 — Korean variety show / K-drama exaggerated peak reaction 톤) — supersedes v1.20**
 > 작성자: art-director
-> 상위 문서: [`art-style-guide.md` v1.2](art-style-guide.md), [`ai-session-kit.md` v1.2](ai-session-kit.md), [`art-anchor-rubric.md` v1.13](art-anchor-rubric.md), [`decisions.md` ADR-003](decisions.md#adr-003-mvp-first-전환--34개월-출시--점진-확대-supersedes-adr-002), [`decisions.md` ADR-005](decisions.md#adr-005), [`art-workload-estimate.md` v4.1](art-workload-estimate.md)
-> 본 문서 범위: Week 1 anchor lock 10장 (캐릭터 5 v1.2 lock candidate + **환경 5 v4 BG-01~05 image edit — v1.2 base PNG 입력 + 지붕만 교체, frontal view, 5가게 구조 일관성**) + **M1 sprint 음식 12 anchor (§5.1 full prompts, v1.3 신설~v1.10 R7 F-12 plated white plate)**. cut anim / 양친 reaction 6컷 / 재료 / UI / VFX는 M1 후반 / M2 (§5.5~§5.7 placeholder).
-> 도구: **ChatGPT (GPT-4o image / DALL-E)** 영구 lock. **환경 5장 v4부터는 gpt-image-1 image edit API** (`client.images.edit(model="gpt-image-1", image=...)`) 도입 — prompt-only generation으로 v1.2 base 정확 재현 불가능했던 한계 극복.
+> 상위 문서: [`art-style-guide.md` v1.2](art-style-guide.md), [`ai-session-kit.md` v1.2](ai-session-kit.md), [`art-anchor-rubric.md` v1.21](art-anchor-rubric.md), [`decisions.md` ADR-003](decisions.md#adr-003-mvp-first-전환--34개월-출시--점진-확대-supersedes-adr-002), [`decisions.md` ADR-005](decisions.md#adr-005), [`art-workload-estimate.md` v4.1](art-workload-estimate.md)
+> 본 문서 범위: Week 1 anchor lock 10장 (캐릭터 5 v1.2 lock candidate + **환경 5 v4 BG-01~05 image edit — v1.2 base PNG 입력 + 지붕만 교체, frontal view, 5가게 구조 일관성**) + **M1 sprint 음식 12 anchor (§5.2 full prompts, v1.3 신설~v1.10 R7, v1.17 F-02/F-09 mvp v2.2 sync)** + **M1 후반 sprint 칼/도마 base + cut style 6종 (§5.5 full prompts, v1.14 신설, ADR-005 Stage 2A rhythm tap prerequisite)** + **M1 후반 sprint 음식 12 × hero ingredient whole 12장 (§5.6 full prompts, v1.15 신설, v1.17 ING-02/ING-09 mvp v2.2 sync)** + **M1 후반 sprint 양친 reaction 6컷 (§5.7 v1.21 v3 image edit — CH-02/CH-03 base + 표정만 변경 + 코믹 amplification 3축 [눈/입/body+icons], family IP consistency lock v2 유지, supersedes v1.18 v2 점잖은 톤)** + **M1 후반 sprint 음식 12 × hero ingredient CUT 12장 (§5.10 full prompts, v1.19 신설, ADR-005 Stage 2B/2C "after"-cut pair, 사용자 verbatim "손질하고 나서의 ingredient 이미지" trigger)** + **M1 후반 sprint 조리도구 12종 (§5.11 full prompts, v1.20 신설, 각각 별도 sprite + 애니메이션 prerequisite, Cookingo: Perfect Meal reference, ADR-005 Stage 2B/2C 조리 mechanic prerequisite)**. UI / VFX는 M2 (§5.8 placeholder).
+> 도구: **ChatGPT (GPT-4o image / DALL-E)** 영구 lock. **환경 5장 v4 + 양친 reaction 6컷 v2는 gpt-image-1 image edit API** (`client.images.edit(model="gpt-image-1", image=...)`) 도입 — prompt-only generation으로 base 정확 재현 불가능했던 한계 극복 (환경 = v1.2 base 카게 구조 재현 / reaction = CH-02/CH-03 family IP 재현). **cut anchor 7장 + ingredient whole 12장 + ingredient cut 12장 + 조리도구 12종은 gpt-image-1 medium prompt-only generation** (cut shape / whole ingredient / cut 결과 / tool silhouette 식별이 우선이라 image edit 불필요, fresh generation으로 충분 — 각 도구는 단독 sprite이라 base reference 없음).
 
-> **v1.13 변경 (2026-05-28, M1 환경 BG-01~05 v4 image edit — v1.2 base + 지붕만 교체 + frontal view + 5가게 구조 일관성, supersedes v1.12)**: 사용자가 v1.12 v3 결과 (5장 batch generation, slight 7/8 perspective, 5가게 구조 inconsistent across shops) 시각 확인 후 폐기 + 새 접근 명시. 사용자 verbatim "**각 가겍의 디자인이 조금씩 다름...지붕, 기둥, 이런것들은 똑같아야 하지 않나.... 원래 버젼에서 지붕만 바꾸는게 어떨까...그리고 정면이 더 낫지 않나...**". main thread 해석 = 3건 fix: (1) **5가게 구조 정확 일관성** — 지붕/기둥/카운터/frame 5가게 모두 정확히 동일, 카테고리별 display goods + signage icon만 다름 (v3는 prompt-only batch generation으로 carpenter 작업이 5가게마다 다르게 생성됨) / (2) **v1.2 base 정확 유지 + 지붕만 교체** — prompt-only generation은 v1.2 정확 재현 어려움, **gpt-image-1 image edit API**로 base image의 천막 부분만 교체 (다른 모든 요소 유지) / (3) **frontal view (frontal elevation)** — slight 7/8 perspective 폐기, v1.2 base가 frontal이었음. **§2.2 STYLE_SUFFIX_BG 무변경** (v3 STYLE_SUFFIX_BG_V3 유지) — v4는 STYLE_SUFFIX_BG suffix를 사용하지 않고 **image edit API용 별도 COMMON_EDIT_PROMPT**를 사용 (지붕 교체 단일 fix prompt). **§4 BG-01~05 본문 전면 재작성** — v3 prompt-only generation 본문은 §4.8 v1.12 v3 archive로 deprecated (사유: 5가게 구조 inconsistent + slight 7/8 perspective + 사용자 v3 폐기 verbatim). v4 본문은 image edit API approach 명시 (base image 경로 `assets-raw/week1-anchors/BG-XX_<name>_v2.png` + 공통 fix prompt + shop-specific 카테고리 명시 한 줄). **새 driver script `tools/edit_bg_anchors_v4.py` 신설** — `client.images.edit(model="gpt-image-1", image=open(base, "rb"), prompt=COMMON_EDIT_PROMPT + category, size="1024x1024", quality="medium", n=1)`. base image dimensions 사전 검증 + (필요 시) gpt-image-1 edit supported size (1024x1024 / 1536x1024 / 1024x1536)로 PIL resize fallback 포함. §0 anchor 표 BG-01~05 row v4 status 갱신 (v1.12 v3 deprecated → v4 pending image edit). 음식 12장 F-01~F-12 본문 무변경 (F-12는 v1.10 R7 plated white plate LOCK candidate 유지). 캐릭터 5장 CH-01~05 본문 무변경 (v1.2 lock candidate 유지).
+> **v1.21 변경 (2026-05-31, M1 후반 reaction 6컷 v3 image edit — CH-02/CH-03 base + 표정 코믹 amplification 3축, 사용자 v2 "심심함" 피드백 trigger, supersedes v1.20 §5.7 reaction 부분만 — §5.11 조리도구 등 다른 항목 무변경)**: 사용자가 v2 (image edit, family IP consistency LOCK) 결과 시각 확인 후 verbatim **"reaction을 코믹하게 만드는게 어때? 지금 reaction 이미지는 너무 심심해"** 피드백 raise. main thread 해석: v2는 family IP consistency 우수하여 LOCK 유지하나, 표정 amplification 부족 → v2 subtle smile / big smile / single-double thumb-up gradient는 점잖아서 player가 ★1/★2/★3 차이를 즉시 체감 못함, "Korean variety show / K-drama exaggerated reaction" 톤 부재. **v2 LOCK 유지 사항** = family IP consistency (어머니 round-bun simple / 아버지 darker salt-and-pepper + darker teal-green) + bust-up crop + Cool Sage `#C8D5C0` bg + chibi mascot proportions + image edit API 패턴 (CH-02/CH-03 base 직접 입력). **v3 추가 변경 (코믹 amplification 3축)**: (a) **눈 exaggeration** — ★1 정상 dot + 한 눈 up-left 사고하는 gaze + 한 eyebrow raised asymmetric / ★2 closed crescent ^_^ 더 pronounced / ★3 GIANT closed-arc ^___^ + optional 별 sparkle ✨ accent 외부 floating (NOT 안면 내부 anime shoujo pupils) / (b) **입 exaggeration** — ★1 wavy thinking line "~" 또는 narrow tight-lipped smirk / ★2 medium open smile 또는 O-shape "오~" / ★3 GIANT wide open with teeth (white flat fill) + optional tongue hint / (c) **body + emotion icons** — ★1 chin hand 사고 pose + question mark icon "?" (mother) 또는 sweat drop teardrop (father) + optional "..." 또는 thinking motion lines / ★2 한 손 cheek + 1-2 sparkle (mother) 또는 **DOUBLE thumb-up chest level** + 1-2 sparkle (father, v3 KEY CHANGE: v2 single → v3 double) / ★3 양손 raised cheek/over head + **3-5 hearts (mother)** + 3-5 sparkles + 2-3 motion lines + optional 1-2 star (mother) / **양손 fist 또는 fist+thumb-up over head** (father, ★2 chest level보다 더 높음) + **3-5 stars (father, mother와 차별)** + 4-6 sparkles + 3-4 motion lines. **어머니 vs 아버지 톤 차이 유지 + 강화**: 어머니 = warm motherly + heart icons dominant cluster (★3 explosive) / 아버지 = reserved masculine + star icons dominant cluster + raised fists (★3 explosive). v1.21 = (a) **§5.7 본문 전면 재작성 v3** (v1.18 v2 본문은 §5.7.archive v2 deprecated 절로 이동 보존; v1.16 v1 prompt-only archive는 §5.7.archive v1으로 그대로 유지). v3 approach = `client.images.edit(model="gpt-image-1", image=open(base, "rb"), prompt=COMMON_FRAME_V3 + expression_prompt_V3, size="1024x1024", quality="medium", n=1)` (v2와 API 패턴 동일). COMMON_FRAME_V3 핵심 추가 강제 사항 = (i) **TONE TARGET 절 신설** — "cartoon-style EXAGGERATED reaction faces in the spirit of Korean variety show or K-drama, ★1/★2/★3 = mild thinking → clearly happy → EXPLOSIVE excitement, NOT subtle progression" / (ii) **CRITICAL BOUNDARIES 5건** = sad/sleeping/crying 회피 (기존 v2 유지) + **anime girl big sparkly pupils 회피 새로 추가** (sparkle accent는 SEPARATE floating geometric icon OUTSIDE the eye, NOT enlarged anime shoujo pupils 내부) + **over-exaggerated goofy 회피 새로 추가** (eyes bulging out / tongue lolling 5x / x-eyes / swirl-eyes / Looney Tunes 톤 OUT — Royal Match + K-drama 톤 유지) + Japanese kimono/Cookie Run/3D/베이지 회피 (기존 v2 유지) + 다중 character 회피 (기존 v2 유지) + text legible 회피 (기존 v2 유지 + emotion icons는 순수 visual geometric symbols 명시). (b) **§0 anchor 표 R-01~R-06 row 6장 status 갱신** (v1.18 v2 image edit LOCK 2026-05-30 → v3 image edit pending 2026-05-31, v2 status는 family IP consistency PASS 하나 표정 amplification CONDITIONAL이라는 사유 명시). (c) **새 driver `tools/edit_reaction_anchors_v3.py` 신설** — `tools/edit_reaction_anchors_v2.py` 기반 (image edit API + base image dimensions 검증 + PIL resize fallback + b64_json 응답 처리 그대로). 구조 = COMMON_FRAME_V3 상수 inline (v2 frame + TONE TARGET + 추가 CRITICAL BOUNDARIES) / REACTIONS list 6개 inline (id / name / character / star / base / expression_prompt_v3 — 각 ★N에 EYES/MOUTH/BODY+ICONS 3축 명세) / base image 사전 검증 / CLI args (`--only` `--version` `--quality` `--out-dir`) / gpt-image-1 medium 1024×1024 default, version v3 default. v2 driver (`tools/edit_reaction_anchors_v2.py`)는 보존 (git history). v1/v2 output (R-XX_<character>_star<N>_v1.png / _v2.png 12장)도 보존 — v3와 공존 (R-XX_<character>_star<N>_v3.png), 사용자 직접 비교 가능. main thread 실행 명령: (1) test (★3 peak 강도 우선 확인 권장): `py tools/edit_reaction_anchors_v3.py --only R-03,R-06 --quality medium` (2장 × $0.042 ≈ $0.08, ~1분) → 시각 확인 후 (2) 6장 batch: `py tools/edit_reaction_anchors_v3.py --quality medium` (6장 × $0.042 ≈ $0.25, ~2-3분, 출력 `assets-raw/reaction_anchors_m1/R-XX_<character>_star<N>_v3.png`). 또는 어머니만: `--only R-01,R-02,R-03` / 아버지만: `--only R-04,R-05,R-06`. v3 risk top 3 = (a) **anime girl big sparkly eyes 오해 ~35%** (★3 sparkle eyes alternative 옵션을 ChatGPT가 enlarged shoujo pupils 내부 sparkle로 해석할 수 있음 → COMMON_FRAME_V3 "SEPARATE floating geometric icon OUTSIDE the eye, NOT enlarged anime shoujo sparkly pupils" 명시 강제로 회피) / (b) **sad/crying 오해 ~25%** (★1 question mark + sweat drop 같은 comic 사고 icon이 sad/distress로 해석될 risk → COMMON_FRAME_V3 "MILD POSITIVE evaluation, NOT sad / NOT distress / NOT embarrassment, comic anime/manga thinking symbol" 명시 강제) / (c) **over-exaggeration goofy ~30%** (★3 EXPLOSIVE peak이 Looney Tunes goofy / x-eyes / tongue lolling 5x로 폭주할 risk → COMMON_FRAME_V3 "Royal Match aesthetic + K-drama tone, NOT slapstick" + boundary list explicit 강제). **R3 fallback (사용자 ChatGPT 웹 UI 수동 chain-of-references 워크플로)**: v3 결과가 여전히 amplification 부족 (★3가 점잖) 또는 over-shoot (goofy)이면 사용자 수동 (a) CH-02 upload + R-02 v3 generate → 어머니 seed / (b) seed + R-01/R-03 (★3 explicit "WAY MORE EXPRESSIVE" 추가) / (c) 새 세션 + CH-03 + R-05 v3 generate → 아버지 seed / (d) seed + R-04/R-06 (★3 "BIGGER FIST RAISE + MORE STARS" 추가). 음식 12장 / 환경 5장 v4 / cut anchor 7장 / ingredient whole 12장 / ingredient cut 12장 / 조리도구 12종 본문 무변경. 캐릭터 5장 본문 무변경.
+
+> **v1.20 변경 (2026-05-31, M1 후반 art sprint 5번째 — 조리도구 12종 anchor prompt set 신설 §5.11 full prompts, 사용자 verbatim trigger, supersedes v1.19)**: 사용자 verbatim **"조리도구 디자인은 안하나? 냄비, 가스레인지, 국자 등등 각기 따로 해서 움직임을 나중에 만들어야 할거 같음. Cookingo 게임의 요리방법이 내가 구현하고 싶은거와 상당히 비슷해"** trigger로 M1 후반 art sprint 5번째 진입. **Cookingo: Perfect Meal (relaxing cooking game, Asian mobile 2025-2026)** reference — slicing/mixing/whisking/garnishing 도구별 specific action + 정확도 매칭 게임 메커니즘과 ADR-005 4-stage rhythm tap의 도구별 action mapping 정합. cut anchor 7 / ingredient whole 12 / ingredient cut 12장은 모두 도마+칼 중심 (CUT mechanic 1종) — 본 sprint는 **나머지 11종 mechanic 도구 + 1 base substrate** = **총 12 도구 sprite 각각 별도 생성** (애니메이션 prerequisite — 각 도구가 단독 sprite여야 godot-dev가 AnimationPlayer로 위치 이동/flip/scoop/mix 등 motion 독립 구현 가능). 12 도구 list (음식 매핑): TOOL-01 가스레인지 (base, all hot 조리) / TOOL-02 냄비 (boil, F-01/F-02/F-10) / TOOL-03 후라이팬 (stir-fry/pan-fry, F-05/F-07/F-09) / TOOL-04 깊은 튀김냄비 (deep-fry, F-06) / TOOL-05 그릴/석쇠 (grill, F-12) / TOOL-06 국자 (scoop broth, F-01/F-02/F-10) / TOOL-07 주걱 wok spatula (stir-fry stirring, F-05/F-09/F-11) / TOOL-08 뒤집개 turner (flip pancake, F-07) / TOOL-09 집게 tongs (grip, F-06/F-12) / TOOL-10 김발 bamboo mat (roll kimbap, F-03) / TOOL-11 mixing 큰 그릇 (mix bibimbap, F-08) / TOOL-12 한식 가위 (cut grilled meat, F-12 eating-style). v1.20 = (a) **§5.11 신설** (조리도구 12종 full prompts, 각 도구 prompt = 단독 sprite + 도구 형태 정확 + 한식 정통 + 일본/중국/서구 cross-cultural negative + 사용 hint visual + 7/8 perspective view [또는 김발/그릴 등 평면 도구 top-down]) / (b) **§2.5에 STYLE_SUFFIX_TOOL 명시** = 단독 sprite isolation + Cool Sage `#C8D5C0` bg + 7/8 perspective + Cookingo-inspired simple geometric flat clean + 한식 homestyle 가정용 (industrial X) + 일본/중국/서구 cooking tool 회피 negative + 다른 도구/food/character/hand 누수 0건 / (c) **§0 anchor 표 TOOL-01~12 row 12장 추가** (pending M1 후반 5번째 sprint) / (d) **새 driver script `tools/gen_tool_anchors_m1.py` 신설** — `tools/gen_cut_anchors_m1.py` template 기반 + TOOLS list 12개 inline (id=TOOL-XX / name=tool_slug / action=mechanic / mapping=음식 ID / body) + STYLE_SUFFIX_TOOL inline append via `.replace("%s", STYLE_SUFFIX_TOOL, 1)` (gen_food/gen_ingredient에서 발생했던 `body % SUFFIX` Python old-style ValueError fix 적용) + CLI args (`--only` `--version` `--quality` `--out-dir`) + gpt-image-1 medium 1024×1024 default + 출력 default `assets-raw/tool_anchors_m1/`. 12장 prompt body 핵심 (각 도구 한 줄 시그니처): TOOL-01 가스레인지 = 한식 가정 4구 silver-gray rectangular stovetop + 4 black 그레이트 grid + 4 front knobs + 1 front-left active blue flame ring + NOT 일본 induction / NOT 미국 electric coil / NOT Chinese restaurant wok burner / TOOL-02 냄비 = 한식 양은냄비 silver-gray rounded cylindrical pot 22-25cm × 12-15cm + 2 ear handles opposite sides + open top + 1-2 white steam swirl lines + NOT 일본 tetsunabe black cast iron / NOT 일본 donabe clay / NOT Chinese wok / NOT Western saucepan single side handle / TOOL-03 후라이팬 = 한식 가정 silver-gray shallow round pan 26-28cm × 4-5cm + single long straight side handle (matte black or wood) + NOT Western Teflon black-coated / NOT Chinese wok round-bottom / NOT Japanese tamagoyaki rectangular / NOT cast iron skillet / TOOL-04 깊은 튀김냄비 = 한식 가정 silver-gray DEEPER cylindrical pot 24-26cm × **18-22cm tall** (vs TOOL-02 12-15cm) + 2 ear handles + open top + golden 60-70% oil pool inside + optional subtle heat wave + NOT 일본 tetsunabe / NOT 일본 donabe / NOT Chinese wok / NOT electric appliance (no buttons/cord) / TOOL-05 그릴/석쇠 = round metallic wire mesh grill grate 28-30cm diameter + 8×8 cross-hatched silver-gray wires + thicker outer rim ring + optional subtle red-orange hot coal glow underneath + NOT solid flat plate / NOT 일본 yakitori 사각 / NOT 미국 BBQ 사각 / NOT cast iron grill pan solid plate (F-12 갈비 anchor의 wire mesh와 cross-asset consistency) / TOOL-06 국자 = 한식 가정 silver-gray single-piece ladle + deep round half-sphere bowl 8-10cm × 5-6cm deep + long straight slim handle 25-28cm + small hanging hole top + 30deg angled + NOT wooden handle Western / NOT 일본 otama / NOT Chinese soup spoon / TOOL-07 주걱 wok spatula = wide flat angled silver-gray metal paddle 8-10cm × 10-12cm × ~20deg angle + long warm brown wood handle 25-30cm + NOT TOOL-08 turner narrower / NOT Chinese wok chuan longer curved / NOT 일본 shamoji wood-only / NOT silicone scraper / TOOL-08 뒤집개 turner = NARROWER LONGER VERY THIN silver-gray metal paddle 6-8cm × 12-14cm × 0.2cm + SHARP front edge + 2-3 optional drainage slots + matte black or wood handle + ~10deg angle (less than TOOL-07) + optional subtle flip motion line + NOT TOOL-07 wider / NOT fish spatula slotted flexible / NOT 미국 pizza peel / TOOL-09 집게 tongs = 한식 가정 silver-gray scissor-style two-piece tool + spring-loaded hinge + 2 long arms 25-28cm + 2 slightly-flared gripping ends + slightly-open tips + optional matte black rubber grip coating + NOT TOOL-12 scissors blades / NOT chopsticks unconnected / NOT pliers gear teeth / NOT tweezers small / TOOL-10 김발 bamboo mat = light natural bamboo tan flat rectangular mat 24-26cm × 22-24cm + 20-25 parallel horizontal bamboo strips + 2 white cotton string weaving lines perpendicular + near top-down view + NOT 일본 makisu colored decorative thread / NOT Chinese bamboo steamer 3D basket / NOT wooden cutting board solid slab / NOT yoga mat rubber / TOOL-11 mixing 큰 그릇 = 한식 가정 silver-gray stainless steel large mixing bowl 28-32cm × 12-14cm wide deep + flared top opening + NO handles + NOT TOOL-02 cooking pot 2 ear handles / NOT 한식 dolsot stone bowl black / NOT 일본 donburi small ceramic / NOT colander holes / TOOL-12 한식 가위 = 한식 BBQ kitchen scissors total 22-25cm + 2 long sharp silver-gray metal blades 10-12cm + 2 looped warm brown wood/plastic finger handles 5-6cm rings + central pivot screw + slightly-closed tips + NOT 미국 office scissors smaller plastic / NOT poultry shears curved notch / NOT hair scissors thin slim / NOT kids craft rounded tips / NOT TOOL-09 tongs no blades. main thread 실행 명령: (1) test: `py tools/gen_tool_anchors_m1.py --only TOOL-01 --quality medium` (1장 × $0.042 ≈ $0.05, ~30초) → 시각 확인 후 (2) 12장 batch: `py tools/gen_tool_anchors_m1.py --quality medium` (12장 × $0.042 ≈ $0.50, ~5분, 출력 `assets-raw/tool_anchors_m1/TOOL-XX_<tool_slug>_v1.png`). 음식 12 / 환경 5 v4 / 캐릭터 5 / cut anchor 7 / ingredient whole 12 / reaction 6 / ingredient cut 12 본문 무변경. ChatGPT 약점 risk top 5 신설 (TOOL-02 냄비 → 일본 tetsunabe 검정 cast iron 누수 ~50% [ChatGPT default가 deeper iron pot으로 인식] / TOOL-03 후라이팬 → Western Teflon 검정 non-stick coating 누수 ~50% [silver-gray bare stainless 강제 필요] / TOOL-05 그릴/석쇠 → 솔리드 cast iron grill pan 누수 ~40% [wire MESH gap visible 강제] / TOOL-10 김발 → 일본 makisu pink/colored thread 누수 ~40% [plain white cotton 강제] / TOOL-12 한식 가위 → Western office scissors smaller plastic 누수 ~40% [robust LARGE size + warm wood handles 강제]). **ADR-005 조리법-도구 매핑 game-designer 후속 sync 필요 사항** = (a) 각 음식 F-XX의 정확한 도구 사용 sequence 확정 (예: F-12 갈비 = TOOL-01 stovetop 위 TOOL-05 grill 올림 + TOOL-09 tongs로 굽기 진행 + TOOL-12 scissors로 가위 cut 후 eating-style) / (b) Stage 2B 조리 mechanic의 도구별 rhythm tap BPM 매핑 (boil pot stirring BPM / pan-fry sizzle BPM / deep-fry timing BPM / grill flip BPM 등) / (c) 도구 transition timing (가스 stovetop 가열 → 냄비 올림 → 끓이기 시작) / (d) UI에서 도구 sprite 호출 layer (foreground 도구 활성 동안 background 도구는 fade 또는 hide).
+
+> **v1.19 변경 (2026-05-30, M1 후반 art sprint 4번째 — 음식 12 × hero ingredient CUT 12장 prompt set 신설 §5.10 full prompts, ADR-005 Stage 2B/2C "after"-cut pair, supersedes v1.18)**: 사용자 verbatim **"손질하고 나서의 ingredient 이미지가 있어야 할 거 같고"** trigger로 M1 후반 art sprint 4번째 진입. ingredient whole 12장 (§5.6 ING-01~12)은 자르기 전 "before" state이고, cut anchor 7장 (§5.5 CUT-00~06)은 generic cut style 시연. 두 anchor 사이 누락된 asset = 각 음식의 hero ingredient를 그 음식 특유의 cut 결과로 specific 시각화한 anchor. 음식별 cut된 결과는 generic CUT-01~06 anchor와 미세 차이 있음 — 예: F-02 애호박은 잔치국수용 thin disc 5-8개 (generic CUT-04 통썰기 anchor의 김밥 cylinder cross-section과 다름) / F-04 어묵은 떡볶이용 medium 6-8cm oval 5-7개 (generic CUT-03 어슷썰기 anchor의 어묵+대파 mixed cluster와 다름) / F-07 daepa는 pajeon용 large 5-7cm oval 5-7개 (generic CUT-03과 mixed) — 음식 시그니처 강화 가치 있음. **옵션 C 채택** (12장 specific 모두 생성, F-11 carrot은 F-08과 동일 ingredient이나 slight visual variation으로 별도 생성, game-designer foods CSV `prep_*` 후속 확정 시 F-08 재사용 결정되면 archive). v1.19 = (a) **§5.10 신설** (ingredient cut 12장 full prompts, §5.6 ingredient whole template 기반 + STYLE_SUFFIX_INGREDIENT_CUT 변형 [whole → cut된 결과 cluster placement 절 변경, 다른 통일 무변경]) / (b) **§0 anchor 표 ICUT-01~12 row 12장 추가** (pending M1 후반 4번째 sprint) / (c) **새 driver script `tools/gen_ingredient_cut_anchors_m1.py` 신설** — `tools/gen_ingredient_anchors_m1.py` template 기반 + INGREDIENT_CUTS list 12개 inline (id=food_id / name=ingredient_cut_slug / food=food_name_en / cut_style=cut_style_id / body) + STYLE_SUFFIX_INGREDIENT_CUT inline append via `.replace("%s", STYLE_SUFFIX_INGREDIENT_CUT, 1)` (gen_food/gen_ingredient에서 발생했던 `body % SUFFIX` Python old-style ValueError fix 적용) + CLI args (`--only` `--version` `--quality` `--out-dir`) + gpt-image-1 medium 1024×1024 default + 출력 default `assets-raw/ingredient_cut_anchors_m1/`. 12장 specific 본문 핵심: F-01 송송 small green discs 20-30개 / F-02 통썰기 round zucchini discs 5-8개 (bright green rim + pale flesh + minimal seed dots) / F-03 채썰기 yellow matchstick 15-20개 (8-10cm kimbap-length) / F-04 어슷썰기 golden-brown oval 5-7개 (6-8cm medium) / F-05 다지기 fine red kimchi bits / F-06 cheese whole (no cut, ING-06과 동일 image) / F-07 어슷썰기 large bright green daepa oval 5-7개 (5-7cm × 1.5-2.5cm dominant green, F-04와 시각 분리) / F-08 채썰기 orange matchstick 15-20개 (5-7cm bibimbap-length) / F-09 marinade coated brown glaze (no cut, F-12 갈비 차별화 CRITICAL: NO bone visible NOT grilled char marks) / F-10 broken cloud-like white curds (no cut, fluffy irregular fragments) / F-11 채썰기 orange matchstick 15-20개 (6-8cm slight diagonal pile, F-08과 시각 variation) / F-12 다지기 fine yellowish-white garlic granules 1-3mm. main thread 실행 명령: (1) test: `py tools/gen_ingredient_cut_anchors_m1.py --only F-01 --quality medium` (1장 × $0.042 ≈ $0.05, ~30초) → 시각 확인 후 (2) 12장 batch: `py tools/gen_ingredient_cut_anchors_m1.py --quality medium` (12장 × $0.042 ≈ $0.50, ~4-5분, 출력 `assets-raw/ingredient_cut_anchors_m1/F-XX_<ingredient_cut_slug>_v1.png`). 음식 12 / 환경 5 v4 / 캐릭터 5 / cut anchor 7 / ingredient whole 12 / reaction 6 본문 무변경. ChatGPT 약점 risk top 5 신설 (F-02 zucchini → cucumber 누수 ~50% [더 darker skin + larger seed cavity으로 ChatGPT default 추론] / F-04 어묵 oval → Japanese naruto pink spiral cross-section 누수 ~50% / F-07 daepa oval → F-04 어묵 oval로 색 누수 ~40% [golden-brown 누수, 강제 dominant green] / F-09 marinade beef → raw red 또는 cooked char marks 누수 ~40% [brown glaze coating state 강제] / F-10 broken tofu → firm cube 누수 ~40% [organic irregular fragments 강제]).
+
+> **v1.18 변경 (2026-05-30, M1 후반 reaction 6컷 v2 image edit — CH-02/CH-03 base + 표정만 변경, 사용자 R1 v1 피드백 2건 fix, supersedes v1.17)** (archived): 사용자가 v1 (`tools/gen_reaction_anchors_m1.py` prompt-only generation, gpt-image-1 medium 1024×1024 6장 batch) 결과 시각 확인 후 verbatim **"reaction 에서 R-01, R-03가 원래 이미지와 좀 다름, 그리고, R-04, R-05, R-06가 이미지가 좀 일관성이 없음"** 2건 피드백 raise. main thread 시각 분석으로 (a) **R-01/R-03 어머니 hair shape mismatch**: v1에서 round-bun **+ side-puff** variant로 생성, CH-02 base의 round-bun **simple**과 다름 + (b) **R-04 vs R-05/R-06 아버지 family IP inconsistency**: R-04는 CH-03 base의 darker salt-and-pepper hair + darker teal-green shirt에 일치, R-05/R-06는 lighter hair tone + lighter shirt tone으로 셋 사이 family IP inconsistency. prompt-only approach가 base의 family IP를 정확 재현 못함을 확인 → **gpt-image-1 image edit API** (BG sprint v4에서 효과 입증된 패턴) 도입. v1.18 = **§5.7 본문 전면 재작성** (v1.16 prompt-only 본문은 §5.7.archive v1 deprecated 절로 이동 보존). v2 approach = `client.images.edit(model="gpt-image-1", image=open(base, "rb"), prompt=COMMON_FRAME + expression_prompt, size="1024x1024", quality="medium", n=1)`로 (a) CH-02_mother.png base 직접 입력 (R-01/R-02/R-03) / (b) CH-03_father.png base 직접 입력 (R-04/R-05/R-06) + COMMON_FRAME (family IP IDENTICAL 강제 + bust-up crop + Cool Sage bg + 표정만 변경 명시 + sad/sleeping/Japanese kimono/anime girl 회피 negative) + 6 expression_prompt (★1/★2/★3 어머니 + 아버지 각각 specific). COMMON_FRAME 핵심 강제 사항 = 어머니 hair = round-bun **simple** (side-puff 추가 명시적 회피) / 아버지 hair tone (salt-and-pepper darker) + shirt tone (teal-green darker) base와 EXACTLY 일치 (NOT lighter 명시) — 사용자 v1 피드백 2건 1:1 fix. **§0 anchor 표 R-01~R-06 row 6장 status 갱신** (v1 prompt-only deprecated 2026-05-30 → v2 image edit pending). **새 driver `tools/edit_reaction_anchors_v2.py` 신설** — `tools/edit_bg_anchors_v4.py` template 기반 (image edit API + base image dimensions 검증 + PIL resize fallback + b64_json 응답 처리). 구조 = (1) COMMON_FRAME 상수 inline (single source) / (2) REACTIONS list 6개 inline (id / name / character / star / base / expression_prompt — 5개 항목별 description) / (3) base image 사전 검증 (CH-02_mother.png / CH-03_father.png 2장만 사용) / (4) CLI args (`--only` `--version` `--quality` `--out-dir`) / (5) gpt-image-1 medium 1024×1024 default, version v2 default. v1 prompt-only driver (`tools/gen_reaction_anchors_m1.py`)는 보존 (git history). v1 output (R-XX_<character>_star<N>_v1.png 6장)도 보존 — v2와 공존 (R-XX_<character>_star<N>_v2.png). main thread 실행 명령: (1) test: `py tools/edit_reaction_anchors_v2.py --only R-01 --quality medium` (1장 × $0.042 ≈ $0.05, ~30초) → 시각 확인 후 (2) 6장 batch: `py tools/edit_reaction_anchors_v2.py --quality medium` (6장 × $0.042 ≈ $0.25, ~2-3분, 출력 `assets-raw/reaction_anchors_m1/R-XX_<character>_star<N>_v2.png`). 또는 어머니 mismatch만: `--only R-01,R-03` / 아버지 inconsistency만: `--only R-04,R-05,R-06`. v2 risk top 3 = (a) base의 default expression 유지 risk ~25% (★1/★2/★3 gradient 무너짐 → EXPRESSION CHANGE explicit 명시로 회피) / (b) base의 bowl/물건 prop carry over risk ~20% (R-03 ★3 손이 cheeks 옆으로 가야 함 → hand position 명시) / (c) base의 thumb-up carry over risk ~30% (R-04 ★1 영향, CH-03 base thumb-up → R-04 ★1 prompt에서 "NO thumb-up" 명시 강제). **R3 fallback (사용자 ChatGPT 웹 UI 수동 chain-of-references 워크플로)**: v2 결과가 여전히 family IP/gradient 부족하면 사용자 수동 (a) CH-02 upload + R-02 generate → 어머니 seed / (b) seed + R-01/R-03 / (c) 새 세션 + CH-03 + R-05 generate → 아버지 seed / (d) seed + (R-06만 추가 CH-05_father_star3.png reference) + R-04/R-06. 음식 12장 / 환경 5장 v4 / cut anchor 7장 / ingredient whole 12장 본문 무변경. 캐릭터 5장 본문 무변경.
+
+> **v1.17 변경 (2026-05-30, mvp-food-selection v2.2 sync — F-02 호떡 → 잔치국수 + F-09 김치찌개 → 불고기 음식 anchor 2장 + ING-02/ING-09 ingredient anchor 2장 전면 교체, supersedes v1.16)**: game-designer가 2026-05-28 mvp-food-selection v2.1 → v2.2 갱신 완료 (F-02 호떡 → 잔치국수 T1, 4가게 순회 곡물+잡화+어물+청과 / F-09 김치찌개 → 불고기 T2, 정육+청과+잡화). art-director는 본 v1.17에서 (a) **§5.2 F-02 본문 전면 교체** (호떡 → 잔치국수 Janchi-guksu, hero = 소면 white wheat thin noodles + 멸치 dashi clear broth + 계란 지단 yellow ribbon + 김 strips + 애호박 zucchini garnish + 멸치 dried anchovy minor accent; cross-cultural negative critical — NOT Japanese somen tsuyu cold dipping / NOT Japanese udon thick / NOT Japanese ramen curly yellow + miso/tonkotsu / NOT Vietnamese pho cinnamon-clove broth + lime/sprouts/herbs / NOT Chinese egg noodle soup. 호떡 본문은 deprecated archive 보존) / (b) **§5.2 F-09 본문 전면 교체** (김치찌개 → 불고기 Bulgogi, hero = 얇은 marbled 소고기 thin-sliced sirloin fanned + soy-pear-garlic marinade pool + 양파/대파/당근/표고/optional 당면 mixed in same dark cast-iron Korean BBQ pan + 깨/송송 대파 garnish; **CRITICAL F-12 갈비 차별화** — NO bone-in LA cut, NO visible white rib bone, NOT grilled on wire mesh grate over hot coals, NOT large 18-25cm LA strips; cross-cultural negative — NOT Japanese sukiyaki raw egg dipping bowl + 다른 vegetable set / NOT shabu-shabu clear broth pot / NOT yakiniku grilled boneless / NOT Chinese beef stir-fry wok hei + cornstarch sauce / NOT American BBQ red sauce + rib bone. 김치찌개 본문은 deprecated archive 보존) / (c) **§5.6 ING-02 본문 전면 교체** (흑설탕 → 소면 somen whole bundled dry white wheat noodles, ~18-22cm × 4-5cm bundle tied at center with plain white/cream paper band, off-white #F5F0E0-#FAFAFA, 15-25 individual slim ~1-2mm strands; cross-cultural negative — NOT Japanese somen pink-and-white decorative paper band / NOT yellow Chinese egg noodles / NOT Italian spaghetti thicker rigid / NOT udon fat chunky / NOT Korean ramyeon curly yellow egg. 흑설탕 본문은 deprecated archive 보존; peanut R1 already deprecated archive 유지) / (d) **§5.6 ING-09 본문 전면 교체** (두부 firm → 얇은 raw 소고기 thin-sliced marbled beef stack/fan, 5-7 slices each ~8-12cm × 5-7cm × 2-3mm THIN paper-thin, pink-red raw #C44545-#B82F2F + visible white marbled fat veins scattered organic irregular ~3-5 marbling lines per slice; **CRITICAL F-12 갈비 차별화 적용 (ING-12 마늘과는 다른 ingredient)** — NO bone visible, RAW state NOT cooked/grilled with char marks, NOT thick 1cm+ steak slab; cross-cultural negative — NOT Japanese wagyu A5 extreme marbling + premium plating / NOT sukiyaki beef on decorative platter + raw egg dipping + 다른 vegetable / NOT bacon parallel striped / NOT salami cured uniform / NOT 삼겹살 thick alternating layered stripes. 두부 firm 본문은 deprecated archive 보존). **§0 anchor 표 row 4 갱신**: F-02 row (Hotteok → Janchi-guksu, T1) / F-09 row (Kimchi Jjigae → Bulgogi, T2) / ING-02 row (peanut R1 archive / brown_sugar R2 archive → somen pending v1) / ING-09 row (firm tofu R1 archive → thin marbled beef pending v1). 다른 8 음식 anchor + 10 ingredient anchor + cut 7 + 환경 5 + 캐릭터 5 + reaction 6 본문 **전면 무변경** (LOCK status 유지). **driver script `tools/gen_food_anchors_m1.py` FOODS list F-02/F-09 body inline 갱신 + docstring v1.17 sync** + **driver script `tools/gen_ingredient_anchors_m1.py` INGREDIENTS list F-02/F-09 item name+food+cut_style+body inline 갱신 + docstring v1.17 sync**. main thread 실행 명령 = (1) `py tools/gen_food_anchors_m1.py --only F-02,F-09 --version v9 --model gpt-image-1 --quality medium` (음식 anchor 2장 × $0.042 ≈ $0.08, ~30-60초, 출력 `assets-raw/food_anchors_m1/F-02_janchi_guksu_v9.png` + `F-09_bulgogi_v9.png` — version v9 = previous F-01~F-11 R1~R7 version과 충돌 회피, F-02/F-09 신규 첫 generation) / (2) `py tools/gen_ingredient_anchors_m1.py --only F-02,F-09 --version v3 --model gpt-image-1 --quality medium` (ingredient anchor 2장 × $0.042 ≈ $0.08, ~30-60초, 출력 `assets-raw/ingredient_anchors_m1/F-02_somen_whole_v3.png` + `F-09_thin_beef_whole_v3.png` — version v3 = previous v1 brown_sugar/firm_tofu / v2 (있다면) 회피, F-02/F-09 신규 generation). 총 4장 × $0.042 ≈ $0.17, ~2분. ChatGPT 약점 risk top 5 갱신 (잔치국수 Japanese somen 누수 ~50% + Vietnamese pho 누수 ~30% / 불고기 Japanese sukiyaki 누수 ~50% + F-12 갈비 cross-contamination ~40% / 소면 Japanese pink-band 누수 ~40% / 얇은 소고기 wagyu 누수 ~40% / 얇은 소고기 cooked brown 누수 ~30%). 음식 12 평가 표 §0 + §5.4 risk top 5 부분 갱신.
+
+> **v1.16 변경 (2026-05-30, M1 후반 art sprint 3번째 — 양친 reaction 6컷 anchor prompt set 신설 §5.7 full prompts, Scene 3 식탁 ★1/★2/★3 gradient, ingredient 12장 sprint와 fully parallel, supersedes v1.15)** (archived): M1 후반 art sprint 2번째 (ingredient whole 12장) sprint와 **병렬로 동시 진행**. ADR-005 Total Score 가중 평균 (재료 25% × 준비 20% × 방법 20% × 시간 35%) → ★1 30%+ / ★2 60%+ / ★3 90%+ gradient. 친구 가족 단위 (project_adr003 2026-05-23 lock): 어머니 + 아버지 L11 동시 unlock (0.6s 시차 fade-in). Scene 3 식탁 reaction = 음식 완성 후 가족이 식탁에서 먹는 reaction (Tier 2 가족 식탁). friends-system 호불호 axis (project_adr003 v0.2): 음식별 호불호 (spicy/sweet/oily/salty/mild) → Total Score + 호불호 보너스 = 최종 reaction. art-director는 Week 1 base 4장 시각 확인: (a) **CH-02_mother.png** = 어머니 base = round-bun short black hair + red top + soft white apron + 음식 그릇 들고 + warm motherly subtle smile (default expression ≈ ★1-★2 boundary) / (b) **CH-03_father.png** = 아버지 base = short salt-and-pepper hair + teal-green button-up shirt + dark pants + thumb-up gesture + slim smile (default expression ≈ ★1-★2 boundary 가까움, thumb-up 때문에 약간 ★2 쪽) / (c) **CH-04_mother_star1.png** = Week 1 어머니 ★1 variant = **sad/teardrop expression** (한 손이 chin 쪽 어색한 worried 자세) → 본 sprint 재해석에서는 ★1 = "mild satisfaction acceptable" (subtle smile + 정상 open eyes) 으로 교체 (Week 1 sad teardrop은 부정 reaction이지 mild satisfaction 아님) / (d) **CH-05_father_star3.png** = Week 1 아버지 ★3 variant = excited eyes-closed-arc happy + 4개 sparkle accents + 양손 (one thumb-up + one fist raised) + wide open mouth smile → **본 sprint settle 형태에 가장 가까움**, Week 1 variant를 ★3 reference로 차용. **§5.7 placeholder → full prompts 확장**: 6 prompt = 어머니 × {★1 subtle smile / ★2 bigger smile + eye crescent arcs / ★3 big wide smile + closed-arc + heart accent} + 아버지 × {★1 slim reserved smile / ★2 fuller relaxed smile + casual thumb-up / ★3 big wide smile + closed-arc + double thumb-up + sparkle (Week 1 CH-05 variant 톤)}. 어머니 vs 아버지 표정 톤 차이: **어머니** = warm motherly nurturing tone, subtle ↔ 부드러운 호 ↔ big delighted + heart / **아버지** = reserved masculine tone, slim closed ↔ relaxed open + casual thumb-up ↔ excited + double thumb-up + sparkle. 각 reaction = (a) **single character bust-up portrait** (어깨까지, NOT full body — Scene 3 식탁 seated context) / (b) Week 1 base와 동일 family IP (hair/outfit/face features 그대로) / (c) 표정만 ★1/★2/★3 gradient에 따라 다름 / (d) **background: Cool Sage `#C8D5C0` solid** (음식/cut/ingredient cross-asset 일관성 — Scene 3 식탁 context의 25-asset cluster 합류 결정; 캐릭터 5장 CH-01~05의 soft mint `#9BE0D2`와는 다름, 추후 어색하면 V2 revert 가능) / (e) modern saturated + slim outline 2-3px + chibi mascot proportions (Royal Match aesthetic) / (f) optional Scene 3 cue (젓가락 한 손 또는 입가 한 조각, minor accent only). **§2.5에 STYLE_SUFFIX_REACTION 명시** = bust-up portrait + chibi mascot + Family IP consistency (어머니/아버지 Week 1 base 명세) + EXPRESSION GRADIENT (★1/★2/★3 메타 정의) + Cool Sage bg + slim outline + 표정 negative (sad/sleeping/crying 0건). **§0 anchor 표 R-01~R-06 row 추가** (어머니 ★1/★2/★3 + 아버지 ★1/★2/★3, pending M1 후반 3번째). **새 driver script `tools/gen_reaction_anchors_m1.py` 신설** — `tools/gen_cut_anchors_m1.py` template 기반, REACTIONS 6개 항목 inline (id=R-XX / name=character_starN_slug / character=mother|father / star=1|2|3 / body), STYLE_SUFFIX_REACTION inline append via `.replace("%s", STYLE_SUFFIX_REACTION, 1)` (gen_food/gen_ingredient에서 발생했던 `body의 % character ↔ Python %s formatting` ValueError fix 적용), gpt-image-1 medium 1024×1024 default. M1 후반 reaction 6컷 main thread 실행 명령: `py tools/gen_reaction_anchors_m1.py --model gpt-image-1 --quality medium` (6장 × $0.042 ≈ $0.25, ~2-3분, 출력 경로 `assets-raw/reaction_anchors_m1/R-XX_<character>_star<N>_v1.png`). 음식 12장 / 환경 5장 v4 / cut anchor 7장 / ingredient whole 12장 본문 무변경. 캐릭터 5장 본문 무변경. **§5.8 UI/VFX는 M2 sprint placeholder 유지** (양친 reaction 6컷은 §5.7로 위치 변경, 이전 v1.15의 "§5.7~§5.8 UI/VFX/양친 reaction" 분류에서 양친 reaction 분리).
+
+> **v1.15 변경 (2026-05-30, M1 후반 art sprint 2번째 — 음식 12 × hero ingredient whole anchor 12장 prompt set 신설 §5.6 full prompts + §5.5 음식↔cut 매핑 표 추가, ADR-005 Stage 2A "before"-cut pair, supersedes v1.14)** (archived): M1 후반 art sprint 1번째 (cut anchor 7장 LOCK 완료) 후 2번째 sprint 진입. **ADR-005 Stage 2A 재료 준비 = rhythm tap + Knife indicator** 미니게임은 각 음식별로 hero ingredient를 적절한 cut style로 자르는 형태 → 음식 12 × hero ingredient 매핑 + whole(자르기 전) state asset이 필요. **§5.5에 음식 12 × hero ingredient × cut style 매핑 표 추가** (임시; game-designer foods CSV prep_* 후속 확정 시 일부 reroll 가능): F-01 라면→대파/CUT-05 송송썰기 · F-02 호떡→견과류/CUT-01 다지기 · F-03 김밥→단무지/CUT-02 채썰기 · F-04 떡볶이→어묵/CUT-03 어슷썰기 · F-05 김치볶음밥→김치/CUT-01 다지기 · F-06 콘도그→모짜렐라/(no cut) · F-07 해물파전→대파 daepa/CUT-03 어슷썰기 · F-08 비빔밥→당근/CUT-02 채썰기 · F-09 김치찌개→두부 firm/CUT-06 깍둑썰기 · F-10 순두부→두부 soft/(no cut, broken curds) · F-11 잡채→당근/CUT-02 채썰기(F-08 재사용 가능) · F-12 갈비→마늘/CUT-01 다지기. **§5.6 신설 — ingredient whole 12장 prompt set**: 각 음식의 hero ingredient를 도마 위에 whole(자르기 전) 상태로 placement. cut된 상태(CUT-01~06)는 재사용 — 본 sprint는 whole 12장만 추가. **§2.5에 STYLE_SUFFIX_INGREDIENT 명시** = STYLE_SUFFIX_CUT 재활용 + INGREDIENT PLACEMENT 절 추가 (center-right whole ingredient + knife left static + 도마/bg/outline 통일). **§0 anchor 표 ING-01~12 row 추가** (F-01~F-12 hero ingredient whole, pending M1 후반). **새 driver script `tools/gen_ingredient_anchors_m1.py` 신설** — `tools/gen_cut_anchors_m1.py` template 기반, INGREDIENTS 12개 항목 inline (id=food_id / name=ingredient_slug / food=food_name_en / cut_style=cut_style_id / body), STYLE_SUFFIX_INGREDIENT inline append, gpt-image-1 medium 1024×1024 default. M1 후반 ingredient whole 12장 main thread 실행 명령: `py tools/gen_ingredient_anchors_m1.py --model gpt-image-1 --quality medium` (12장 × $0.042 ≈ $0.50, ~4-5분, 출력 경로 `assets-raw/ingredient_anchors_m1/<food_id>_<ingredient_name>_whole_v1.png`). 음식 12장 F-01~F-12 본문 무변경. 캐릭터 5장 / 환경 5장 v4 / cut anchor 7장 본문 무변경. **§5.7~§5.8 UI/VFX/양친 reaction은 M2 sprint placeholder 유지**.
+
+> **v1.14 변경 (2026-05-29, M1 후반 sprint 진입 — 칼/도마 base anchor 1장 + cut style 6종 prompt set 신설 §5.5 full prompts, ADR-005 Stage 2A rhythm tap prerequisite, supersedes v1.13)** (archived): M1 anchor 22/22 LOCK 완료 (음식 12 + 환경 5 + 캐릭터 5, commit dfb141e) 후 M1 후반 art sprint 진입. **ADR-005 Stage 2A 재료 준비 = rhythm tap + Knife indicator** prerequisite로 칼/도마 base + cut style 6종 anchor가 필요. **§2.5 STYLE_SUFFIX_CUT 신설** — 모든 cut anchor 공통 suffix (square 1:1, top-down view, Korean cutting board + knife 통일 silhouette, Cool Sage `#C8D5C0` bg, modern saturated, slim outline 2-3px, 한식 anchor 일관성). **§5.5 placeholder → full prompts 확장** (cutting_board base 1장 + cut_style_mince/julienne/diagonal/whole/sliced_rounds/cube 6장 = 총 7장). 각 cut style은 **cutting RESULT state** (cut된 결과 상태, NOT cutting action mid-motion) — 게임 asset으로 도마 + cut된 재료 + 칼 옆에 놓임 형태. cut style 6종 시그니처 재료 매핑 = mince (다지기) → 마늘 (F-12 갈비/F-09 김치찌개, 가장 빠른 BPM 140) / julienne (채썰기) → 당근 (F-08 비빔밥/F-11 잡채) / diagonal (어슷썰기) → 어묵+대파 (F-04 떡볶이/모든 국물) / whole (통썰기) → 김밥 cylinder 단면 (F-03, BPM 70 가장 느림) / sliced_rounds (송송썰기) → 대파 (F-12 갈비/모든 가니쉬) / cube (깍둑썰기) → 두부 (F-09 김치찌개/F-10 순두부). **§0 anchor 표 cut anchor 7장 row 추가** (CUT-00 cutting_board ~ CUT-06 cube). **새 driver script `tools/gen_cut_anchors_m1.py` 신설** — `tools/gen_food_anchors_m1.py` template 기반, CUTS 7개 항목 inline, STYLE_SUFFIX_CUT inline append, gpt-image-1 medium 1024×1024 default. M1 후반 cut anchor 7장 main thread 실행 명령: `py tools/gen_cut_anchors_m1.py --model gpt-image-1 --quality medium` (7장 × $0.042 ≈ $0.29, ~3-4분, 출력 경로 `assets-raw/cut_anchors_m1/<name>_v1.png`). 음식 12장 F-01~F-12 본문 무변경 (각 LOCK status 유지). 캐릭터 5장 CH-01~05 본문 무변경 (v1.2 lock candidate 유지). 환경 5장 BG-01~05 v4 image edit approach 무변경. **§5.6~§5.7 양친 reaction/UI/VFX는 M2 sprint placeholder 유지**.
+
+> **v1.13 변경 (2026-05-28, M1 환경 BG-01~05 v4 image edit — v1.2 base + 지붕만 교체 + frontal view + 5가게 구조 일관성, supersedes v1.12)** (archived): 사용자가 v1.12 v3 결과 (5장 batch generation, slight 7/8 perspective, 5가게 구조 inconsistent across shops) 시각 확인 후 폐기 + 새 접근 명시. 사용자 verbatim "**각 가겍의 디자인이 조금씩 다름...지붕, 기둥, 이런것들은 똑같아야 하지 않나.... 원래 버젼에서 지붕만 바꾸는게 어떨까...그리고 정면이 더 낫지 않나...**". main thread 해석 = 3건 fix: (1) **5가게 구조 정확 일관성** — 지붕/기둥/카운터/frame 5가게 모두 정확히 동일, 카테고리별 display goods + signage icon만 다름 (v3는 prompt-only batch generation으로 carpenter 작업이 5가게마다 다르게 생성됨) / (2) **v1.2 base 정확 유지 + 지붕만 교체** — prompt-only generation은 v1.2 정확 재현 어려움, **gpt-image-1 image edit API**로 base image의 천막 부분만 교체 (다른 모든 요소 유지) / (3) **frontal view (frontal elevation)** — slight 7/8 perspective 폐기, v1.2 base가 frontal이었음. **§2.2 STYLE_SUFFIX_BG 무변경** (v3 STYLE_SUFFIX_BG_V3 유지) — v4는 STYLE_SUFFIX_BG suffix를 사용하지 않고 **image edit API용 별도 COMMON_EDIT_PROMPT**를 사용 (지붕 교체 단일 fix prompt). **§4 BG-01~05 본문 전면 재작성** — v3 prompt-only generation 본문은 §4.8 v1.12 v3 archive로 deprecated (사유: 5가게 구조 inconsistent + slight 7/8 perspective + 사용자 v3 폐기 verbatim). v4 본문은 image edit API approach 명시 (base image 경로 `assets-raw/week1-anchors/BG-XX_<name>_v2.png` + 공통 fix prompt + shop-specific 카테고리 명시 한 줄). **새 driver script `tools/edit_bg_anchors_v4.py` 신설** — `client.images.edit(model="gpt-image-1", image=open(base, "rb"), prompt=COMMON_EDIT_PROMPT + category, size="1024x1024", quality="medium", n=1)`. base image dimensions 사전 검증 + (필요 시) gpt-image-1 edit supported size (1024x1024 / 1536x1024 / 1024x1536)로 PIL resize fallback 포함. §0 anchor 표 BG-01~05 row v4 status 갱신 (v1.12 v3 deprecated → v4 pending image edit). 음식 12장 F-01~F-12 본문 무변경 (F-12는 v1.10 R7 plated white plate LOCK candidate 유지). 캐릭터 5장 CH-01~05 본문 무변경 (v1.2 lock candidate 유지).
 
 > **v1.12 변경 (2026-05-28, M1 환경 BG-01~05 v3 minimal — v1.2 base 회복 + 천막→기와 지붕 단일 fix, supersedes v1.11)** (archived; v4 image edit로 supersede; 사유 — 5가게 구조 inconsistent + slight 7/8 perspective + prompt-only generation의 v1.2 base 재현 한계): 사용자가 v1.11 v2 (한옥 양식 풀세트 — 옹기 + lantern + 목조 한옥 frame + 처마 풀세트) 결과 시각 확인 후 **너무 많음** 진단 → v2 전면 폐기. 사용자 verbatim "**기존버젼에서 다른거는 다 그대로 하고 기와 지붕으로만 바꾸자 천막 없애고**". 즉 v1.2 base (commit 7a6cffb 환경 5장)의 minimal feel 회복 + **천막(red/green striped awning) → 검정 기와 곡선 지붕 (curved black ceramic tile roof, 한옥 기와 eave 곡선)** 단일 fix만 적용. v1.2 base의 다른 모든 요소 (채소/meat/fish/곡식/sauce 카테고리 시그니처 + 작은 가게 카운터 + BG-01의 좌측 옹기 2개 + BG-05의 sauce 항아리 4개 + 고추 hanging + icon+영어 minimal signage + Cool Sage `#C8D5C0` bg + modern saturated 톤 + slim outline 2-3px) **무변경 유지**. v2의 추가 요소 (5가게 공통 옹기 prominent + 5가게 공통 hanging lantern + 목조 한옥 frame 양쪽 기둥 + 처마 깊은 overhang + 와당 풀세트) **모두 폐기**. **§2.2 STYLE_SUFFIX_BG 전면 재작성** = v1.12 STYLE_SUFFIX_BG_V3 (기와 지붕 단일 layer + v1.2 base 가게 카운터 + icon-first 영어 minimal + Cool Sage `#C8D5C0` solid bg + 추가 한옥 풀세트/lantern/extra onggi 명시 회피). 5가게 영어 signage v1.2 base 회복 = "PRODUCE" / "BUTCHER" / "SEAFOOD" / "GRAIN" / "SAUCES". §4 BG-01~05 본문 v3로 전면 재작성. 기존 v1.11 v2 본문은 §4.7 v1.11 v2 archive 절 (deprecated, 2026-05-28)에 보존. 기존 v1.2 archive (§4.6) 무변경. §0 anchor 표 BG-01~05 row v3 status 갱신 (v1.11 v2 deprecated → v3 pending). 음식 12장 F-01~F-12 본문 무변경 (F-12는 v1.10 R7 plated white plate LOCK candidate 유지). 캐릭터 5장 CH-01~05 본문 무변경 (v1.2 lock candidate 유지).
 
@@ -102,17 +118,54 @@
 | BG-04 | 곡물상 🌾 (v4 image edit) | `assets-raw/week1-anchors/BG-04_grain_v2.png` (base) | gpt-image-1 edit API | image edit COMMON_EDIT_PROMPT + "Korean grain shop (GRAIN signage with grain sack icon)" | **v1.2 invalidated → v2 deprecated → v3 deprecated → v4 pending (image edit)** |
 | BG-05 | 잡화점 🫙 (v4 image edit, sauces 시그니처) | `assets-raw/week1-anchors/BG-05_sundry_v2.png` (base) | gpt-image-1 edit API | image edit COMMON_EDIT_PROMPT + "Korean sauces/seasoning shop (SAUCES signage with bottle/jar icon)" | **v1.2 invalidated → v2 deprecated → v3 deprecated → v4 pending (image edit)** |
 | F-01 | Ramyeon (라면, T1) | TBD | TBD | TBD | pending M1 |
-| F-02 | Hotteok (호떡, T1) | TBD | TBD | TBD | pending M1 |
+| F-02 | Janchi-guksu (잔치국수, T1, v1.17 mvp v2.2 신규 — 호떡 deprecated) | TBD | TBD | TBD | **v1.17 pending v9 — 호떡 deprecated 2026-05-30 (mvp v2.2 trigger)** |
 | F-03 | Kimbap (김밥, T1) | TBD | TBD | TBD | pending M1 |
 | F-04 | Tteokbokki (떡볶이, T1) | TBD | TBD | TBD | pending M1 |
 | F-05 | Kimchi Fried Rice (김치볶음밥, T1) | TBD | TBD | TBD | pending M1 |
 | F-06 | Korean Corn Dog (한국식 콘도그, T1) | TBD | TBD | TBD | pending M1 |
 | F-07 | Haemul Pajeon (해물파전, T1) | TBD | TBD | TBD | pending M1 |
 | F-08 | Bibimbap (비빔밥, T2) | TBD | TBD | TBD | pending M1 |
-| F-09 | Kimchi Jjigae (김치찌개, T2) | TBD | TBD | TBD | pending M1 |
+| F-09 | Bulgogi (불고기, T2, v1.17 mvp v2.2 신규 — 김치찌개 deprecated) | TBD | TBD | TBD | **v1.17 pending v9 — 김치찌개 deprecated 2026-05-30 (mvp v2.2 trigger, F-12 갈비 차별화 CRITICAL: NO bone-in LA cut)** |
 | F-10 | Sundubu Jjigae (순두부찌개, T2) | TBD | TBD | TBD | pending M1 |
 | F-11 | Japchae (잡채, T2) | TBD | TBD | TBD | pending M1 |
 | F-12 | Galbi-gui (갈비구이, T2) | TBD | TBD | TBD | pending M1 |
+| CUT-00 | Cutting Board base (칼+도마 정적 baseline, v1.14 신설) | TBD | TBD | TBD | **pending M1 후반** |
+| CUT-01 | Mince — 다지기 (마늘, BPM 140 가장 빠름, F-12/F-09) | TBD | TBD | TBD | **pending M1 후반** |
+| CUT-02 | Julienne — 채썰기 (당근, F-08/F-11) | TBD | TBD | TBD | **pending M1 후반** |
+| CUT-03 | Diagonal Slice — 어슷썰기 (어묵+대파, F-04/모든 국물) | TBD | TBD | TBD | **pending M1 후반** |
+| CUT-04 | Whole Slice — 통썰기 (김밥 cylinder 단면, F-03, BPM 70 가장 느림) | TBD | TBD | TBD | **pending M1 후반** |
+| CUT-05 | Sliced Thin Rounds — 송송썰기 (대파, F-12/모든 가니쉬) | TBD | TBD | TBD | **pending M1 후반** |
+| CUT-06 | Cube Dice — 깍둑썰기 (두부, F-09/F-10) | TBD | TBD | TBD | **pending M1 후반** |
+| ING-01 | F-01 Ramyeon hero — 대파 (spring onion) whole, pair=CUT-05 송송썰기 (v1.15 신설) | TBD | TBD | TBD | **pending M1 후반 2번째 sprint** |
+| ING-02 | F-02 Janchi-guksu hero — 소면 (somen white wheat noodles bundled whole), pair=(no cut, sprinkle/serve), v1.17 mvp v2.2 신규 | TBD | TBD | TBD | **v1.17 pending v3 — peanut R1 / brown_sugar R2 deprecated 2026-05-30 (mvp v2.2 trigger, 호떡 → 잔치국수)** |
+| ING-03 | F-03 Kimbap hero — 단무지 (pickled radish) whole, pair=CUT-02 채썰기 | TBD | TBD | TBD | **pending M1 후반 2번째 sprint** |
+| ING-04 | F-04 Tteokbokki hero — 어묵 (fish cake sheet) whole, pair=CUT-03 어슷썰기 | TBD | TBD | TBD | **pending M1 후반 2번째 sprint** |
+| ING-05 | F-05 Kimchi Fried Rice hero — 김치 (napa cabbage kimchi leaf) whole, pair=CUT-01 다지기 | TBD | TBD | TBD | **pending M1 후반 2번째 sprint** |
+| ING-06 | F-06 Corn Dog hero — 모짜렐라 (cheese stick) whole, pair=(no cut, whole) | TBD | TBD | TBD | **pending M1 후반 2번째 sprint** |
+| ING-07 | F-07 Haemul Pajeon hero — 대파 daepa (large scallion) whole, pair=CUT-03 어슷썰기 | TBD | TBD | TBD | **pending M1 후반 2번째 sprint** |
+| ING-08 | F-08 Bibimbap hero — 당근 (carrot) whole, pair=CUT-02 채썰기 | TBD | TBD | TBD | **pending M1 후반 2번째 sprint** |
+| ING-09 | F-09 Bulgogi hero — 얇은 소고기 (raw thin-sliced marbled beef stack/fan) whole, pair=(no cut, marinade prep state), v1.17 mvp v2.2 신규 | TBD | TBD | TBD | **v1.17 pending v3 — firm tofu R1 deprecated 2026-05-30 (mvp v2.2 trigger, 김치찌개 → 불고기, F-12 갈비 차별화 CRITICAL: NO bone visible + RAW NOT cooked)** |
+| ING-10 | F-10 Sundubu hero — 두부 soft (soft tofu tube) whole, pair=(no cut, broken curds) | TBD | TBD | TBD | **pending M1 후반 2번째 sprint** |
+| ING-11 | F-11 Japchae hero — 당근 (carrot, F-08 variation) whole, pair=CUT-02 채썰기 | TBD | TBD | TBD | **pending M1 후반 2번째 sprint** (game-designer F-08 재사용 확정 시 archive) |
+| ING-12 | F-12 Galbi-gui hero — 마늘 (garlic cloves) whole, pair=CUT-01 다지기 | TBD | TBD | TBD | **pending M1 후반 2번째 sprint** |
+| ICUT-01 | F-01 Ramyeon cut — 대파 송송 thin green discs 20-30개, ING-01 whole의 "after" pair (v1.19 신설) | TBD | TBD | TBD | **pending M1 후반 4번째 sprint** |
+| ICUT-02 | F-02 Janchi-guksu cut — 애호박 통썰기 round green discs 5-8개 (medium 4-5cm), ING-02 whole의 "after" pair | TBD | TBD | TBD | **pending M1 후반 4번째 sprint** |
+| ICUT-03 | F-03 Kimbap cut — 단무지 채썰기 yellow matchstick 15-20개 (8-10cm kimbap-length), ING-03 whole의 "after" pair | TBD | TBD | TBD | **pending M1 후반 4번째 sprint** |
+| ICUT-04 | F-04 Tteokbokki cut — 어묵 어슷썰기 golden-brown oval 5-7개 (6-8cm medium), ING-04 whole의 "after" pair | TBD | TBD | TBD | **pending M1 후반 4번째 sprint** |
+| ICUT-05 | F-05 Kimchi Fried Rice cut — 김치 다지기 fine red minced bits scattered, ING-05 whole의 "after" pair | TBD | TBD | TBD | **pending M1 후반 4번째 sprint** |
+| ICUT-06 | F-06 Corn Dog cut — 모짜렐라 whole (no cut, ING-06과 동일 image — cheese는 whole 그대로 corn dog 안 insertion) | TBD | TBD | TBD | **pending M1 후반 4번째 sprint (ING-06과 동일 결과)** |
+| ICUT-07 | F-07 Haemul Pajeon cut — 대파 daepa 어슷썰기 large dominant green oval 5-7개 (5-7cm × 1.5-2.5cm, F-04와 시각 분리), ING-07 whole의 "after" pair | TBD | TBD | TBD | **pending M1 후반 4번째 sprint (F-04와 색 분리 CRITICAL: dominant green NOT golden-brown)** |
+| ICUT-08 | F-08 Bibimbap cut — 당근 채썰기 orange matchstick 15-20개 (5-7cm bibimbap-length), ING-08 whole의 "after" pair | TBD | TBD | TBD | **pending M1 후반 4번째 sprint** |
+| ICUT-09 | F-09 Bulgogi cut — 얇은 소고기 marinade coated brown glaze (no cut, 양념재우기 prep state), ING-09 raw whole의 "after" marinated pair, **F-12 갈비 차별화 CRITICAL: NO bone visible + NOT grilled char marks (brown from marinade NOT grill)** | TBD | TBD | TBD | **pending M1 후반 4번째 sprint (F-12 차별화 CRITICAL)** |
+| ICUT-10 | F-10 Sundubu cut — 두부 soft broken cloud-like white curds (no cut, scooped from tube state), ING-10 whole tube의 "after" broken pair | TBD | TBD | TBD | **pending M1 후반 4번째 sprint (organic irregular fragments NOT firm cube)** |
+| ICUT-11 | F-11 Japchae cut — 당근 채썰기 orange matchstick 15-20개 (6-8cm slight diagonal pile, F-08과 시각 variation), ING-11 whole의 "after" pair | TBD | TBD | TBD | **pending M1 후반 4번째 sprint (game-designer F-08 재사용 확정 시 archive)** |
+| ICUT-12 | F-12 Galbi-gui cut — 마늘 다지기 fine yellowish-white minced granules 1-3mm scattered, ING-12 whole의 "after" pair | TBD | TBD | TBD | **pending M1 후반 4번째 sprint** |
+| R-01 | 어머니 ★1 mild satisfaction (subtle warm smile, normal open dot eyes) — v1.18 v2 image edit base=CH-02_mother.png | `assets-raw/week1-anchors/CH-02_mother.png` (base) | gpt-image-1 edit API (no chat session) | image edit COMMON_FRAME + R-01 expression_prompt (★1 mild satisfaction) | **v1 prompt-only deprecated 2026-05-30 (어머니 hair round-bun+side-puff mismatch vs CH-02 base round-bun simple) → v2 image edit pending** |
+| R-02 | 어머니 ★2 happy/pleased (bigger smile + soft upward crescent arc) — **anchor seed** (base default와 가장 가까움) | `assets-raw/week1-anchors/CH-02_mother.png` (base) | gpt-image-1 edit API | image edit COMMON_FRAME + R-02 expression_prompt (★2 happy) | **v1 prompt-only candidate (사용자 silent ACK이나 통일 위해 v2 재생성) → v2 image edit pending (anchor seed)** |
+| R-03 | 어머니 ★3 very happy (big wide smile + closed-arc happy eyes + heart accent) — v1.18 v2 image edit base=CH-02_mother.png | `assets-raw/week1-anchors/CH-02_mother.png` (base) | gpt-image-1 edit API | image edit COMMON_FRAME + R-03 expression_prompt (★3 very happy) | **v1 prompt-only deprecated 2026-05-30 (어머니 hair mismatch CH-02 base와 다름) → v2 image edit pending** |
+| R-04 | 아버지 ★1 reserved (slim closed smile + NO thumb-up, normal open dot eyes) — v1.18 v2 image edit base=CH-03_father.png | `assets-raw/week1-anchors/CH-03_father.png` (base) | gpt-image-1 edit API | image edit COMMON_FRAME + R-04 expression_prompt (★1 reserved, NO thumb-up) | **v1 prompt-only deprecated 2026-05-30 (R-05/R-06와 family IP inconsistency — R-04 darker tone vs R-05/R-06 lighter tone) → v2 image edit pending (family IP lock)** |
+| R-05 | 아버지 ★2 relaxed (fuller open smile + single casual thumb-up + crescent arc) — **anchor seed** | `assets-raw/week1-anchors/CH-03_father.png` (base) | gpt-image-1 edit API | image edit COMMON_FRAME + R-05 expression_prompt (★2 relaxed enjoyment) | **v1 prompt-only deprecated 2026-05-30 (lighter tone vs R-04 darker — family IP inconsistency) → v2 image edit pending (anchor seed, hair+shirt tone CH-03 base와 EXACTLY 일치 강제)** |
+| R-06 | 아버지 ★3 very excited (big wide smile + closed-arc + DOUBLE thumb-up + 2-4 sparkle accent) — v1.18 v2 image edit base=CH-03_father.png | `assets-raw/week1-anchors/CH-03_father.png` (base) | gpt-image-1 edit API | image edit COMMON_FRAME + R-06 expression_prompt (★3 very excited, double thumb-up) | **v1 prompt-only deprecated 2026-05-30 (lighter tone vs R-04 darker — family IP inconsistency) → v2 image edit pending (사용자 ChatGPT 웹 UI fallback 시 CH-05_father_star3.png 추가 reference 권장)** |
 
 ### 0.1 ChatGPT subject anchor 운영 (sref 대체 메커니즘)
 
@@ -350,7 +403,63 @@ any English or Korean text legibly readable on the dish (use solid block placeho
 > 음식 카드는 **plated hero shot** (Stage 3 식탁 완성형) 중심 — Stage 2A cut variation / Stage 2B cooking action은 본 sprint 범위 외 (M1 후반 / M2).
 > bowl/plate 컬러는 **white 또는 pale celadon (#E8F0E8)** 통일 — 한식 백자/분청 톤. 일본식 검정 라멘 그릇 회피.
 
-### 2.5 anchor consistency 운영 규칙 (sref 대체)
+### 2.5 공통 Suffix — **칼/도마 + cut anchor 7장 (CUT-00~CUT-06, v1.14 신설)**
+
+모든 cut anchor prompt 끝에 동일하게 부착. M1 후반 sprint ADR-005 Stage 2A rhythm tap prerequisite.
+**핵심**: cut anchor 7장은 (a) 한식 도마 + 한식 칼 silhouette을 통일 유지하고 (b) 각 cut style은 cutting RESULT state (cut된 결과 상태, NOT cutting action)로 표현하며 (c) 음식 12장 anchor + 환경 5장 anchor와 동일한 Cool Sage `#C8D5C0` bg + modern saturated 톤 + slim outline 2-3px로 cross-asset 일관성 lock.
+
+```
+[STYLE_SUFFIX_CUT]
+Format: square 1:1.
+View: top-down (overhead view, looking straight down at the cutting board surface).
+Style: modern mobile casual game asset, clean 2D illustration in Royal Match (Dream Games 2021)
+aesthetic. Hero shot of a Korean kitchen cutting board with ingredients prepared for cooking.
+Slim bold dark outline 2-3px (warm dark #2D1D14, not pure black), single color fill with optional
+soft 1-layer cel shading and ONE small specular highlight per element (juicy/freshness appetite).
+Vibrant saturated colors at 80-90 percent saturation, warm food + cool background balance.
+
+CUTTING BOARD (consistent across all 7 cut anchors):
+- A Korean kitchen wooden cutting board (도마) in warm brown wood color (#A67049 single fill,
+  slim grain line accent 1-2 only, NOT heavy realistic wood texture), rectangular shape with
+  rounded corners (approximately 16:9 horizontal proportion, filling most of the image).
+- The board has a slight darker rim outline (warm dark #2D1D14, 2-3px), clean modern flat appearance.
+
+KNIFE (consistent silhouette across all 7 cut anchors):
+- A modern Korean kitchen knife (식칼) — warm brown wood handle (#A67049 matching the board) +
+  silver-gray steel blade (#C8C8C8 single fill with subtle slim cel shading), slim simple geometric
+  shape, slightly elongated rectangular blade with a subtle pointed tip.
+- The knife sits on or beside the cutting board (placement varies per anchor — see body prompt).
+
+BACKGROUND:
+- Solid Cool Sage #C8D5C0 background (consistent across all 7 cut anchors, matches food + environment
+  anchor base for cross-asset one-game-world identity).
+- Single subtle ambient ellipse shadow directly under the cutting board (#000 ~25% alpha).
+
+Important: avoid beige background, cream paper background, scrapbook, storybook, kraft paper,
+vintage texture, golden hour, sunset warm lighting,
+Cookie Run, Cookie Run Kingdom frosting style, Toca Boca, Toon Blast over-cartoony,
+realistic or photorealistic rendering, 3D render, octane or unreal engine, food photography,
+heavy wood grain texture, heavy steel reflection, any texture, noise, grain,
+painterly or hand-painted feel, watercolor, gradient mesh, multi-layer complex shading,
+hyperdetailed elements, cinematic, gritty, blood, gore,
+Japanese kitchen knife (santoku/deba/yanagiba with distinct single-bevel asymmetric blade,
+black resin or octagonal magnolia wood handle, kanji engraving on blade),
+Chinese cleaver (rectangular tall blade much wider than Korean knife),
+Western chef knife (large triangular blade with bolster, German/French style),
+mortar and pestle (절구), traditional Korean stone tools (replaced by knife + cutting board as the
+direct gameplay mechanic mapping for ADR-005 Stage 2A rhythm tap),
+human characters, hands holding the knife, cooking action mid-motion, kitchen environment background,
+multiple cutting boards, multiple knives, any English or Korean text legibly readable on the board.
+```
+
+> **v1.14 도구 선택 사유**: cut anchor 7장은 cut shape 식별이 우선이므로 prompt-only generation으로 충분 (환경 5장 v4 image edit과 달리 base image의 정확 재현이 필수 요건 아님). gpt-image-1 medium 1024×1024 = $0.042/장. 한식 도마 + 한식 칼 silhouette 통일은 STYLE_SUFFIX_CUT의 explicit description으로 lock.
+> **anchor seed 후보**: CUT-00 cutting_board base가 lock 후 CUT-01~06 cut style 6장의 reference image upload seed로 사용 권장 (음식 anchor F-01 / 환경 anchor BG-01과 동일 패턴).
+
+> **v1.15 STYLE_SUFFIX_INGREDIENT (§5.6 신설용)**: ingredient whole 12장도 동일 STYLE_SUFFIX_CUT 본문을 재활용 + **INGREDIENT PLACEMENT 절 추가** (center-right whole ingredient + knife static left placement + cutting RESULT state 대신 WHOLE/UNCUT state 명시 + cut pieces scattered 회피 negative 추가). 도구는 cut anchor와 동일하게 gpt-image-1 medium prompt-only generation. 12장 × $0.042 ≈ $0.50. STYLE_SUFFIX_INGREDIENT 전체 본문은 `tools/gen_ingredient_anchors_m1.py` 상수 참조 (driver script가 single source of truth, 본 §2.5 cut suffix 본문에 INGREDIENT PLACEMENT 절을 추가하면 cut anchor 7장에도 invasive하게 영향 → driver inline 분리 유지).
+
+> **v1.16 STYLE_SUFFIX_REACTION (§5.7 신설용)**: 양친 reaction 6컷은 §2.3 STYLE_SUFFIX_CHAR (캐릭터 5장 공통 suffix)에서 (a) Format은 square 1:1 유지 / (b) View를 **bust-up portrait (head and shoulders only)**로 명시 (캐릭터 5장 full body와 다름) / (c) Background를 **Cool Sage `#C8D5C0` solid**로 전환 (캐릭터 5장 soft mint `#9BE0D2`와 다름 — Scene 3 식탁 reaction context에서 음식/cut/ingredient cross-asset cluster에 합류시키는 결정; 추후 어색하면 V2에서 soft mint revert 가능) / (d) **CHARACTER CONSISTENCY 절 추가** (어머니 Week 1 CH-02_mother base = round-bun + 빨간 jeogori top + soft white apron + warm motherly tone / 아버지 Week 1 CH-03_father base = salt-and-pepper hair + teal-green button-up shirt + kind reserved fatherly tone) / (e) **EXPRESSION GRADIENT 절 신설** (★1/★2/★3 메타 정의 — ★1 subtle smile + 정상 dot eyes / ★2 bigger smile + soft eye crescent arcs / ★3 big wide smile + closed-arc happy eyes + optional sparkle) / (f) **OPTIONAL SCENE 3 CONTEXT CUE 절** (젓가락 한 손 또는 입가 한 조각 minor accent only) / (g) negative에 `sleeping / sad closed eyes / crying tears` (Week 1 CH-04_mother_star1 sad teardrop variant 누수 회피 위해 필수) + `full body / lower body / legs / feet` (bust-up portrait 강제) + `multiple characters in one image` (single subject per anchor, 어머니/아버지 결합 0건) + `speech bubbles / captions` 추가. 도구는 cut/ingredient anchor와 동일하게 gpt-image-1 medium prompt-only generation. 6장 × $0.042 ≈ $0.25. STYLE_SUFFIX_REACTION 전체 본문은 `tools/gen_reaction_anchors_m1.py` 상수 참조 (driver script가 single source of truth, 본 §2.5 cut suffix 본문에 REACTION 변형 절을 추가하면 cut/ingredient anchor 19장에도 invasive하게 영향 → driver inline 분리 유지). **Week 1 reference image upload 권장**: CH-02_mother.png를 R-01~R-03 어머니 3컷 생성 시 reference upload, CH-03_father.png를 R-04~R-06 아버지 3컷 생성 시 reference upload — family IP consistency lock (sref 부재 대체). Week 1 CH-05_father_star3.png는 R-06 아버지 ★3 생성 시 추가 reference로 upload 가능 (★3 expression 형태 reference, 거의 settle 형태).
+
+### 2.6 anchor consistency 운영 규칙 (sref 대체)
 
 > 운영 매핑 표는 §0.1, 결과 인계 schema는 §0.2 참조.
 
@@ -1129,6 +1238,107 @@ main thread 해석: v2의 한옥 풀세트 (옹기 + lantern + 목조 한옥 fra
 
 ---
 
+## 5.7 M1 후반 Sprint — 양친 reaction 6컷 Anchor Prompts (v1.16 신설, Scene 3 식탁 ★1/★2/★3 gradient)
+
+### 5.7.1 개요
+
+> **범위**: 어머니 × {★1, ★2, ★3} + 아버지 × {★1, ★2, ★3} = 총 6장 reaction portrait. Scene 3 식탁 (음식 완성 후 양친이 식탁에서 먹는 reaction) 중심.
+> **친구 가족 단위** (project_adr003 2026-05-23 lock): 어머니 + 아버지 L11 동시 unlock (0.6s 시차 fade-in).
+> **ADR-005 Total Score 가중 평균** (재료 25% × 준비 20% × 방법 20% × 시간 35%): ★1 30%+ / ★2 60%+ / ★3 90%+.
+> **friends-system 호불호 axis** (project_adr003 v0.2): 음식별 호불호 (spicy/sweet/oily/salty/mild) → Total Score + 호불호 보너스 = 최종 reaction.
+> **공유 anchor**: Week 1 CH-02_mother.png (어머니 base) + Week 1 CH-03_father.png (아버지 base) + 선택 Week 1 CH-05_father_star3.png (아버지 ★3 reference). reference image upload로 family IP consistency lock (sref 부재 대체).
+> **도구**: ChatGPT gpt-image-1 medium 1024×1024 prompt-only generation + reference image upload. 6장 × $0.042 ≈ $0.25.
+> **공통 suffix**: §2.5 STYLE_SUFFIX_REACTION (driver script `tools/gen_reaction_anchors_m1.py` 상수 inline) — bust-up portrait + Cool Sage bg + chibi mascot + Family IP consistency + EXPRESSION GRADIENT 메타 정의.
+> **i18n**: 모든 prompt는 **icon-first English minimal** 원칙 — 한글 prompt 회피 (DALL-E Korean weakness + global UX). 본문에 `(어머니, early 50s, ...)` 같은 한국어 캐릭터 참조는 family IP context 명세이므로 허용.
+
+### 5.7.2 Week 1 base 시각 확인 결과 (art-director 2026-05-30)
+
+> art-director가 Week 1 commit 7a6cffb base 4장을 Read tool로 시각 확인한 결과 (`assets-raw/week1-anchors/`):
+
+| 파일 | 캐릭터 | Week 1 표정/포즈 | reaction sprint 활용 |
+|------|--------|----------------|---------------------|
+| **CH-02_mother.png** | 어머니 base | round-bun short black hair (simple dark shape) + 빨간 V-collar jeogori top (#F23E3E 톤) + soft white apron + 양손으로 음식 그릇 (작은 갈색 단지) 들고 + warm motherly subtle smile + 정상 dot eyes + light pink blush. **default expression ≈ ★1-★2 경계** (subtle warm smile 이지만 mouth closed, 약간 ★1 쪽) | R-01~R-03 어머니 3컷 family IP base reference. R-02 ★2가 CH-02 base와 가장 가까운 expression intensity (단 R-02는 bust-up + 음식 그릇 prop 빼고 chopsticks/bowl optional). |
+| **CH-03_father.png** | 아버지 base | short salt-and-pepper hair (gray-and-black simple shape) + solid teal-green button-up shirt (#2A8A6C 톤) + dark navy pants + LEFT 손 thumb-up gesture + RIGHT 손 hip 옆 + slim smile + 정상 dot eyes + 매우 light pink blush. **default expression ≈ ★2 경계** (thumb-up 때문에 ★1보다 한 단계 위, 하지만 mouth closed에 slim smile이라 ★2 lower end) | R-04~R-06 아버지 3컷 family IP base reference. R-05 ★2가 CH-03 base와 가장 가까운 expression intensity (단 R-05는 bust-up + thumb-up 약화 small casual gesture). |
+| **CH-04_mother_star1.png** | 어머니 Week 1 ★1 variant | round-bun + 빨간 sweater (apron 없음) + **sad teardrop expression** (한 눈에 작은 파란 teardrop visible) + downturned 입 + 한 손이 chin 쪽 어색한 worried 자세 + 정상 dot eyes + light pink blush | **본 sprint 재해석에서 폐기 — Week 1 sad teardrop은 부정 reaction이지 mild satisfaction (★1) 아님**. ADR-005 Total Score gradient 정의에 따르면 ★1 = "30%+ acceptable but not exciting" = mild positive acceptance ↔ Week 1 ★1 sad teardrop은 아예 0-29% 영역의 부정 reaction에 해당. R-01 어머니 ★1 prompt는 subtle warm smile + 정상 open dot eyes (Week 1 CH-04 sad variant 폐기)로 새로 작성. CH-04 file 자체는 보존 (향후 score 0-29% 또는 호불호 penalty 깊은 음식 reaction asset으로 재활용 가능). |
+| **CH-05_father_star3.png** | 아버지 Week 1 ★3 variant | salt-and-pepper hair + **파란** button-up shirt (CH-03 base teal-green과 살짝 다른 톤, 시각 디테일 inconsistency) + **excited eyes-closed-arc happy** (upward crescent smile-strokes) + **wide open mouth smile** (clear "wow!" delight) + LEFT 손 thumb-up + RIGHT 손 fist raised + **4개 simple flat orange sparkle accents** (얼굴 주변, single color, NOT detailed anime sparkle) + light pink blush | **본 sprint settle 형태에 가장 가까움**. R-06 아버지 ★3 prompt는 CH-05 variant를 거의 그대로 재현 (단 shirt 톤만 CH-03 base teal-green과 정확 매칭 + bust-up framing). CH-05 image 자체를 R-06 생성 시 추가 reference로 upload 권장 (★3 expression 형태 reference). |
+
+### 5.7.3 ★1/★2/★3 Expression Gradient 정의 (어머니 column + 아버지 column)
+
+> ADR-005 Total Score gradient (★1 30%+ / ★2 60%+ / ★3 90%+)에 맞춘 표정 진화. 어머니 (warm motherly nurturing tone) vs 아버지 (reserved masculine tone) 표정 톤 차이 명확.
+
+| 단계 | Score | 어머니 (warm motherly) | 아버지 (reserved masculine) |
+|------|-------|----------------------|--------------------------|
+| **★1 mild satisfaction (acceptable but not exciting)** | 30-59% | Eyes: 정상 open dot 2개 / Mouth: SUBTLE small arc (mouth closed, 입꼬리 살짝 up) / Cheek: light pink soft blush / Head: 살짝 tilt (gentle contemplative warmth) / Hand (optional): 한 mitten 손 near chin 또는 chopsticks (minor accent) / **Tone**: 폴라이트 motherly nurturing "this is okay, I appreciate it" | Eyes: 정상 open dot 2개 / Mouth: SLIM RESERVED small arc (mouth closed, 입꼬리 slight 약간만 up) / Cheek: very light pink (mother보다 살짝 약함, 남성적 reserved) / Head: 정상 upright (slumped 아님) / Hand (optional): 한 mitten 손 near chin (thoughtful evaluation) — **thumb-up 없음** (CH-03 base의 thumb-up은 ★2 이상에서만 등장) / **Tone**: stoic acceptance "this is okay" (mother보다 reserved) |
+| **★2 happy / pleased (solidly satisfied)** | 60-89% | Eyes: GENTLE UPWARD CRESCENT ARCS (soft crinkle 시작, ★1 dot ↔ ★3 closed-arc 사이 in-between) / Mouth: BIGGER warm smile, slightly OPEN small open-arc (gentle "oh, this is really good!") / Cheek: light pink 살짝 더 visible (warmth glow) / Head: 정상 upright relaxed / Hand (optional): rice bowl 또는 chopsticks 들고 happily eating gesture / **Tone**: genuine warm motherly happiness | Eyes: slight UPWARD CRESCENT ARCS (mother보다 살짝 less pronounced, 남성적) / Mouth: FULLER more open smile (★1 closed-arc보다 살짝 open, "contented this is good") / Cheek: light pink slightly more visible / Head: 정상 upright relaxed (한 어깨 살짝 relaxed) / Hand (optional): SMALL CASUAL thumb-up (CH-03 base와 비슷한 톤, single thumb, ★3보다 toned-down) / **Tone**: reserved posture가 drop하여 genuine relaxed enjoyment |
+| **★3 very happy / excited (wow, delicious!)** | 90-100% | Eyes: CLOSED-ARC HAPPY (upward crescent smile-strokes 2개, NOT sad/sleeping closed). Alternative: small simple flat geometric sparkle accents (single color, NOT detailed anime sparkle) / Mouth: BIG WIDE OPEN delighted "wow!" smile (★2 small open ↔ clearly larger and more open, small hint of teeth/mouth-interior OK) / Cheek: light pink clearly visible warm glow (NOT deep dark Cookie Run pink) / Head/Body: joyful, 양 mitten 손 raised near cheeks in delight OR clasped near chest in motherly pride / Optional accent: 1-2 small simple flat geometric heart icons (single color red, NOT detailed) / **Tone**: pure motherly delight, warmest most amplified | Eyes: CLOSED-ARC HAPPY (Week 1 CH-05_father_star3 변형 — upward crescent smile-strokes) / Mouth: BIG WIDE OPEN delighted "wow, son/daughter, this is GREAT!" grin (★2 small open ↔ clearly larger, small hint of teeth OK) / Cheek: light pink clearly visible / Head/Body: energetic excited, body slightly tilted forward in excitement, **one or BOTH mitten 손 enthusiastic thumb-up gesture** (Week 1 CH-05 variant = double thumb-up with one fist raised = settle pose for ★3) / Optional accent: 2-4 small simple flat geometric sparkle accents (single color yellow/orange, Week 1 CH-05 sparkle pattern reference) / **Tone**: peak fatherly excitement breaking through usual reserved posture |
+
+> **Cross-asset tone consistency**: 어머니/아버지 모두 ★1 → ★2 → ★3 gradient는 (1) eye shape 진화 (정상 dot → soft crescent arc → fully closed happy arc) + (2) mouth 진화 (subtle closed arc → small open → big wide open) + (3) body language 진화 (reserved → relaxed → energetic) 3축 동시 amplification. 어머니는 warm motherly nurturing tone amplification, 아버지는 reserved masculine tone breaking into excitement amplification — 같은 gradient 방향이지만 톤 starting point가 다름.
+
+### 5.7.4 6 prompt body 핵심 (한 줄 요약)
+
+| ID | name | character | star | body 핵심 (한 줄) |
+|----|------|-----------|------|-----------------|
+| **R-01** | mother_star1 | mother | ★1 | 어머니 Week 1 base family IP + bust-up portrait + SUBTLE warm small arc smile (mouth closed, 살짝 up) + 정상 open dot eyes + 살짝 head tilt + Cool Sage bg. **Week 1 CH-04 sad teardrop variant 폐기** — ★1 = mild positive acceptance (NOT sad). |
+| **R-02** | mother_star2 | mother | ★2 | 어머니 Week 1 base family IP + bust-up portrait + BIGGER warm smile mouth slightly OPEN + soft UPWARD CRESCENT ARC eyes (★1 ↔ ★3 in-between) + light pink blush more visible + Cool Sage bg. CH-02 base default expression과 가장 가까움. |
+| **R-03** | mother_star3 | mother | ★3 | 어머니 Week 1 base family IP + bust-up portrait + BIG WIDE OPEN delighted smile + CLOSED-ARC HAPPY eyes (upward crescent) + 양손 raised near cheeks in delight + optional 1-2 simple flat geometric heart icons + Cool Sage bg. |
+| **R-04** | father_star1 | father | ★1 | 아버지 Week 1 base family IP + bust-up portrait + SLIM RESERVED small arc smile (mouth closed, very slight lift) + 정상 open dot eyes + **thumb-up 없음** (★1은 reserved) + Cool Sage bg. |
+| **R-05** | father_star2 | father | ★2 | 아버지 Week 1 base family IP + bust-up portrait + FULLER more open smile (small open arc) + slight UPWARD CRESCENT ARC eyes + SMALL CASUAL single thumb-up (CH-03 base 톤) + Cool Sage bg. CH-03 base default expression과 가장 가까움. |
+| **R-06** | father_star3 | father | ★3 | 아버지 Week 1 base family IP + bust-up portrait + BIG WIDE OPEN delighted smile + CLOSED-ARC HAPPY eyes (Week 1 CH-05 reference) + **DOUBLE thumb-up + one fist raised** (Week 1 CH-05 settle pose) + 2-4 small simple flat geometric sparkle accents (Week 1 CH-05 sparkle pattern) + Cool Sage bg. Week 1 CH-05 거의 그대로 재현 (단 shirt teal-green CH-03 base 정확 매칭 + bust-up framing). |
+
+> 6 prompt 전체 본문 (각 약 30 line block)은 driver script `tools/gen_reaction_anchors_m1.py`의 REACTIONS 리스트 inline 보존 — single source of truth. 본 §5.7.4는 한 줄 요약만 인용. body 변경 시 driver 와 본 §5.7.4 표 동시 갱신.
+
+### 5.7.5 anchor seed 채택 + reference image upload 워크플로
+
+> sref URL 부재 대체 → reference image upload + subject anchor 문장의 3축 운영:
+
+1. **Round 1 (어머니 anchor seed)**: R-02 어머니 ★2 (가장 CH-02 base default와 가까움)을 anchor seed로 lock. ChatGPT 채팅 세션에 **CH-02_mother.png upload + R-02 prompt** 같이 전송 → "이 reference 어머니 캐릭터와 동일한 family IP (hair / outfit / face features)를 유지하면서 ★2 happy/pleased reaction expression bust-up portrait" follow-up.
+2. **Round 2 (어머니 ★1/★3 generation)**: R-02 best result를 같은 채팅 세션 안에서 reference로 사용 → R-01 어머니 ★1 (subtle warm smile) / R-03 어머니 ★3 (big wide open + closed-arc + heart) generation. "앞서 생성한 어머니 ★2 image와 같은 family IP 유지, 단 표정만 ★1 subtle smile 또는 ★3 big delighted로 변경" follow-up.
+3. **Round 3 (아버지 anchor seed)**: R-05 아버지 ★2 (가장 CH-03 base default와 가까움)을 anchor seed로 lock. **새 채팅 세션** (어머니/아버지 세션 분리 권장 — 캐릭터 cross-contamination 회피)에 **CH-03_father.png upload + R-05 prompt** 같이 전송 → "이 reference 아버지 캐릭터와 동일한 family IP 유지하면서 ★2 happy/relaxed reaction expression bust-up portrait" follow-up.
+4. **Round 4 (아버지 ★1/★3 generation)**: R-05 best result를 같은 채팅 세션 안에서 reference로 사용 → R-04 아버지 ★1 (slim reserved) / R-06 아버지 ★3 (big wide open + double thumb-up + sparkle) generation. R-06 생성 시 **Week 1 CH-05_father_star3.png 추가 reference upload** 권장 — "이 reference image의 ★3 expression intensity (closed-arc happy eyes + double thumb-up + sparkle accents)를 정확히 매칭, 단 shirt teal-green tone과 bust-up framing은 CH-03 base와 정확 매칭" follow-up.
+
+> driver script (`py tools/gen_reaction_anchors_m1.py`)는 ChatGPT API direct call (reference image upload 자동화 X) — 즉 fresh generation으로 6장 batch 생성. reference image upload + chain-of-references 워크플로는 사용자 ChatGPT 웹 UI에서 수동 실행 권장. **driver 6장 batch 결과의 family IP consistency가 약하면 (G1 일관성 FAIL)** 사용자 ChatGPT 웹 UI reference upload 워크플로 사용 권장.
+
+### 5.7.6 reroll trigger (follow-up 대화 형식)
+
+> 어머니/아버지 reaction anchor 공통 reroll trigger:
+
+| Trigger 유형 | follow-up prompt 패턴 |
+|-------------|---------------------|
+| **G1 family IP 일관성 FAIL** (Week 1 base와 다른 캐릭터) | "이 이미지를 다시 그려줘. Week 1 reference image와 같은 family IP (hair / outfit / face features) 정확히 매칭, 같은 outline 두께·features·컬러 saturation 유지." |
+| **표정 gradient FAIL — ★1이 너무 expressive / ★3이 너무 reserved** | "이 이미지를 다시 그려줘. ★N expression intensity를 [더 subtle/더 expressive]로 — ★1 = subtle small arc mouth closed, ★2 = bigger open arc, ★3 = wide open delighted + closed-arc happy eyes 3 단계 gradient 정확 매칭." |
+| **sad/sleeping closed eyes 누수** (Week 1 CH-04 sad teardrop 패턴) | "이 이미지를 다시 그려줘. 눈을 [정상 open dot 2개 OR 위로 향한 happy upward crescent arc]로, 절대 sad/sleeping/crying closed eyes 아님. 표정은 [mild satisfaction / happy / very happy] 긍정 reaction." |
+| **full body / lower body 누수** (bust-up 위반) | "이 이미지를 다시 그려줘. bust-up portrait (head and shoulders only)로 — 다리/하반신/full body 절대 안 보이게. Scene 3 식탁 seated 형태." |
+| **bg cool sage 누수 → 베이지/cream/캐릭터 5장 soft mint 누수** | "이 이미지를 다시 그려줘. 배경을 solid Cool Sage #C8D5C0 (cool tone)으로 명확히, 베이지/cream/soft mint #9BE0D2 톤 모두 제거. Scene 3 식탁 cross-asset 일관성." |
+| **multiple characters 누수** (어머니/아버지 결합) | "이 이미지를 다시 그려줘. single subject만 ([어머니 OR 아버지]) 그리기 — 다른 가족 멤버 절대 없음. portrait composition." |
+| **deep dark pink cheek / Cookie Run frosting 누수** | "이 이미지를 다시 그려줘. cheek blush를 LIGHT pink #FFCFCF soft 로, deep dark Cookie Run frosting pink 절대 안 됨." |
+| **sparkle/heart icon 폭주 detail** (★3에서만 발생) | "이 이미지를 다시 그려줘. sparkle/heart 아이콘을 simple flat geometric (single color, NOT detailed anime sparkle effect)로 단순화, 1-4개만 minor accent로." |
+| **남성적 톤 누수 (아버지)** — anime boy / teenager 누수 | "이 이미지를 다시 그려줘. 50대 mature father로 강조 — salt-and-pepper hair + 다 자란 성인, 절대 teenager/anime boy/school boy 아님." |
+
+### 5.7.7 driver script + 실행 명령
+
+- 신규 driver: `tools/gen_reaction_anchors_m1.py`
+- 6장 batch 실행: `py tools/gen_reaction_anchors_m1.py --model gpt-image-1 --quality medium`
+- 1장 test 실행 (R-02 어머니 ★2 anchor seed 권장): `py tools/gen_reaction_anchors_m1.py --only R-02`
+- 일부 실행 (어머니/아버지 ★1만): `py tools/gen_reaction_anchors_m1.py --only R-01,R-04`
+- 출력 경로: `assets-raw/reaction_anchors_m1/R-XX_<character>_star<N>_v1.png` (v1 default, --version v2 plate 가능)
+- 비용 예상: 6장 × $0.042 ≈ $0.25
+- 시간 예상: ~2-3분 (6장 batch)
+
+### 5.7.8 ChatGPT 약점 risk top 5
+
+| Rank | reaction anchor | 누수 risk | default % | 회피 전략 |
+|------|----------------|----------|-----------|----------|
+| 1 | R-01 mother_star1 | sad teardrop / crying / disappointed expression 누수 (Week 1 CH-04 sad pattern + ChatGPT의 "low rating reaction" → sad 자동 추론) | ~60% | "MILD POSITIVE acceptance, subtle warm smile + 정상 OPEN dot eyes, NOT sad, NOT crying, NOT disappointed" explicit 강제 + ★1 = "30%+ acceptable but not exciting" gradient 정의 명시 |
+| 2 | R-06 father_star3 | sparkle detail 폭주 (anime sparkle effect 누수) + double thumb-up이 single thumb-up로 단순화 | ~40% | "small simple flat geometric sparkle (single color, NOT detailed anime sparkle)" + "BOTH mitten hands enthusiastic thumb-up gesture (Week 1 CH-05_father_star3 settle pose)" 명시 + Week 1 CH-05 reference upload 권장 |
+| 3 | R-03 mother_star3 | heart icon detail 폭주 + closed-arc eyes가 sad closed eyes로 잘못 추론 | ~35% | "HAPPY UPWARD ARC closed-arc (smiling eyes, NOT sad/sleeping)" + "small simple flat geometric heart icons (single color, NOT detailed)" 명시 |
+| 4 | R-02 / R-05 ★2 in-between | ★2의 in-between expression이 ★1 또는 ★3로 collapse (gradient flat화) | ~30% | "GENTLE UPWARD CRESCENT ARCS (★1 dot ↔ ★3 fully closed-arc 사이 in-between)" + "BIGGER than ★1, SMALLER than ★3" 양방향 비교 명시 |
+| 5 | R-04 father_star1 | thumb-up 누수 (CH-03 base의 thumb-up이 ★1에 carry over) | ~25% | "thumb-up 없음 (★1은 reserved, thumb-up은 ★2 이상에서만)" explicit 명시 |
+
+> 부차 risk (P2): 모든 reaction에서 full body 누수 (~25%), bg 캐릭터 5장 soft mint 누수 (~20%), multiple characters 결합 누수 (~15%).
+
+
+---
+
 ### 5.2 음식 12 Anchor Prompts (F-01~F-12)
 
 #### F-01 — Ramyeon (라면, T1, anchor 시드 1순위)
@@ -1178,57 +1388,85 @@ NO narutomaki pink spiral fish cake, NO nori seaweed sheet on top, NO chashu por
 
 ---
 
-#### F-02 — Hotteok (호떡, T1, FTUE 1순위)
+#### F-02 — Janchi-guksu (잔치국수, T1, v1.17 mvp v2.2 신규 — 호떡 deprecated 2026-05-30)
 
-**English title**: Hotteok (Korean Sweet Pancake with Brown Sugar Filling)
+**English title**: Janchi-guksu (Korean Celebration Noodle Soup with Anchovy Broth)
 
 **식별 핵심 시각 요소**:
-- 갈색 golden-brown round disc 1~2개 (pan-grilled flat circle)
-- 중앙 brown sugar/cinnamon filling 흘러나오는 dark dot/swirl
-- 살짝 fluffy 부드러운 edge (구운 자국 일부)
-- 흰 작은 접시 또는 종이 cup (한식 시장 호떡 종이 컵)
-- accent: 깨/견과류 dot 1~2개 (선택)
+- 넓고 얕은 흰 baekja shallow bowl (한식 백자, sloped wide rim, NOT 깊은 일본 ramen 뚝)
+- 맑은 light golden-amber 멸치 dashi broth (warm pale brown-yellow, NOT 진한 spicy red, NOT 짙은 miso brown, NOT clear Vietnamese pho)
+- THIN delicate 흰 wheat noodles (소면 white wheat thin strands, swirled mound at center, hero element)
+- garnish 5종 (fanned arrangement, separated strips): 노란 계란 지단 strips (julienned yellow egg crepe) + 검정 김 strips (gim, julienned rectangular) + 녹색 애호박 (zucchini disc/julienne) + optional 멸치 (dried anchovy 1-2 minor accent) + optional 빨간 고추 slice
+- single subtle ambient ellipse shadow
 
-**Tier 1 단서**: disc 1~2개만, 접시 단순.
+**Tier 1 단서**: bowl 1개, 1인분, garnish 4-5종 단순 fanned.
 
-**Prompt** (v1.5 = v2 contained filling + 표면 topping syrup drizzle 추가):
+**Prompt** (v1.17 mvp v2.2 신설, ChatGPT 자연어):
 ```
-A modern mobile casual game food card illustration of Korean Hotteok (sweet pancake), 7/8 top-down view.
-A golden-brown round flat disc (one or two stacked) sits on a small white plate or a simple paper cup
-(Korean street market style). The disc has a slightly chewy edge with subtle grill marks.
-In the center top, a tiny hint of dark brown sugar filling barely peeks through a small slit
-in the surface — the filling is mostly contained INSIDE the disc, only a small dark dot or thin sliver
-of brown sugar visible at the slit (realistic Hotteok appearance — the filling is enclosed, not pouring out).
-On the golden-brown surface of the disc, a small drizzle of glossy dark brown sugar syrup
-is gently swirled on top as a finishing touch (a light decorative drizzle, like syrup on a pancake,
-a thin glossy ribbon resting on the surface, NOT a flood, NOT pouring out from inside,
-NOT a large pool, just a delicate topping accent).
-Optional: 1-2 small chopped peanut or sesame dots scattered on top as accent.
-Single subtle ambient ellipse shadow under the plate.
+A modern mobile casual game food card illustration of Korean Janchi-guksu (잔치국수,
+Korean celebration noodle soup with anchovy broth), top-down view.
+A wide clean white round shallow bowl (Korean baekja porcelain, gently sloped wide rim, large enough
+for noodles + clear broth + garnish, NOT a deep narrow Japanese ramen donburi, NOT a Vietnamese pho
+deep wide soup plate) is filled with light golden-amber clear anchovy dashi broth (멸치 육수,
+warm pale brown-yellow gentle tone — the gentle clear broth made from dried anchovies + dried kelp,
+NOT a thick brown miso, NOT a pale white tonkotsu, NOT a vibrant spicy red gochugaru, NOT a
+dark soy-based broth, NOT a vivid Vietnamese pho cinnamon-clove tinted broth).
+THIN delicate white wheat noodles (소면 somen-style Korean white thin wheat noodles, fine slim strands)
+emerge in a soft swirled nest at the center of the bowl, the noodles forming a gentle rounded mound
+that rises just above the broth surface (the noodles are clearly visible as the hero element, the
+broth pools around the noodle mound).
+GARNISH on top of the noodle mound (Korean janchi-guksu signature, arranged in clean separated
+strips fanning out from the center):
+(1) bright YELLOW EGG RIBBON strips (지단 julienned egg crepe, thin yellow rectangular strips
+~3-5cm long × ~3mm wide, 5-7 strips fanning across one side of the noodle mound, a hero garnish),
+(2) dark green-black GIM SEAWEED STRIPS (얇게 자른 김, thin rectangular black-green seaweed strips
+~3-5cm long × ~3mm wide, 5-7 strips on the opposite side of the egg ribbon, matte NOT glossy),
+(3) thin GREEN ZUCCHINI ROUNDS or julienned light-green zucchini (애호박, 3-4 thin pale green
+diagonal slices ~2cm long × ~1cm wide × very thin, scattered as accent),
+(4) optional 1-2 small DRIED ANCHOVY (멸치) garnish on the rim or beside the bowl as a hint of the
+broth ingredient (small slim silver-gray fish ~2-3cm long, OPTIONAL minor accent),
+(5) optional 1 RED CHILI PEPPER SLICE (small thin red diagonal slice as color accent, OPTIONAL).
+Single subtle ambient ellipse shadow under the bowl.
 
 [STYLE_SUFFIX_FOOD]
 
-Important also: this is Korean Hotteok (street market sweet pancake with brown sugar filling),
-NOT a Western pancake stack with maple syrup, NOT a Chinese cong you bing (scallion pancake),
-NOT a Japanese dorayaki (red bean filled). The brown sugar filling is mostly CONTAINED INSIDE the disc,
-with only a tiny hint peeking through a small slit — NO excessive syrup overflow from the slit,
-NO molten lava-like outpour from inside, NO large pool of syrup pooled on the plate,
-NO sauce flooding out of the disc interior.
-The small syrup drizzle on top is okay as a separate topping accent (like pancake syrup decoration,
-visually distinct from the contained filling — the topping drizzle rests on the surface,
-the filling stays enclosed inside).
-The filling is brown molten sugar (barely visible at the slit), NOT chocolate, NOT cream.
-The disc has a chewy fried golden-brown surface, NOT fluffy soufflé style.
+Important also: this is Korean Janchi-guksu (잔치국수, celebration noodle soup with clear anchovy
+dashi broth), NOT Japanese somen (Japanese somen is served cold with tsuyu dipping sauce in a
+separate cup + ice cubes + green onion garnish, NOT in a hot anchovy broth bowl with egg ribbon +
+gim + zucchini), NOT Japanese udon (udon noodles are THICK chunky white strands, janchi-guksu is
+THIN delicate strands), NOT Japanese ramen (ramen has curly yellow egg noodles + miso/tonkotsu/shoyu
+broth + narutomaki/chashu/nori sheet, NOT clear anchovy broth + egg ribbon/gim/zucchini garnish),
+NOT Japanese soba (soba is buckwheat brown-gray noodles, janchi-guksu is white wheat noodles).
+NOT Vietnamese pho (pho has clear cinnamon-clove beef broth + raw beef slices + lime wedge + bean
+sprouts + Thai basil + cilantro + hoisin/sriracha side, janchi-guksu has anchovy broth + egg ribbon
++ gim + zucchini, NO lime, NO bean sprouts, NO basil/cilantro herbs, NO sliced beef).
+NOT Chinese egg noodle soup or wonton soup (those use yellow egg noodles + char siu pork / wontons,
+NOT thin white wheat noodles + Korean garnish set).
+NOT Korean instant Ramyeon (F-01 with vibrant orange-red gochugaru spicy broth + curly yellow
+noodles + sunny-side-up egg + spring onion — janchi-guksu is the OPPOSITE: clear gentle anchovy
+broth + thin white wheat noodles + egg ribbon strips + gim strips, gentle vs spicy, white vs yellow,
+clear vs red).
+The ESSENTIAL signature features are: (a) wide clean white Korean baekja shallow bowl + (b) LIGHT
+GOLDEN-AMBER clear anchovy broth + (c) THIN delicate WHITE wheat noodles swirled mound + (d) bright
+YELLOW EGG RIBBON STRIPS as hero garnish + (e) dark GIM SEAWEED STRIPS contrast garnish + (f) thin
+green zucchini accent. The combination of clear anchovy broth + thin white wheat noodles + yellow
+egg ribbon + dark gim strips is the unmistakable Korean janchi-guksu signature.
+NO Japanese ceramic pink spiral narutomaki, NO chashu pork, NO seaweed sheet on top (gim is in
+JULIENNED STRIPS, not a sheet), NO wasabi, NO gari, NO bonito flakes, NO mayo, NO lime wedge,
+NO bean sprouts, NO herbs (basil/cilantro), NO sliced raw beef.
 ```
 
-**DALL-E 3 약점 회피 노트**:
-- **risk L** — 한식 단독 카테고리, 누수 risk 낮음.
-- minor risk: Western pancake stack로 빠질 수 있음 (높게 쌓인 형태). "single flat disc" 강조.
-- minor risk: Chinese cong you bing (파전 회피)으로 빠질 수 있음. "sweet brown sugar filling" 강조.
+**ChatGPT 약점 회피 노트**:
+- **risk H — Japanese somen 누수** (~50% default): "noodle soup with thin white wheat noodles" → ChatGPT default가 Japanese cold somen 추론 빈번. "hot anchovy broth + egg ribbon + gim + zucchini garnish" 강제 + Japanese cold tsuyu/separate cup/ice 명시 회피.
+- **risk M — Vietnamese pho 누수** (~30%): "clear noodle soup" → ChatGPT가 pho 추론 가능. "anchovy broth", "egg ribbon + gim strips garnish" + "NO lime, NO bean sprouts, NO basil/cilantro" 명시.
+- broth 색 누수: 맑은 한식 멸치 broth가 ChatGPT default로 miso brown 또는 spicy red로 빠지기 쉬움. "LIGHT GOLDEN-AMBER clear anchovy broth" 반복 강조.
+- F-01 라면과 혼동: 둘 다 noodle soup이지만 F-01 라면은 spicy red + curly yellow, F-02 잔치국수는 clear amber + thin white. 본문 "OPPOSITE of F-01 Ramyeon" 명시.
 
 **Reroll 트리거** (follow-up):
-- Western pancake stack 누수: "이 이미지를 다시 그려줘. single flat disc (or 2 stacked max)로, 절대 높게 쌓인 American pancake stack with maple syrup 아님."
-- 단맛 filling 안 보임: "이 이미지를 다시 그려줘. 중앙에 dark molten brown sugar filling을 oozing 형태로 명확히 보이게."
+- Japanese somen 누수: "이 이미지를 다시 그려줘. Korean Janchi-guksu로 명확히 — 넓고 얕은 흰 baekja bowl + 따뜻한 light golden-amber clear anchovy dashi broth + 흰 thin wheat noodles swirled mound + 노란 egg ribbon strips + 검정 gim strips + 녹색 애호박 garnish. NOT Japanese cold somen with tsuyu, NO separate dipping cup, NO ice cubes."
+- Vietnamese pho 누수: "이 이미지를 다시 그려줘. NOT Vietnamese pho — anchovy broth (NOT cinnamon-clove beef broth), Korean garnish (egg ribbon + gim + zucchini), NO lime wedge, NO bean sprouts, NO Thai basil, NO cilantro, NO sliced raw beef."
+- broth 색 누수 (brown miso로 추론): "이 이미지를 다시 그려줘. broth를 LIGHT GOLDEN-AMBER clear (warm pale yellow-amber)로 강조, 멸치 dashi 시그니처 — NOT brown miso, NOT dark soy, NOT red spicy."
+- garnish 누수 (egg ribbon 또는 gim strips 누락): "이 이미지를 다시 그려줘. garnish 4종 명확 — (1) 노란 egg ribbon julienned strips 5-7개 fanned + (2) 검정 gim julienned strips 5-7개 opposite side + (3) 녹색 애호박 slices 3-4개 + (4) optional dried anchovy 1-2개."
 
 ---
 
@@ -1537,52 +1775,119 @@ NO Japanese pickled umeboshi plum, NO bamboo chopsticks placed on top.
 
 ---
 
-#### F-09 — Kimchi Jjigae (김치찌개, T2, 중식 hot pot 누수 risk)
+#### F-09 — Bulgogi (불고기, T2, v1.17 mvp v2.2 신규 — 김치찌개 deprecated 2026-05-30, F-12 갈비 차별화 CRITICAL)
 
-**English title**: Kimchi Jjigae (Kimchi Stew)
+**English title**: Bulgogi (Korean Marinated Thin-sliced Beef with Vegetables)
 
 **식별 핵심 시각 요소**:
-- **검정 ttukbaegi (뚝배기) 한식 stone pot** — 한식 stew의 핵심 식별 (NOT 중식 hot pot)
-- 빨간 spicy kimchi broth (진한 red-orange)
-- 흰 두부 (tofu) 사각 block 2~3개 (위에 보이게)
-- 김치 잎 chunks 2~3개 (빨간 김치 잎 형태)
-- 갈색 pork belly slice 또는 흰 띠 (선택)
-- 녹색 spring onion sprinkle
-- 김 위로 살짝 (steam swirl 1~2 line, 선택)
-- 검정 wooden trivet 또는 단순 base
+- **검정 cast-iron Korean BBQ pan (전골 jeongol-style)** — shallow round black cast-iron, slightly curved rim ~22-28cm, rustic dark iron (NOT 깊은 Chinese wok, NOT copper sukiyaki pan, NOT white ceramic plate)
+- **GLOSSY BROWN soy-pear-garlic marinade pool** (간장+배+마늘+설탕+참기름 양념, dark caramel-brown glossy sauce, 단짠 umami coating everything)
+- **5-7 THIN MARBLED BEEF slices fanned** (얇게 썬 차돌박이/등심, each ~6-10cm × ~4-6cm × ~2-3mm paper-thin, marbled fat veins visible across cooked rich brown surface, naturally curled at edges)
+- **MIXED VEGETABLES in SAME PAN**: 양파 white onion half-moon slices + 대파 green scallion 3-4cm segments + 당근 orange carrot julienne + 표고/느타리 brown mushroom slices + optional 당면 brown glass noodle strands
+- garnish: 깨 generous sprinkle + 송송 sliced 대파 chopped rounds
+- single subtle ambient ellipse shadow under cast-iron pan
 
-**Tier 2 단서 (2인분 풍성)**: 큰 ttukbaegi, 두부 3개 + 김치 chunks 3개 + pork.
+**Tier 2 단서 (2인분 풍성)**: 큰 cast-iron pan + 5-7 beef slices generously + 4-6 vegetable types mixed together + 깨/대파 garnish.
 
-**Prompt**:
+**F-12 갈비구이 차별화 CRITICAL** (불고기 ≠ 갈비 절대 구분):
+- NO bone-in LA cut, NO visible white rib bone, NO cross-section bone discs along strips
+- NOT grilled on wire mesh grill grate over hot coals
+- NOT large 18-25cm LA strips (불고기는 작은 ~6-10cm 자연 curled slices)
+- 불고기는 IN A PAN with marinade pool + mixed vegetables together (갈비는 plated on ceramic plate or grill grate)
+
+**Prompt** (v1.17 mvp v2.2 신설, ChatGPT 자연어):
 ```
-A modern mobile casual game food card illustration of Korean Kimchi Jjigae (kimchi stew), 7/8 top-down view.
-A black Korean stone pot (ttukbaegi 뚝배기, the signature Korean stew vessel, rounded with a thick rim,
-NOT a wide Chinese hot pot, NOT a Japanese donabe) is filled with bubbling vibrant red-orange spicy kimchi broth.
-Inside the pot: 2-3 white tofu (dubu) square blocks visible at the surface,
-2-3 red kimchi leaf chunks, optional 1-2 brown pork belly slices, scattered green spring onion dots on top.
-1-2 subtle steam swirl lines rising from the surface (optional).
-The pot sits on a simple dark wooden trivet or directly on the surface.
-Tier 2 abundance: tofu 3 blocks + kimchi 3 chunks + pork visible, pot looks generously filled.
+A modern mobile casual game food card illustration of Korean Bulgogi (불고기, marinated
+thin-sliced beef hot pot dish with vegetables), 7/8 top-down view.
+The dish is served on/in a DARK CAST-IRON KOREAN BBQ PAN (전골 jeongol-style shallow round black
+cast-iron pan with a slightly curved rim, ~22-28cm diameter, rustic dark iron color #2D2D33, NOT a
+glossy Chinese wok with rounded deep bowl, NOT a Japanese sukiyaki copper pan, NOT a white ceramic
+plate — Korean cast-iron bulgogi pan is dark, flat-ish, shallow, slightly curved rim).
+The pan is filled with the rich BROWN SOY-PEAR-GARLIC MARINADE POOL (간장+배+마늘+설탕+참기름 양념,
+glossy dark caramel-brown sauce, generously coating everything, gentle bubbling sheen — NOT a deep
+sukiyaki broth bath, NOT a clear shabu-shabu broth, NOT a vibrant red gochujang sauce, NOT a green
+salsa — just a glossy umami brown soy-pear-garlic marinade coating).
+HERO: 5-7 THIN SLICED MARBLED BEEF pieces (얇게 썬 차돌박이 / 등심 marinated bulgogi beef slices,
+each slice ~6-10cm long × ~4-6cm wide × ~2-3mm THIN paper-thin slice, soft marbled fat veins
+visible in pale white pattern across the dark cooked rich brown surface, FANNED arrangement curling
+naturally as cooked beef does — some slices slightly curled at edges, others laying flat, all
+coated with the glossy soy-pear-garlic marinade glaze with a slight brown sheen specular highlight).
+The beef slices are CLEARLY VISIBLE as the hero element, generously filling ~50-60% of the pan area.
+COOKED VEGETABLES mixed together with the beef in the SAME PAN (NOT on the side, NOT separated):
+- 4-6 WHITE ONION SLICES (양파, thin half-moon slices ~3-5cm long × ~1.5cm wide, slightly
+  translucent caramelized pale white-gold, mixed in among the beef),
+- 3-5 GREEN SCALLION SEGMENTS (대파 chunks, ~3-4cm long diagonal-cut bright green stalks, scattered
+  across the pan),
+- 2-3 ORANGE CARROT JULIENNE strips (당근 채, thin matchstick ~4-5cm long × ~3mm wide, bright orange
+  accent visible among brown beef),
+- 2-3 BROWN SHIITAKE OR OYSTER MUSHROOM slices (표고 or 느타리 버섯, dark brown cap slices ~3-4cm wide,
+  cooked tender),
+- optional 1-2 TRANSLUCENT BROWN GLASS NOODLE (당면 dangmyeon) strands mixed in as accent (slim
+  shiny translucent amber strands, optional minor element — Korean bulgogi often includes a small
+  portion of dangmyeon mixed in).
+GARNISH on top of the bulgogi:
+- generous sprinkle of WHITE SESAME SEEDS (깨, scattered all over the beef + vegetables as a hero
+  Korean garnish),
+- CHOPPED GREEN SCALLION ROUNDS (송송 sliced 대파, small bright green disc-shaped slices ~1-2mm thick,
+  scattered as additional accent — these are SMALL CHOPPED ROUNDS, NOT the larger 3-4cm scallion
+  SEGMENTS mixed into the beef above).
+Single subtle ambient ellipse shadow under the cast-iron pan.
 
 [STYLE_SUFFIX_FOOD]
 
-Important also: this is Korean Kimchi Jjigae (kimchi stew in ttukbaegi stone pot),
-NOT a Chinese hot pot (huoguo, which is a wide shallow pan with raw ingredients around),
-NOT Sichuan mala soup, NOT Japanese nabe, NOT shabu-shabu.
-The black ttukbaegi pot (rounded, thick rim, individual portion size) is the ESSENTIAL identifying feature.
-The broth is bright vibrant red-orange (kimchi + gochugaru), NOT brown soy-based dashi,
-NOT clear Sichuan mala oil layer. NO raw thin-sliced meat slices around the pot,
-NO Chinese mala peppercorns floating, NO chopstick-held raw vegetables on the side.
+Important also: this is Korean Bulgogi (불고기, thin-sliced marinated beef cooked together with
+vegetables in a Korean cast-iron pan). The ESSENTIAL signature features are: (a) DARK CAST-IRON
+KOREAN BBQ PAN (NOT plate, NOT bowl, NOT grill grate) + (b) GLOSSY BROWN soy-pear-garlic marinade
+pool coating everything + (c) THIN SLICED marbled beef (paper-thin 2-3mm slices, FANNED naturally,
+marbled fat visible) + (d) MIXED VEGETABLES IN THE SAME PAN (onion + scallion + carrot + mushroom)
++ (e) sesame seeds + chopped scallion garnish.
+
+CRITICAL — F-12 갈비구이 차별화 (이 요리는 불고기 NOT 갈비):
+- NO BONE-IN LA CUT — bulgogi uses BONELESS thin-sliced beef, ABSOLUTELY NO visible white rib bone,
+  NO bone cross-section discs along strips, NO single long bone alongside meat. Any rib bone =
+  immediate FAIL (that's F-12 Galbi-gui, this is F-09 Bulgogi).
+- NOT GRILLED ON METAL GRATE — bulgogi is cooked IN A PAN with marinade pool, NOT on a wire mesh
+  grill grate over hot coals (that's F-12). NO hot coals glow underneath, NO wire mesh grate
+  pattern.
+- NOT SEPARATED MEAT STRIPS — bulgogi has thin marbled slices fanned naturally curling, NOT
+  perfectly parallel rectangular strips spaced evenly (that's F-12 LA-galbi form).
+- NOT LARGE 18-25cm LA STRIPS — bulgogi slices are smaller ~6-10cm × 4-6cm and natural curled
+  shapes, NOT large rectangular cross-cut strips.
+
+NOT Japanese SUKIYAKI (sukiyaki has deeper broth bath in a square iron pan + raw egg dipping bowl
+on the side + tofu cubes + 다른 vegetable set + napa cabbage dominant — bulgogi is shallow
+marinade-coated, NO raw egg dipping bowl, NO deep broth bath).
+NOT Japanese SHABU-SHABU (shabu-shabu uses clear simmering broth pot with thin meat slices dipped
+mid-cooking + ponzu/sesame dipping sauce — bulgogi is already coated with marinade in the pan, no
+clear broth, no dipping sauce setup).
+NOT Japanese YAKINIKU (yakiniku is grilled boneless thin beef on tabletop grill grate with salt or
+soy dipping sauce, NO marinade pool coating in a pan, NO mixed vegetables cooked together).
+NOT Chinese BEEF STIR-FRY (stir-fry has wok hei char marks + dark soy + glossy thick cornstarch
+sauce + Chinese cabbage / bok choy / bean sprouts vegetable set, bulgogi has soy-pear-garlic
+marinade + Korean vegetable set + cast-iron pan, NOT wok).
+NOT American BBQ RIBS (red BBQ sauce + thick slab + bone-on-side, completely different category).
+NOT Korean Kimchi Jjigae F-09 deprecated (was vibrant red-orange gochugaru broth + ttukbaegi stone
+pot + tofu cubes + kimchi chunks — this is the NEW F-09 Bulgogi, completely different visual:
+brown marinade NOT red broth, cast-iron pan NOT ttukbaegi, thin beef slices NOT tofu cubes).
+
+The combination of dark cast-iron Korean pan + glossy brown soy-pear-garlic marinade pool +
+fanned thin marbled beef slices + mixed vegetables (onion/scallion/carrot/mushroom) in the SAME
+pan + sesame + chopped scallion garnish is the unmistakable Korean bulgogi signature.
 ```
 
-**DALL-E 3 약점 회피 노트**:
-- **risk HIGH — Chinese hot pot 누수**: ChatGPT default "Korean spicy stew" → 중식 hot pot 추론 빈번 (특히 raw ingredients around 추가). → "black ttukbaegi (rounded thick rim, individual portion)" 강제 + hot pot/mala/raw meat negative.
-- 뚝배기 누락 (wide pan으로): "rounded thick rim, individual portion size" 명시.
-- broth 색 누수 (간장 갈색): "bright vibrant red-orange (kimchi + gochugaru)" 강조.
+**ChatGPT 약점 회피 노트**:
+- **risk HIGH — Japanese sukiyaki 누수** (~50% default): "thin marbled beef + dark cast-iron pan + soy sauce + vegetables" → ChatGPT default가 sukiyaki 추론 빈번. raw egg dipping bowl 추가 회피 critical. "NO raw egg dipping bowl, NO deep broth bath" 명시.
+- **risk HIGH — F-12 갈비구이 cross-contamination** (~40%): 동일 한식 BBQ 카테고리이므로 ChatGPT가 bone-in LA cut 누수 가능. "NO BONE-IN LA CUT, NO visible white rib bone, NOT grilled on wire mesh grate" 반복 강조. F-12와 시각 분리 critical.
+- pan 누락 (plate로 추론): "dark cast-iron Korean BBQ pan" 명시, ceramic plate 회피.
+- 양념 누수 (red gochujang으로 추론, 김치찌개 잔재): "GLOSSY BROWN soy-pear-garlic marinade, NOT vibrant red gochujang" 명시.
+- vegetables 분리 (side dish로 추론): "mixed in SAME PAN, NOT on the side, NOT separated" 명시.
 
 **Reroll 트리거** (follow-up):
-- 중식 hot pot 누수: "이 이미지를 다시 그려줘. Korean Kimchi Jjigae로 명확히 — 검정 ttukbaegi (rounded thick rim, individual portion size) 한식 stone pot + bright red-orange kimchi broth + 흰 두부 blocks. NOT Chinese hot pot, NO raw thin-sliced meat around, NO Sichuan mala peppercorns."
-- ttukbaegi 모양 누수: "이 이미지를 다시 그려줘. pot을 black ttukbaegi (rounded shape, thick rim, deep bowl, individual portion)로 명확히, wide shallow hot pot 아님."
+- Japanese sukiyaki 누수: "이 이미지를 다시 그려줘. Korean Bulgogi로 명확히 — 검정 cast-iron Korean BBQ pan + glossy brown soy-pear-garlic marinade pool + thin fanned marbled beef + mixed vegetables. NOT Japanese sukiyaki, NO raw egg dipping bowl, NO deep broth bath."
+- F-12 갈비 cross-contamination: "이 이미지를 다시 그려줘. NOT F-12 갈비 — BONELESS thin-sliced beef (~2-3mm), NO visible white rib bone, NO bone cross-section discs, NOT on wire mesh grill grate over hot coals. 불고기 = pan with marinade pool + mixed vegetables."
+- pan 누수 (white plate로): "이 이미지를 다시 그려줘. pan을 DARK CAST-IRON Korean BBQ pan (shallow round black, slightly curved rim ~22-28cm)으로 명확히, NOT a ceramic plate, NOT a glossy wok."
+- vegetables 누락 또는 분리: "이 이미지를 다시 그려줘. 양파/대파/당근/표고 mixed IN THE SAME PAN with beef (NOT on the side, NOT a separate plate). 5-7 thin beef slices + 4 vegetable types mixed together in the marinade pool."
+- marinade 색 누수 (red로): "이 이미지를 다시 그려줘. marinade를 GLOSSY BROWN soy-pear-garlic (간장+배+마늘 단짠 갈색)으로, NOT vibrant red gochujang (이건 김치찌개 잔재), NOT clear broth."
 
 ---
 
@@ -1931,52 +2236,927 @@ meat strip, a SHORT WHITE RIB BONE protrudes about 1-2cm. ... [중략 — 전체
 
 ---
 
-### 5.5 ADR-005 칼/도마 + Cut Style 6종 (M1 후반 sprint — 음식 12 hero shot 완료 후)
+### 5.5 ADR-005 Stage 2A 칼/도마 + Cut Style 6종 (v1.14 신설, M1 후반 sprint — full prompts)
 
-> art-style-guide §5 가이드 기반. 본 sprint는 prompt frame만 placeholder.
+> **ADR-005 Stage 2A prerequisite**: 재료 준비 = rhythm tap + Knife indicator. 칼이 자동 위아래 움직임 (AnimationPlayer), 도마 닿기 직전 = perfect tap. 각 cut style은 BPM 다름 (다지기 140 가장 빠름 / 통썰기 70 가장 느림).
+> **범위**: 칼/도마 base 1장 + cut style 6장 = **총 7장**. 각 cut style은 cutting RESULT state (cut된 결과 상태, NOT cutting action mid-motion) — 게임 asset으로 도마 + cut된 재료 + 칼 옆에 놓임 형태.
+> **공유 anchor**: CUT-00 cutting_board base가 anchor seed → CUT-01~06 cut style 6장 prompt에 reference upload + "같은 도마 + 같은 칼 silhouette + 같은 Cool Sage bg + 같은 outline 두께로 일관성 유지" follow-up. 음식 anchor F-01 / 환경 anchor BG-01과 동일 패턴.
+> **도구**: ChatGPT (GPT-4o image / gpt-image-1 medium). prompt-only generation (cut shape 식별 우선, image edit 불필요).
+> **공통 suffix**: §2.5 STYLE_SUFFIX_CUT 모든 prompt 끝에 부착.
 
-**칼/도마 base prompt** (ChatGPT 자연어):
+#### 5.5.0 음식 12 × hero ingredient × cut style 매핑 표 (v1.15 신설)
+
+> **출처**: ADR-005 Stage 2A 재료 준비 미니게임은 음식별 hero ingredient를 적절한 cut style로 자르는 형태. 본 매핑은 art-director **임시 직관 매핑** — game-designer foods CSV `prep_*` 컬럼 후속 확정 시 일부 reroll/재매핑 가능. 매핑이 변경되면 §5.6 ingredient whole anchor도 같이 reroll.
+> **F-06 / F-10 예외**: 콘도그 cheese / 순두부 soft tofu는 cut 없이 whole(또는 broken curds) 형태로 사용 — 본 매핑 표에서 cut style = (no cut).
+
+| food_id | 음식 | hero ingredient | cut style anchor | BPM | 비고 |
+|---------|------|----------------|------------------|-----|------|
+| F-01 | Ramyeon (라면) | 대파 (spring onion) | CUT-05 송송썰기 | ~90 | 라면 가니쉬 시그니처 thin 송송 sliced rounds |
+| F-02 | Hotteok (호떡) | 견과류 (peanut) | CUT-01 다지기 | ~140 | 호떡 filling 토핑 finely chopped 견과류 |
+| F-03 | Kimbap (김밥) | 단무지 (pickled radish) | CUT-02 채썰기 | ~100 | 김밥 단면 hero julienne strip |
+| F-04 | Tteokbokki (떡볶이) | 어묵 (fish cake sheet) | CUT-03 어슷썰기 | ~80 | 떡볶이 시그니처 diagonal oval slices |
+| F-05 | Kimchi Fried Rice (김치볶음밥) | 김치 (napa cabbage kimchi leaf) | CUT-01 다지기 | ~140 | 볶음밥용 chopped 김치 base |
+| F-06 | Korean Corn Dog (콘도그) | 모짜렐라 (cheese stick) | **(no cut, whole)** | N/A | 콘도그 내부 cheese stretch — whole 그대로 insert |
+| F-07 | Haemul Pajeon (해물파전) | 대파 daepa (large scallion) | CUT-03 어슷썰기 | ~80 | 파전 시그니처 diagonal-sliced 대파 (F-01 spring onion보다 thicker variety) |
+| F-08 | Bibimbap (비빔밥) | 당근 (carrot) | CUT-02 채썰기 | ~100 | 비빔밥 6 section 중 orange hero julienne |
+| F-09 | Kimchi Jjigae (김치찌개) | 두부 firm (firm tofu) | CUT-06 깍둑썰기 | ~70 | 김치찌개 시그니처 흰 cube dice 두부 |
+| F-10 | Sundubu Jjigae (순두부) | 두부 soft (soft tofu tube) | **(no cut, broken curds)** | N/A | 순두부는 cut 없이 squeezed/scooped soft curds |
+| F-11 | Japchae (잡채) | 당근 (carrot) | CUT-02 채썰기 | ~100 | 잡채 시그니처 — F-08과 동일 ingredient (asset 재사용 가능) |
+| F-12 | Galbi-gui (갈비구이) | 마늘 (garlic cloves) | CUT-01 다지기 | ~140 | 갈비 양념 finely minced garlic base |
+
+> **cut style 분포 통계** (음식 12 → cut style 5 + 2 no-cut):
+> - CUT-01 다지기 (mince) — F-02 호떡 견과류 / F-05 김치볶음밥 김치 / F-12 갈비 마늘 = 3 음식
+> - CUT-02 채썰기 (julienne) — F-03 김밥 단무지 / F-08 비빔밥 당근 / F-11 잡채 당근 = 3 음식 (당근 2회)
+> - CUT-03 어슷썰기 (diagonal) — F-04 떡볶이 어묵 / F-07 해물파전 대파 daepa = 2 음식
+> - CUT-04 통썰기 (whole disc) — 본 매핑에서 hero ingredient 없음 (김밥 cylinder 단면은 김밥 자체 service form, hero ingredient cut prep 아님)
+> - CUT-05 송송썰기 (sliced rounds) — F-01 라면 대파 spring onion = 1 음식
+> - CUT-06 깍둑썰기 (cube) — F-09 김치찌개 두부 firm = 1 음식
+> - **no cut** — F-06 콘도그 모짜렐라 / F-10 순두부 soft tofu = 2 음식
+>
+> CUT-04 통썰기는 hero ingredient cut prep 매핑이 없음 → game-designer 후속 검증 시 (a) 김밥 자체 cylinder slice를 Stage 2C "plating" 단계 cut으로 분리 매핑하거나 (b) 다른 음식에 통썰기 추가 매핑 (예: F-04 떡볶이 떡 cylinder도 송송/통썰기 가능)을 고려.
+
+#### 5.5.1 CUT-00 — Cutting Board base (칼+도마 정적 baseline, anchor seed)
+
+**의도**: Scene 2 (Kitchen) 도마 화면 background asset. 칼 + 도마 정적 baseline (NO food, NO cut state). cut style 6종 anchor seed.
+
+**식별 핵심 시각 요소**:
+- 한식 도마 — warm brown wood (#A67049) + slim grain accent 1-2개 + rounded corners + ~16:9 가로비례 (square 1:1 frame 내)
+- 한식 칼 (식칼) — warm brown wood handle + silver-gray steel blade + slim simple geometric shape, slightly elongated rectangular blade with subtle pointed tip
+- 칼은 도마 위에 비스듬히 (~45도, handle = 하단 좌측 또는 우측 corner / blade tip = 대각선 상단 corner) — 정적 baseline placement, NOT mid-swing
+- bg = solid Cool Sage `#C8D5C0` + ambient ellipse shadow
+
+**Prompt** (v1.14 신설):
 ```
-A flat 2D illustration of a knife and wooden cutting board, top-down view.
-Simple knife silhouette (gray blade + brown handle), bold 3px black outline.
-Brown rectangular cutting board with 2-3 horizontal grain lines, rounded corners.
-Hyper-casual mobile game style, single color fill, no shading.
-Plain warm cream background. Format: square 1:1. Minimal stylization.
+A modern mobile casual game asset illustration of a Korean kitchen cutting board (도마)
+with a kitchen knife resting on top, top-down view, static baseline state (NO food on the board,
+NO cut ingredients, NO cutting action in progress — this is the empty cutting board + knife
+baseline used as the Scene 2 (Kitchen) background asset in the K-Food Master mobile game).
 
-Important: avoid realistic, photorealistic, 3D render, texture, painterly,
-hyperdetailed, gore, blood, raw meat.
+The wooden cutting board fills most of the image (approximately 16:9 horizontal proportion within
+the square frame), centered with a small margin around it. The board is warm brown wood (#A67049
+single fill) with 1-2 subtle slim grain lines as accent (NOT heavy realistic wood grain texture).
+The board has a slim bold dark outline (warm dark #2D1D14, 2-3px) and rounded corners (modern
+friendly mobile game shape).
+
+The Korean kitchen knife sits on the cutting board surface, placed diagonally at approximately
+a 45-degree angle (handle in the lower-left or lower-right corner of the board, blade pointing
+toward the opposite upper corner — a natural relaxed placement, NOT mid-swing motion). The knife
+has a warm brown wood handle (#A67049 matching the board) and a silver-gray steel blade (#C8C8C8
+single fill with subtle slim cel shading), simple geometric slim silhouette.
+
+[STYLE_SUFFIX_CUT]
+
+Important also: this is the EMPTY cutting board + knife baseline state — NO food ingredients on
+the board, NO cut pieces, NO vegetables, NO meat, NO fish, NO garlic, NO scallions, NO tofu, NO
+sauce, NO mortar and pestle, NO traditional Korean stone tools (this is the modern direct-mechanic
+mapping per ADR-005 Stage 2A rhythm tap requirement). The knife is at a relaxed diagonal placement
+(not raised mid-swing, not chopping in motion). This is the static baseline cutting board scene
+used as the foundation for all 6 cut style variants.
 ```
 
-**Cut style 6종 frame placeholder** (각 frame 1: whole / frame 2: cutting / frame 3: cut):
+**Expected output 특징**: empty Korean cutting board + diagonal knife placement + Cool Sage bg + slim outline 2-3px + no food.
 
-| Cut style | Frame 수 | Prompt 핵심 변수 (자연어) |
-|-----------|---------|--------------------------|
-| 다지기 (mince) | 2 (whole → minced dots) | "ingredient minced into many small dots, scattered evenly" |
-| 채썰기 (julienne) | 2 (whole → thin sticks) | "ingredient julienned into thin parallel sticks" |
-| 어슷썰기 (diagonal slice) | 3 (whole → mid → done) | "ingredient diagonally sliced into parallelogram pieces" |
-| 통썰기 (round slice) | 2 (whole → rounds) | "ingredient round-sliced into evenly spaced discs" |
-| 송송썰기 (small chop) | 2 (whole → segments) | "scallion chopped into small segments" |
-| 깍둑썰기 (cube) | 3 (whole → mid → cubes) | "ingredient cubed into small dice pieces" |
+**Reroll 트리거** (follow-up):
+- 음식이 추가됨: "이 이미지를 다시 그려줘. 도마 위에 음식/재료 완전 제거. 칼만 도마 위에 비스듬히 놓여있는 정적 baseline 상태."
+- 절구 누수: "이 이미지를 다시 그려줘. mortar and pestle (절구) 완전 제거. 한식 도마 + 한식 칼만."
+- Japanese 식칼 누수 (santoku/deba): "이 이미지를 다시 그려줘. modern Korean kitchen knife (식칼)로 — 직사각 slim blade + warm brown wood handle. NOT Japanese santoku/deba single-bevel asymmetric blade, NOT kanji engraving."
+- 칼 mid-swing motion: "이 이미지를 다시 그려줘. 칼을 도마 위에 비스듬히 (~45도) 정적 placement, NOT raised mid-chop, NOT in motion."
 
-> ChatGPT는 frame sequence를 같은 채팅 세션 안에서 "앞 frame과 동일 ingredient base, cut state만 변경" follow-up으로 일관성 lock.
+#### 5.5.2 CUT-01 — Mince (다지기, 마늘, BPM 140 가장 빠름)
 
-**ingredient cut variation**: 음식 12 × hero ingredient 1~2 = ~24 sprite. 각 "whole + cut" 2장만.
+**의도**: F-12 갈비 양념 / F-09 김치찌개 시그니처. 가장 빠른 BPM rhythm tap cut style.
 
-### 5.6 양친 reaction 6컷 (U-2 동시 unlock, M1 후반 / M2)
+**식별 핵심 시각 요소**:
+- 마늘 minced bits scattered — 작은 yellowish-white 불규칙 granules (각 1-3mm, irregular angular shapes, NOT round perfect discs)
+- 도마 center-right portion에 generous 클러스터로 scattered (loose cluster, "just been minced" 인상)
+- optional 1-2 whole garlic cloves (small rounded teardrop, off-white) — LEFT side에 시각 reference
+- 칼은 LEFT side에 set down, blade flat against board, handle lower-left corner
 
-| ID | Subject | 상속 anchor |
-|----|---------|------------|
-| CH-02-S | 어머니 Subtle (★1·★2) | CH-02 lock image |
-| CH-02-H | 어머니 Happy (★3) | CH-02 lock image |
-| CH-03-S | 아버지 Subtle (★1·★2) | CH-03 lock image |
-| CH-03-H | 아버지 Happy (★3) | CH-03 lock image |
-| (CH-04, CH-05) | 주인공 본 sprint에서 lock | — |
+**Tier**: BPM 140 — 가장 fine/granular cut, 시각적으로 가장 분산된 fine texture
 
-> 6컷 합계 = (어머니 S+H) + (아버지 S+H) + (주인공 본 sprint CH-04·05) = 6컷.
-> 모든 reaction prompt에 "Important: avoid sleeping, eyes closed peaceful, sad, crying" 필수 (tier-1-2-flow §3.3.1 sync).
-> 각 prompt에 CH-02 / CH-03 lock image를 reference upload하여 일관성 lock.
+**Prompt** (v1.14 신설):
+```
+A modern mobile casual game asset illustration of a Korean kitchen cutting board (도마)
+with MINCED GARLIC (다진 마늘) scattered on top, top-down view, cutting RESULT state (the garlic
+has just been finely minced — many tiny irregular fine bits scattered across the board surface,
+NOT cutting in progress). The signature ingredient mapping = 마늘 (Korean garlic, the fastest BPM
+~140 cut style, used in F-12 galbi marinade and F-09 kimchi jjigae).
 
-### 5.7 재료 카드 / UI / VFX (M1 후반 / M2)
+On the cutting board surface: a generous pile of FINELY MINCED GARLIC bits — many small irregular
+yellowish-white granules (each tiny bit approximately 1-3mm, irregular angular shapes since they
+are finely chopped, NOT round perfect discs, NOT large chunks). The minced garlic is scattered in
+a loose cluster covering roughly the center-right portion of the board, with a few bits scattered
+slightly wider to give a natural "just been minced" appearance. Optional: 1-2 unminced whole garlic
+cloves (small rounded teardrop shape, off-white color) sit on the board as visual anchors for
+"before mince" context — these are partial reference shapes, NOT the hero element.
+
+The kitchen knife rests on the LEFT side of the cutting board, blade flat against the board
+surface, handle pointing toward the lower-left corner, slightly angled (the knife is set down
+after mincing, NOT in motion mid-chop). The knife blade has subtle hints of garlic juice sheen on
+its edge (very minimal accent).
+
+[STYLE_SUFFIX_CUT]
+
+Important also: this is the MINCE (다지기) cut style result — the garlic must read as MANY TINY
+FINE IRREGULAR BITS (1-3mm each, finely chopped texture), NOT round disc-shaped slices, NOT large
+chunks, NOT julienne strips, NOT cube dice. The signature ingredient is Korean garlic (마늘) —
+small yellowish-white minced granules scattered across the board as the hero element. This is the
+cutting RESULT state (just finished mincing), NOT cutting action mid-chop. The mapping is mince
+(다지기) = fastest BPM ~140 for ADR-005 Stage 2A rhythm tap — visually identifiable as the most
+granular/fine cut texture among the 6 cut styles.
+```
+
+**Reroll 트리거**:
+- 큰 chunks로 추론: "이 이미지를 다시 그려줘. garlic을 finely minced (1-3mm tiny irregular bits)로, NOT chunks, NOT slices."
+- disc/slice 추론: "이 이미지를 다시 그려줘. round disc slices 폐기 → irregular fine bits (다지기, finely chopped texture)."
+- 마늘 색 누수: "이 이미지를 다시 그려줘. garlic을 yellowish-white으로 (Korean 마늘 색), NOT pure white, NOT brown."
+
+#### 5.5.3 CUT-02 — Julienne (채썰기, 당근)
+
+**의도**: F-08 비빔밥 (radial 채소 section) / F-11 잡채 (당면 mixed-in 채소 strip). 한식 julienne 시그니처.
+
+**식별 핵심 시각 요소**:
+- 당근 julienned strips — 주황 (#FF9933) thin elongated parallel matchstick (각 4-6cm long × 2-3mm wide × 2-3mm thick, ~15-20 strips)
+- 도마 center-right portion에 relaxed natural pile (slightly overlapping, NOT perfectly stacked geometric)
+- optional 1-2 whole carrots (cylindrical orange + green leafy top) — LEFT side
+- 칼은 LEFT side, blade flat, handle lower-left corner
+
+**Prompt** (v1.14 신설):
+```
+A modern mobile casual game asset illustration of a Korean kitchen cutting board (도마)
+with JULIENNED CARROT (채썬 당근) on top, top-down view, cutting RESULT state. The signature
+ingredient mapping = 당근 (Korean julienned carrot, used in F-08 bibimbap and F-11 japchae as the
+classic julienne signature vegetable).
+
+On the cutting board surface: a generous pile of JULIENNED CARROT STRIPS — many thin elongated
+orange (#FF9933 single fill, bright vibrant saturated) strips, each strip approximately 4-6cm long
+× 2-3mm wide × 2-3mm thick (thin matchstick-like elongated strips, all parallel-ish aligned and
+slightly overlapping in a relaxed natural pile, NOT perfectly stacked geometric, NOT cube cubes,
+NOT round discs). The julienne strips are arranged in the center-right portion of the board,
+suggesting a "just been julienned" pile. Approximately 15-20 visible strips. Optional: 1-2 unsliced
+whole carrots (cylindrical orange shape with a green leafy top) sit on the LEFT side of the board
+as visual reference for "before julienne" — these are partial anchors, NOT the hero element.
+
+The kitchen knife rests on the LEFT side of the cutting board next to the whole carrots, blade
+flat against the board surface, handle pointing toward the lower-left corner (the knife is set
+down after julienning, NOT in motion).
+
+[STYLE_SUFFIX_CUT]
+
+Important also: this is the JULIENNE (채썰기) cut style result — the carrots must read as MANY
+THIN ELONGATED MATCHSTICK STRIPS (4-6cm long × 2-3mm wide × 2-3mm thick, thin elongated parallel
+shapes), NOT mince bits, NOT round disc slices, NOT cube dice, NOT large chunks. The signature
+ingredient is Korean julienned carrot (당근 채) — bright orange elongated thin strips as the hero
+element. This is the cutting RESULT state, NOT cutting action mid-slice. The mapping is julienne
+(채썰기) for ADR-005 Stage 2A rhythm tap — visually identifiable as the thinnest elongated strip
+shape among the 6 cut styles (NOT short oval like diagonal slice, NOT thin round like sliced
+rounds).
+```
+
+**Reroll 트리거**:
+- 당근 두꺼움 (cube로 추론): "이 이미지를 다시 그려줘. carrots을 THIN matchstick strips (2-3mm wide × 2-3mm thick × 4-6cm long)으로, NOT cube cubes, NOT thick chunks."
+- 길이 짧음: "이 이미지를 다시 그려줘. 채 strips를 4-6cm 길이의 elongated parallel matchsticks으로."
+- 다른 채소 (양파/시금치)로 추론: "이 이미지를 다시 그려줘. 당근(carrot, orange #FF9933)만 — 다른 채소 완전 제거."
+
+#### 5.5.4 CUT-03 — Diagonal Slice (어슷썰기, 어묵+대파)
+
+**의도**: F-04 떡볶이 어묵 + 모든 국물의 어슷썬 대파. 한식 diagonal slice 시그니처.
+
+**식별 핵심 시각 요소**:
+- 어묵 diagonal oval slices — 4-5 flat elongated oval (각 5-7cm long diagonal × 2-3cm wide, light golden-brown `#C8923C`, slightly translucent)
+- 대파 diagonal oval slices — 6-8 smaller oval (각 3-4cm long diagonal × 1-1.5cm wide, white base fading to green tip)
+- 두 ingredient 모두 명확한 diagonal angle (elongated oval shape, NOT round perfect circle which would be 통썰기)
+- optional whole fish cake stick + whole scallion — LEFT side
+- 칼은 LEFT side, blade flat, handle lower-left corner
+
+**Prompt** (v1.14 신설):
+```
+A modern mobile casual game asset illustration of a Korean kitchen cutting board (도마)
+with DIAGONAL-SLICED FISHCAKE AND SCALLION (어슷썬 어묵 + 대파) on top, top-down view, cutting
+RESULT state. The signature ingredient mapping = 어묵 + 대파 (Korean diagonal-sliced fish cake and
+scallion, used in F-04 tteokbokki and all Korean soup/stew dishes).
+
+On the cutting board surface: a mix of DIAGONAL OVAL FISH CAKE SLICES and DIAGONAL OVAL SCALLION
+SLICES. The fish cake (어묵) slices are flat oval-elongated shapes (each approximately 5-7cm long
+diagonal × 2-3cm wide, light golden-brown #C8923C single fill, slightly translucent appearance,
+4-5 slices arranged in a relaxed overlapping pile in the center-right of the board). The scallion
+(대파) diagonal slices are smaller oval shapes (each approximately 3-4cm long diagonal × 1-1.5cm
+wide, white base fading to bright green tip, 6-8 slices scattered around the fish cake slices).
+
+Both ingredient types are cut at a clear diagonal angle (어슷썰기 = the knife cuts the cylindrical
+ingredient at a slanted angle, producing elongated OVAL slices that are visibly longer in one
+dimension than the cross-section would be — the elongated oval shape IS the diagonal slice
+signature, NOT round perfect circles which would be 통썰기). Optional: 1 unsliced whole fish cake
+stick (cylindrical light golden shape, ~10cm long) and 1 unsliced whole scallion (cylindrical
+white-to-green shape, ~12cm long) sit on the LEFT side of the board as visual reference for
+"before diagonal slice".
+
+The kitchen knife rests on the LEFT side of the cutting board, blade flat against the board
+surface, handle pointing toward the lower-left corner (the knife is set down after slicing, NOT
+in motion).
+
+[STYLE_SUFFIX_CUT]
+
+Important also: this is the DIAGONAL SLICE (어슷썰기) cut style result — the slices must read as
+ELONGATED OVAL SHAPES (longer in one dimension than the natural cross-section diameter, the
+diagonal cut signature), NOT round perfect circles (those would be 통썰기), NOT thin strips (those
+would be 채썰기), NOT cube dice. The signature ingredients are Korean fish cake (어묵) AND Korean
+scallion (대파) — both diagonal-sliced as the hero elements. The elongated oval shape is the
+critical visual identifier — the more elongated the oval, the steeper the diagonal angle. This is
+the cutting RESULT state, NOT cutting action mid-slice. The mapping is diagonal slice (어슷썰기)
+for ADR-005 Stage 2A rhythm tap — visually distinct from whole slice (round) and sliced rounds
+(thin round).
+```
+
+**Reroll 트리거**:
+- 둥근 disc로 추론 (통썰기 누수): "이 이미지를 다시 그려줘. 어슷썰기 = elongated OVAL shape (longer in one dimension), NOT round perfect circles. 칼이 cylindrical ingredient를 slanted angle로 cut."
+- 어묵 색 누수: "이 이미지를 다시 그려줘. 어묵을 light golden-brown #C8923C로, NOT white, NOT pink-orange."
+- 대파 색 누수: "이 이미지를 다시 그려줘. 대파 slices를 white base fading to bright green tip으로."
+
+#### 5.5.5 CUT-04 — Whole Slice (통썰기, 김밥 cylinder 단면, BPM 70 가장 느림)
+
+**의도**: F-03 김밥 serving form (cylinder 단면). BPM 70 가장 느린 cut style — 가장 stable round disc.
+
+**식별 핵심 시각 요소**:
+- 김밥 round disc slices — 4-5 perfect 둥근 disc (각 ~3cm 지름 × 1.5-2cm thick)
+- 각 disc는 김밥 cross-section: 검정 김 outer ring + 흰 short-grain rice + colorful cross-section center (yellow danmuji + orange carrot + green spinach + red ham + yellow egg)
+- center-right portion에 relaxed row arrangement, slightly overlapping, all round-face-up
+- optional whole uncut kimbap cylinder (~12-15cm) — LEFT side
+- 깨 sprinkle on top
+- 칼은 LEFT side, blade flat, handle lower-left corner
+
+**Prompt** (v1.14 신설):
+```
+A modern mobile casual game asset illustration of a Korean kitchen cutting board (도마)
+with WHOLE-SLICED KIMBAP DISCS (통썬 김밥) on top, top-down view, cutting RESULT state. The
+signature ingredient mapping = 김밥 cylinder 단면 (Korean kimbap whole slices, used in F-03 kimbap
+service form, the slowest BPM ~70 cut style — the most stable round disc shape).
+
+On the cutting board surface: 4-5 ROUND DISC KIMBAP SLICES arranged in a relaxed row across the
+center-right portion of the board. Each slice is a perfect round disc (approximately 3cm diameter
+× 1.5-2cm thick, the classic Korean kimbap cylindrical cross-section). Each disc shows the kimbap
+signature cross-section: a black seaweed (gim) outer ring + white rice with FINE small grains
+underneath + a colorful cross-section center showing distinct ingredient blocks: yellow pickled
+radish (danmuji), orange carrot, green spinach or cucumber, red ham or beef strips, and yellow
+egg strips. The slices are slightly overlapping in the relaxed row, all oriented round-face-up to
+show the cross-section. A few sesame seed dots are sprinkled on top.
+
+Optional: 1 unsliced whole kimbap cylinder (uncut roll, ~12-15cm long cylinder with black gim
+exterior) sits on the LEFT side of the board as visual reference for "before whole slice" — this
+is a partial anchor, NOT the hero element.
+
+The kitchen knife rests on the LEFT side of the cutting board next to the unsliced kimbap roll,
+blade flat against the board surface, handle pointing toward the lower-left corner (the knife is
+set down after slicing, NOT in motion).
+
+[STYLE_SUFFIX_CUT]
+
+Important also: this is the WHOLE SLICE (통썰기) cut style result — the kimbap slices must read
+as PERFECT ROUND DISCS (cylindrical cross-sections, the round-face-up disc shape, ~3cm diameter ×
+1.5-2cm thick), NOT elongated oval (those would be 어슷썰기 diagonal slice), NOT thin matchstick
+strips (those would be 채썰기), NOT mince bits, NOT cube dice. The signature ingredient is Korean
+kimbap (김밥) whole slices — the round disc shape with visible colorful cross-section is the hero.
+The whole slice (통썰기) maps to the slowest BPM ~70 cut style for ADR-005 Stage 2A rhythm tap —
+the most stable easiest cut shape, visually identifiable as the largest most regular round disc
+among the 6 cut styles. NOT Japanese maki sushi (those use raw fish + tight compressed rice + thin
+seaweed) — this is Korean kimbap (thicker disc, cooked vegetables, matte gim).
+```
+
+**Reroll 트리거**:
+- Japanese maki sushi 누수: "이 이미지를 다시 그려줘. Korean 김밥으로 명확히 — thicker disc + cooked vegetables (danmuji yellow + carrot orange + spinach green + ham red) + matte gim. NOT Japanese maki sushi, NOT raw fish."
+- elongated oval로 추론 (어슷썰기 누수): "이 이미지를 다시 그려줘. 통썰기 = perfect ROUND DISC (round-face-up cylindrical cross-section), NOT elongated oval."
+
+#### 5.5.6 CUT-05 — Sliced Thin Rounds (송송썰기, 대파)
+
+**의도**: F-12 갈비구이 hero garnish + 모든 한식 finishing 가니쉬. 송송 sliced 대파 시그니처.
+
+**식별 핵심 시각 요소**:
+- 대파 thin round slices — 20-30 small bright green disc (각 1-1.5cm 지름 × 1-3mm thick)
+- 각 slice는 scallion ring pattern: 작은 흰 center circle (scallion 줄기 hollow cross-section) + bright green outer ring
+- center-right portion에 generous loose pile scattered ("just been 송송 sliced" 인상)
+- optional 1-2 whole scallion stems (white-to-green) — LEFT side
+- 칼은 LEFT side, blade flat, handle lower-left corner
+
+**Tier comparison**: 통썰기 (CUT-04)와 비교 시 SAME round shape이지만 distinctly THINNER + SMALLER. rapid repeated thin slicing.
+
+**Prompt** (v1.14 신설):
+```
+A modern mobile casual game asset illustration of a Korean kitchen cutting board (도마)
+with SLICED THIN ROUND SCALLIONS (송송 썬 대파) scattered on top, top-down view, cutting RESULT
+state. The signature ingredient mapping = 대파 (Korean scallion / spring onion thinly sliced into
+small round discs, used in F-12 galbi-gui as the hero garnish and across all Korean dishes as the
+finishing garnish).
+
+On the cutting board surface: many SMALL THIN ROUND SCALLION SLICES — bright green small disc
+shapes (each approximately 1-1.5cm diameter × 1-3mm thick, very thin round discs from cross-cutting
+the cylindrical scallion stem). Each slice shows the characteristic scallion ring pattern: a small
+white circle in the center (the hollow scallion stem cross-section interior) surrounded by a bright
+green ring (the outer scallion stem wall). Approximately 20-30 visible thin round slices scattered
+across the center-right portion of the board in a generous loose pile, suggesting a "just been
+송송-sliced" abundant garnish ready for sprinkling.
+
+Optional: 1-2 unsliced whole scallion stems (cylindrical white-base-to-green-tip shape, ~12cm
+long) sit on the LEFT side of the board as visual reference for "before sliced rounds" — these
+are partial anchors, NOT the hero element.
+
+The kitchen knife rests on the LEFT side of the cutting board next to the unsliced scallions,
+blade flat against the board surface, handle pointing toward the lower-left corner (the knife is
+set down after slicing, NOT in motion).
+
+[STYLE_SUFFIX_CUT]
+
+Important also: this is the SLICED THIN ROUNDS (송송썰기) cut style result — the scallion slices
+must read as MANY SMALL THIN ROUND DISCS (1-1.5cm diameter × 1-3mm thick, very thin round shape
+with the characteristic small white center ring + bright green outer ring), NOT elongated oval
+(those would be 어슷썰기 diagonal slice), NOT thicker large round disc (those would be 통썰기
+whole slice — 송송 is distinctly thinner and smaller), NOT thin matchstick strips (those would be
+채썰기), NOT mince bits, NOT cube dice. The signature ingredient is Korean scallion (대파) 송송
+sliced — the small thin bright green round discs scattered abundantly are the hero. Compared to
+통썰기 (large stable round disc), 송송썰기 is the SAME round shape but distinctly THINNER and
+SMALLER (rapid repeated thin slicing). The mapping is sliced rounds (송송썰기) for ADR-005 Stage
+2A rhythm tap.
+```
+
+**Reroll 트리거**:
+- 통썰기와 동일 크기로 추론: "이 이미지를 다시 그려줘. 송송썰기 = THIN SMALL round discs (1-1.5cm 지름 × 1-3mm 두께)로, 통썰기 (3cm 지름 × 1.5-2cm thick)보다 distinctly thinner + smaller."
+- diagonal oval로 추론: "이 이미지를 다시 그려줘. perfect round disc (NOT oval) — straight perpendicular cut across cylindrical scallion."
+- scallion ring pattern 누락: "이 이미지를 다시 그려줘. 각 disc에 small white center ring + bright green outer ring (scallion 줄기 cross-section signature) 명확."
+
+#### 5.5.7 CUT-06 — Cube Dice (깍둑썰기, 두부)
+
+**의도**: F-09 김치찌개 squarish 흰 두부 블록 + F-10 순두부 contrast. 한식 깍둑썰기 두부 시그니처.
+
+**식별 핵심 시각 요소**:
+- 두부 cubes — 8-12 small equal-sided 흰 cube (각 2-2.5cm × 2-2.5cm × 2-2.5cm, `#FAFAFA` + very slight cool sage cel shading on one corner)
+- clean geometric square edges + slim outline 2-3px + top-face highlight + side-face slight shadow (3D cube volume hint in top-down view)
+- center-right portion에 relaxed loose cluster (not perfect grid, slight natural overlap, "just been cubed")
+- optional 1 uncut tofu block (larger rectangular slab ~10cm × 6cm × 3cm) — LEFT side
+- 칼은 LEFT side, blade flat, handle lower-left corner
+
+**Prompt** (v1.14 신설):
+```
+A modern mobile casual game asset illustration of a Korean kitchen cutting board (도마)
+with CUBE-DICED TOFU (깍둑 썬 두부) on top, top-down view, cutting RESULT state. The signature
+ingredient mapping = 두부 (Korean firm tofu cubed, used in F-09 kimchi jjigae as the signature
+squarish white tofu blocks).
+
+On the cutting board surface: 8-12 SMALL TOFU CUBES — each cube approximately 2-2.5cm × 2-2.5cm ×
+2-2.5cm (roughly equal-sided cubes, clean white (#FAFAFA single fill with very slight cool sage
+cel shading on one corner) with bold outline 2-3px and clean geometric square edges). The cubes
+are arranged in a relaxed loose cluster (not perfect grid, slight natural overlap, suggesting
+"just been cubed"). Approximately 8-12 visible cubes scattered across the center-right portion of
+the board, all clearly readable as 3D cube shapes (slight top-face highlight + side-face slight
+shadow indicates the cube volume even in top-down view).
+
+Optional: 1 uncut tofu block (larger rectangular slab, ~10cm × 6cm × 3cm, same white color) sits
+on the LEFT side of the board as visual reference for "before cube dice" — this is a partial
+anchor, NOT the hero element.
+
+The kitchen knife rests on the LEFT side of the cutting board next to the uncut tofu block, blade
+flat against the board surface, handle pointing toward the lower-left corner (the knife is set
+down after dicing, NOT in motion).
+
+[STYLE_SUFFIX_CUT]
+
+Important also: this is the CUBE DICE (깍둑썰기) cut style result — the tofu must read as MANY
+SMALL EQUAL-SIDED CUBES (2-2.5cm × 2-2.5cm × 2-2.5cm, clearly cubic 3D shapes with visible top
+and side faces), NOT thin slices, NOT mince bits, NOT elongated strips, NOT round discs, NOT
+oval diagonal slices. The signature ingredient is Korean firm tofu (두부) — white squarish cube
+blocks as the hero. The cube shape with visible 3D volume (top face + side face shading hint) is
+the critical visual identifier for 깍둑썰기. This is the cutting RESULT state, NOT cutting action.
+The mapping is cube dice (깍둑썰기) for ADR-005 Stage 2A rhythm tap — visually identifiable as
+the most volumetric cube shape among the 6 cut styles. NOT Chinese mapo tofu (uses firm tofu in
+brown Sichuan sauce on a flat plate — different context), this is the raw cubed tofu prep state
+on the cutting board.
+```
+
+**Reroll 트리거**:
+- 두부 너무 얇음 (slice로 추론): "이 이미지를 다시 그려줘. tofu를 small equal-sided CUBES (2-2.5cm × 2-2.5cm × 2-2.5cm, 3D cube volume)로, NOT thin slices, NOT flat squares."
+- Chinese mapo tofu 누수 (sauce 추가): "이 이미지를 다시 그려줘. raw cubed tofu prep state (도마 위)만 — sauce/broth 완전 제거. clean white tofu cubes on bare cutting board."
+- 3D volume 누락 (flat square로 추론): "이 이미지를 다시 그려줘. tofu cube의 top face highlight + side face slight shadow로 3D volume 인상 명확화 (top-down view에서도 cube 모양 인식)."
+
+#### 5.5.8 Cut anchor 7장 cross-호환 운영
+
+- **Stage 1 (CUT-00 anchor seed lock)**: CUT-00 cutting_board base 1차 생성 → 적합 시 §0 표 `CUT_ANCHOR_FILE` 기록.
+- **Stage 2 (CUT-01~06 cut style 6종 follow-up)**: 각 prompt에 `CUT_ANCHOR_FILE` reference upload + 본문 prompt + "이 reference cutting board + knife와 같은 wood color, blade silhouette, outline 두께, Cool Sage bg 톤으로 일관성 유지" 명시.
+- **세션 분기 권장**: cut anchor 7장 한 세션 권장 (음식/환경/캐릭터 anchor와 다른 새 세션).
+- **subject anchor 단어 공통 부분**: "modern mobile casual game asset illustration of a Korean kitchen cutting board (도마) with [cut state], top-down view, cutting RESULT state"
+
+#### 5.5.9 Cut anchor 7장 ChatGPT 약점 risk top 3 (G6 세분화)
+
+| Rank | Cut style | 누수 risk | default % | 회피 전략 |
+|------|-----------|----------|-----------|----------|
+| 1 | CUT-04 통썰기 | Japanese maki sushi (김밥 cylinder 단면 → maki 추론) | ~50% | matte gim + cooked vegetables (danmuji yellow + carrot + spinach + ham) + Korean short-grain rice 명시 |
+| 2 | CUT-06 깍둑썰기 | Chinese mapo tofu (sauce 추가) | ~40% | raw cubed tofu prep state on bare cutting board, NO sauce/broth 명시 |
+| 3 | CUT-00/01-06 | Japanese kitchen knife (santoku/deba single-bevel) | ~30% | modern Korean kitchen knife (식칼) — slim rectangular blade + warm brown wood handle, NOT santoku asymmetric blade, NOT kanji engraving |
+
+#### 5.5.10 ingredient cut variation (v1.15 → §5.6 ingredient whole 12장 신설로 supersede)
+
+> v1.14에서는 "M2 sprint placeholder"였으나 v1.15에서 **M1 후반 2번째 sprint로 격상** — §5.5.0 음식 12 × hero ingredient 매핑 표 + §5.6 ingredient whole 12장 prompt set 신설. cut된 상태(CUT-01~06)는 재사용, whole 12장만 추가 생성.
+
+### 5.6 음식 12 × hero ingredient whole anchor 12장 (v1.15 신설, M1 후반 2번째 sprint — full prompts)
+
+> **ADR-005 Stage 2A "before"-cut pair**: §5.5 cut anchor 7장이 "after cut" state라면, §5.6 ingredient whole 12장은 각 음식의 hero ingredient "before cut" state. 게임 미니게임에서 whole→cut 2-frame transition으로 사용.
+> **범위**: 음식 12 × hero ingredient × whole state = **총 12장**. cut된 결과 12장은 §5.5 cut anchor 7장 재사용 (한 cut style이 여러 음식에 매핑되므로 12 ≠ 7).
+> **F-06 / F-10 예외**: 모짜렐라 / soft tofu는 cut 없는 형태로 게임에서 사용 — whole anchor만 생성, 대응 cut anchor 없음.
+> **F-08 / F-11 중복 가능성**: 둘 다 당근 hero, game-designer foods CSV `prep_*` 후속 확정 시 F-11을 F-08 anchor 재사용으로 결정하면 ING-11 archive. v1.15는 일단 12장 모두 별도 prompt + slight visual variation (F-11 carrot은 slight diagonal angle + larger leafy crown)로 생성.
+> **공유 anchor**: §5.5 CUT-00 cutting_board base가 동일 anchor seed로 작동 — ING-01~12 prompt에 CUT-00 image reference upload + "같은 도마 + 같은 칼 silhouette + 같은 Cool Sage bg + 같은 outline 두께로 일관성 유지" follow-up.
+> **도구**: ChatGPT (GPT-4o image / gpt-image-1 medium). prompt-only generation. STYLE_SUFFIX_INGREDIENT는 cut anchor와 동일 base + INGREDIENT PLACEMENT 절 추가 (driver script `tools/gen_ingredient_anchors_m1.py` `STYLE_SUFFIX_INGREDIENT` 상수가 single source of truth, 본 문서는 요약만).
+
+#### 5.6.0 prompt body single source of truth = driver script
+
+> ingredient whole 12장 본문 prompt는 `tools/gen_ingredient_anchors_m1.py`의 `INGREDIENTS` list 12개 항목 inline body가 single source. 본 문서 §5.6.1~§5.6.12는 (a) hero ingredient + cut style 매핑 / (b) 식별 핵심 시각 요소 / (c) reroll trigger / (d) DALL-E 약점 회피 노트만 요약. 본문 prompt 변경 시 driver script body를 수정 (본 문서가 아닌 driver script가 ground truth) + 본 문서 요약을 sync.
+
+#### 5.6.1 ING-01 — F-01 Ramyeon hero / 대파 spring onion whole (pair = CUT-05 송송썰기)
+
+**식별 핵심 시각 요소**:
+- single whole green spring onion stalk, ~18-22cm long × 1-1.5cm thick at white root end
+- white root end (~6-8cm, off-white #F5F5E8 + 2-3 wispy white root strands at tip) + bright green leaf end (~8-10cm, #52C160)
+- center transition zone (~3-4cm pale yellow-green)
+- knife on LEFT side static, intact uncut stalk on center-right
+
+**Reroll trigger 핵심**: cut된 형태로 추론 / 부추 (garlic chives, 얇은 flat leaves)로 추론 / leek (overlapping flat layers)로 추론 / Japanese negi 누수.
+
+#### 5.6.2 ING-02 — F-02 Janchi-guksu hero / 소면 somen whole (no cut, sprinkle/serve) — v1.17 mvp v2.2 신규
+
+**식별 핵심 시각 요소** (v1.17 신규, peanut R1 + brown_sugar R2 모두 deprecated archive):
+- single small BUNDLE of dry SOMEN-STYLE white wheat noodles (~18-22cm × 4-5cm bundle, single-serving portion)
+- clean off-white #F5F0E0 to #FAFAFA color (pale warm-white wheat tone, NOT pure bright white, NOT yellow, NOT brown)
+- 15-25 fine parallel slim strands (~1-2mm per strand) clearly visible running lengthwise
+- PLAIN white or pale cream paper/string BAND tied at center (~2cm wide, solid color block placeholder, NO printed text)
+- two ends show cut noodle strand tips fanning slightly (showing thickness ~1-2mm)
+- optional 2-3 stray loose strands beside bundle as freshness accent
+- 칼 LEFT side static (somen 자체는 cut 없음, knife = cross-asset 19+ anchor consistency convention)
+
+**Reroll trigger 핵심**:
+- Japanese pink-and-white decorative paper band 누수 (Korean homestyle plain band 명시) — 가장 critical
+- 노란 Chinese egg noodles 추론 (소면은 pale off-white wheat, NOT yellow)
+- Italian spaghetti 추론 (소면은 더 얇음 ~1-2mm, spaghetti는 ~2-3mm rigid)
+- 일본 udon thick chunky 추론 (소면은 thin delicate)
+- Korean ramyeon curly yellow egg noodles 추론 (소면은 straight thin white wheat)
+- cooked floppy 또는 broken pieces로 cut/cooked 상태 누수 (이 anchor는 dry bundle 전 상태)
+
+**deprecation 기록**:
+- **peanut whole (R1)** = ING-02 v1 호떡 hero 보조 토핑 (peanut 6-8 whole shells) → R2 deprecated 2026-05-28 (사용자 명시 흑설탕 dominant filling으로 교체)
+- **brown_sugar whole (R2)** = ING-02 v2 호떡 hero filling (흑설탕 mound 5-6cm + cinnamon sticks) → v1.17 deprecated 2026-05-30 (mvp v2.2 trigger, 호떡 → 잔치국수 음식 자체 교체)
+- **somen whole (v1.17)** = ING-02 v3 잔치국수 hero noodle bundle. 현재 settle 형태.
+
+#### 5.6.3 ING-03 — F-03 Kimbap hero / 단무지 pickled radish whole (pair = CUT-02 채썰기)
+
+**식별 핵심 시각 요소**:
+- single whole danmuji cylinder, ~12-15cm long × 3-3.5cm diameter, fat cylinder shape with rounded end caps
+- VIBRANT YELLOW #F5D43E single fill (signature pickled radish bright yellow, NOT pale beige NOT dull mustard)
+- glossy slightly translucent surface + ONE specular highlight along top
+- end caps slightly more pale #F5E58A
+
+**Reroll trigger 핵심**: 신선 백색 daikon 누수 (이건 pickled yellow form) / 바나나 누수 (banana는 curved-tapered + stem, danmuji는 flat end caps) / pickle gherkin 누수 (bumpy green) / 당근으로 추론 / julienne strips로 cut 상태 누수.
+
+#### 5.6.4 ING-04 — F-04 Tteokbokki hero / 어묵 fish cake sheet whole (pair = CUT-03 어슷썰기)
+
+**식별 핵심 시각 요소**:
+- single whole flat rectangular fish cake sheet, ~14-18cm long × 6-8cm wide × 1-1.5cm thick (FLAT slab, NOT cylindrical, NOT stick)
+- light golden-brown #C8923C single fill, slightly translucent
+- mostly smooth surface (1-2 subtle slim shading lines suggesting fish paste grain, NO heavy noise)
+- slightly rounded corners (natural manufactured fish cake shape)
+
+**Reroll trigger 핵심**: Japanese naruto (pink spiral cross-section) 누수 / Japanese chikuwa (hollow tube cylinder) 누수 / 소시지 (cylindrical pink/red) 누수 / 토스트 빵 누수 / diagonal slices cut 상태 누수.
+
+#### 5.6.5 ING-05 — F-05 Kimchi Fried Rice hero / 김치 napa cabbage leaf whole (pair = CUT-01 다지기)
+
+**식별 핵심 시각 요소**:
+- single whole napa cabbage kimchi leaf loosely folded, ~12-15cm long × 7-9cm wide when folded
+- thick WHITE-PALE rib at one end (~3-4cm wide, off-white #F0EBD8)
+- VIBRANT GOCHU RED kimchi seasoning paste #E84540 smeared across the green leaf surface (light green base #C8D88A)
+- subtle cabbage leaf wrinkle/fold lines + ONE specular highlight on red-coated surface
+
+**Reroll trigger 핵심**: whole kimchi jar / bulk 누수 (single leaf 필요) / Chinese pickled cabbage 누수 / Japanese tsukemono 누수 / chopped bits cut 상태 누수.
+
+#### 5.6.6 ING-06 — F-06 Korean Corn Dog hero / 모짜렐라 cheese stick whole (no cut, whole)
+
+**식별 핵심 시각 요소**:
+- single whole mozzarella cheese stick, ~10-12cm long × 2-2.5cm diameter, fat cylinder with flat end caps
+- CLEAN MILKY WHITE #FAFAFA single fill + very subtle cool sage shading underside
+- smooth slightly glossy surface + ONE specular highlight
+- creamier end caps #F5F0E8
+
+**Reroll trigger 핵심**: 치즈 누수 (cheddar yellow/orange, mozzarella는 milky white) / 페타 (crumbly) / 소시지 (pink/red) / 두부 (matte sharp square edges, mozzarella는 glossy cylindrical) / sliced rounds cut 상태 누수 (이 anchor는 cut 없음).
+
+#### 5.6.7 ING-07 — F-07 Haemul Pajeon hero / 대파 daepa large scallion whole (pair = CUT-03 어슷썰기)
+
+**식별 핵심 시각 요소**:
+- TWO whole large Korean daepa scallion stalks side by side (THICKER + LONGER than F-01 ING-01 spring onion)
+- 각 stalk ~22-26cm long × 2-2.5cm thick at white root end
+- white root end (~8-10cm) + transition (~4-5cm) + bright green leaf end (~10-12cm)
+- two stalks aligned parallel, slight overlap at center, knife on LEFT side
+
+**Reroll trigger 핵심**: F-01 spring onion 변종으로 추론 (daepa는 thicker/longer variety) / 부추 누수 / leek 누수 / Japanese negi 누수 / diagonal slices cut 상태 누수.
+
+#### 5.6.8 ING-08 — F-08 Bibimbap hero / 당근 carrot whole (pair = CUT-02 채썰기)
+
+**식별 핵심 시각 요소**:
+- single whole fresh carrot, ~15-18cm long, tapered cone (3-3.5cm diameter top → 0.5cm pointed tip)
+- VIBRANT ORANGE #FF9933 single fill
+- small green leafy crown at top (3-5 short leaf stubs, ~2-3cm, vivid green #52C160)
+- 2-3 subtle slim cel shading horizontal ridge lines (carrot ring texture) + ONE specular highlight
+
+**Reroll trigger 핵심**: baby carrot 누수 (tiny round-ended) / sweet potato (fatter dark red-purple) / parsnip (cream-white) 누수 / julienne strips cut 상태 누수.
+
+#### 5.6.9 ING-09 — F-09 Bulgogi hero / 얇은 raw 소고기 thin-sliced marbled beef whole (no cut, marinade prep state) — v1.17 mvp v2.2 신규
+
+**식별 핵심 시각 요소** (v1.17 신규, firm tofu R1 deprecated archive):
+- STACK or FANNED arrangement of 5-7 THIN sliced raw marbled beef sheets
+- 각 slice ~8-12cm × 5-7cm × 2-3mm THIN paper-thin (Korean bulgogi-cut butcher pre-sliced thickness)
+- 색: PINK-RED RAW BEEF base #C44545 to #B82F2F (deep pink-red raw meat tone, NOT brown cooked, NOT bright red fresh blood, NOT pale pink)
+- VISIBLE WHITE MARBLED FAT VEINS (pale cream-white #F0E8D8) scattered ~3-5 organic irregular marbling lines per slice (signature marbled sirloin)
+- slight diagonal FAN or STACK at slight overlap (top 2-3 slices slightly offset, showing cross-section edges underneath like a slightly fanned deck of cards)
+- ~2-3mm THIN slice cross-section visible on slightly-visible side
+- subtle slim cel shading on slice edges + ONE specular highlight along top slice (fresh moist raw beef sheen)
+- 칼 LEFT side static (beef already pre-sliced at butcher; knife = cross-asset 19+ anchor consistency convention, game prep mechanic = 양념재우기 marinade application not cutting)
+
+**F-12 갈비구이 차별화 CRITICAL** (ING-09 ≠ ING-12 마늘과는 ingredient 별도; 단 F-12 plated meat과 비교):
+- NO BONE-IN LA CUT — bulgogi beef is BONELESS thin-sliced sirloin, ABSOLUTELY NO visible white rib bone, NO bone cross-section discs, NO single long bone alongside
+- NOT GRILLED OR COOKED — bulgogi ingredient is RAW pink-red before marinade state, NOT brown cooked grilled (cooked state = F-12 plated), NOT marinade-coated brown
+- NOT THICK STEAK SLAB — bulgogi beef is THIN paper-thin slices ~2-3mm, NOT a thick 1cm+ slab, NOT a butcher's whole roast
+
+**Reroll trigger 핵심**:
+- Japanese wagyu A5 extreme marbling 누수 (wagyu는 intricate marbling + premium plating, bulgogi는 subtle natural marbling on kitchen board)
+- Japanese sukiyaki beef on decorative platter + raw egg dipping bowl 누수 (이 anchor는 단순 도마 prep state, NOT plated)
+- bacon parallel striped 누수 (bacon은 alternating white-pink bands, 이 anchor는 scattered marbling)
+- salami / pepperoni cured uniform 누수 (이 anchor는 fresh raw marbled beef)
+- 삼겹살 thick alternating layered stripes 누수 (이 anchor는 marbled sirloin not pork belly)
+- F-12 갈비 bone visible 누수 CRITICAL (bone 추론되면 즉시 FAIL)
+- cooked brown 추론 (이 anchor는 RAW pink-red, NOT cooked grilled state)
+- firm tofu rectangular block 누수 (firm tofu R1 잔재, white block 추론되면 즉시 FAIL — 이건 pink-red marbled beef)
+
+**deprecation 기록**:
+- **firm_tofu_whole (R1)** = ING-09 v1 김치찌개 hero (clean matte white rectangular block 12×9×3.5cm) → v1.17 deprecated 2026-05-30 (mvp v2.2 trigger, 김치찌개 → 불고기 음식 자체 교체)
+- **thin_beef_whole (v1.17)** = ING-09 v3 불고기 hero raw thin-sliced marbled beef stack/fan. 현재 settle 형태.
+
+#### 5.6.10 ING-10 — F-10 Sundubu hero / 두부 soft tofu tube whole (no cut, broken curds)
+
+**식별 핵심 시각 요소**:
+- single whole soft tofu tube in clear plastic packaging, ~18-20cm long × 5-6cm diameter (cylindrical clear plastic sausage shape)
+- visible CLOUD-LIKE WHITE soft tofu inside #FAFAFA (NOT firm sharp-edged like F-09)
+- sealed plastic tube ends (small flat tabs, light cream/clear)
+- optional small label band (solid color block placeholder, NO readable text)
+- subtle cylindrical 3D volume shading + ONE specular highlight on glossy plastic
+
+**Reroll trigger 핵심**: F-09 firm tofu rectangular block 누수 (이건 cylindrical tube package) / 소시지 (pink/red) / F-06 모짜렐라 (이건 fully white solid cylindrical, this는 clear plastic wrapping with white contents inside) / scooped curds cut 상태 누수 (이 anchor는 cut 없음).
+
+#### 5.6.11 ING-11 — F-11 Japchae hero / 당근 carrot whole, F-08 variation (pair = CUT-02 채썰기)
+
+**식별 핵심 시각 요소** (F-08과 동일 ingredient species, slight visual variation):
+- single whole fresh carrot lying flat at SLIGHT DIAGONAL ANGLE (~15도, F-08의 perfectly horizontal과 구분)
+- ~16-19cm long (F-08보다 slightly longer for variation)
+- same VIBRANT ORANGE #FF9933
+- slightly LARGER green leafy crown (4-6 leaf stubs, ~3-4cm, more leafy than F-08)
+- 2-3 ridge lines + ONE specular highlight
+
+**Reroll trigger 핵심**: F-08 ING-08과 완전 동일하게 추론 (slight variation 차별 안 됨) / baby carrot 누수 / sweet potato 누수 / julienne cut 상태 누수.
+
+**game-designer 후속 확정 사안**: F-11이 F-08 anchor를 재사용하는 것으로 결정되면 ING-11 archive (assets-raw 파일은 보존, §0 anchor 표 status `재사용 결정 archived`로 갱신).
+
+#### 5.6.12 ING-12 — F-12 Galbi-gui hero / 마늘 garlic cloves whole (pair = CUT-01 다지기)
+
+**식별 핵심 시각 요소**:
+- loose cluster 5-7 whole INDIVIDUAL PEELED garlic cloves (Korean 통마늘, NOT the whole bulb with all cloves attached)
+- each clove ~2-3cm long × 1.5-2cm wide, classic teardrop / small almond-oval shape
+- off-white to pale cream #F5F0E0 single fill with bold outline
+- slightly pointed root end (small tan stem tip) + rounded broad end
+- subtle 3D shading + ONE specular highlight per clove
+
+**Reroll trigger 핵심**: whole garlic bulb (single round bulb with papery skin) 누수 — peeled individual clove state 명시 / 양파 (larger rounded layered structure) 누수 / 생강 ginger (knobbly irregular) 누수 / 샬롯 shallot (reddish-purple) 누수 / minced bits cut 상태 누수.
+
+#### 5.6.13 ingredient whole 12장 cross-호환 운영
+
+- **Stage 1 (anchor seed inheritance)**: CUT-00 cutting_board base가 anchor seed로 작동 (cut anchor 7장 + ingredient whole 12장 = 총 19장이 공유 anchor seed).
+- **Stage 2 (12 ingredient follow-up)**: 각 prompt에 CUT-00 image reference upload + 본문 prompt + "이 reference cutting board + knife와 같은 wood color, blade silhouette, outline 두께, Cool Sage bg 톤으로 일관성 유지" 명시.
+- **세션 분기 권장**: ingredient whole 12장 한 세션 권장 (cut anchor 7장 직후 같은 세션 안에서 follow-up 진행하면 cut anchor anchor seed 재활용 + 세션 context 일관성 강화 가능).
+- **subject anchor 단어 공통 부분**: "modern mobile casual game asset illustration of a Korean kitchen cutting board (도마) with a WHOLE (uncut) [hero ingredient] placed on top, top-down view, ready-to-cut state"
+
+#### 5.6.14 ingredient whole 12장 ChatGPT 약점 risk top 5 (G6 세분화)
+
+| Rank | Ingredient | 누수 risk | default % | 회피 전략 |
+|------|-----------|----------|-----------|----------|
+| 1 | ING-03 단무지 | 신선 백색 daikon 또는 banana 누수 | ~50% | VIBRANT YELLOW #F5D43E + fat cylinder + flat end caps 명시, "pickled radish" 키워드 강제 |
+| 2 | ING-04 어묵 | Japanese naruto (pink spiral) 또는 chikuwa (hollow tube) 누수 | ~50% | FLAT rectangular sheet + light golden-brown 명시, NOT cylindrical NOT pink spiral |
+| 3 | ING-07 대파 daepa | F-01 spring onion 변종으로 추론 (thinner shorter) | ~40% | THICKER + LONGER variety (~22-26cm × 2-2.5cm) + 2 stalks 명시 |
+| 4 | ING-06 모짜렐라 | cheddar yellow 또는 두부 (matte square) 누수 | ~40% | CLEAN MILKY WHITE + GLOSSY cylindrical + 명확한 cheese stick 카테고리 |
+| 5 | ING-12 마늘 | whole bulb (papery skin) 또는 양파 누수 | ~35% | PEELED INDIVIDUAL CLOVES + teardrop shape + 5-7 cluster 명시 |
+
+> 부차 risk (P2): ING-01 spring onion (Japanese negi 누수), ING-09 firm tofu (silken tofu 누수), ING-10 soft tofu (F-09 firm tofu rectangular 누수).
+
+#### 5.6.15 driver script + 실행 명령
+
+- 신규 driver: `tools/gen_ingredient_anchors_m1.py` (`tools/gen_cut_anchors_m1.py` template 기반)
+- 첫 시도 (ING-01 test 권장, ~30초 / ~$0.05): `py tools/gen_ingredient_anchors_m1.py --only F-01`
+- 12장 batch (~4-5분 / ~$0.50): `py tools/gen_ingredient_anchors_m1.py --model gpt-image-1 --quality medium`
+- 출력 경로: `assets-raw/ingredient_anchors_m1/<food_id>_<ingredient_name>_v1.png` (예: `F-01_spring_onion_whole_v1.png`)
+- F-11 carrot variation reroll (game-designer 재사용 결정 시 archive): `py tools/gen_ingredient_anchors_m1.py --only F-11`
+
+#### 5.6.16 game-designer 후속 confirm 사안 (foods CSV `prep_*` 컬럼)
+
+> 본 v1.15 음식 12 × hero ingredient × cut style 매핑은 art-director 임시 직관 매핑. game-designer가 foods CSV `prep_*` 컬럼으로 정식 매핑을 lock 시 (a) 일부 hero ingredient 변경 / (b) cut style 변경 가능. 검증 필요 사안:
+
+| food | art-director 매핑 | game-designer 검증 사안 |
+|------|------------------|----------------------|
+| F-01 라면 | 대파 / CUT-05 송송 | 계란 또는 김 추가 hero 후보 검토 필요? |
+| F-02 호떡 | 견과류 / CUT-01 다지기 | 견과류 외 흑설탕 filling도 prep mechanic 있는가? |
+| F-03 김밥 | 단무지 / CUT-02 채썰기 | 단무지 외 5색 ingredient (계란/시금치/햄/당근) 중 어떤 게 Stage 2A hero? |
+| F-04 떡볶이 | 어묵 / CUT-03 어슷썰기 | 떡 자체 prep (cylinder 송송 또는 통썰기)는 별도 mini-game인가? |
+| F-05 김치볶음밥 | 김치 / CUT-01 다지기 | 김치 외 햄/계란도 prep mechanic 있는가? |
+| F-06 콘도그 | 모짜렐라 / no cut | 소시지 자체 prep mechanic 있는가? 모짜렐라는 whole insertion만? |
+| F-07 해물파전 | 대파 daepa / CUT-03 어슷썰기 | 새우/오징어/조개 해물 3종 중 어떤 게 Stage 2A hero? (대파가 dominant 시각이지만 해물도 후보) |
+| F-08 비빔밥 | 당근 / CUT-02 채썰기 | 6 section 중 당근 외 시금치/콩나물/표고도 prep 후보? (당근이 가장 visible signature) |
+| F-09 김치찌개 | 두부 firm / CUT-06 깍둑썰기 | 김치 다지기도 hero 후보? (두부는 두번째 mechanic으로 분할?) |
+| F-10 순두부 | 두부 soft / no cut | 멸치/김치/계란 풀기 별도 mini-game 있는가? |
+| F-11 잡채 | 당근 / CUT-02 (F-08 재사용) | F-08과 carrot anchor 재사용? 또는 시금치/표고가 잡채 hero? |
+| F-12 갈비구이 | 마늘 / CUT-01 다지기 | 마늘 외 LA갈비 자체 prep (재우기/굽기)이 dominant mini-game인가? |
+
+> game-designer 확정 후 art-director는 (a) 본 §5.5.0 매핑 표 갱신 / (b) §5.6 ingredient whole prompt 일부 reroll / (c) driver script INGREDIENTS list sync 작업 진행.
+
+---
+
+### 5.10 음식 12 × hero ingredient CUT 12장 (v1.19 신설, ADR-005 Stage 2B/2C "after"-cut pair)
+
+> **v1.19 트리거 (2026-05-30)**: 사용자 verbatim "**손질하고 나서의 ingredient 이미지가 있어야 할 거 같고**" — ingredient whole 12장 (§5.6 ING-01~12)은 "before" state, cut anchor 7장 (§5.5 CUT-00~06)은 generic cut style 시연. 그 사이 누락된 asset = 각 음식의 hero ingredient를 그 음식 특유 cut 결과로 specific 시각화 (음식 시그니처 강화 + Stage 2B/2C 사용). **옵션 C 채택** (12장 specific 모두 생성, F-06 cheese는 ING-06과 동일 image이나 카탈로그 완전성 위해 별도 anchor).
+
+#### 5.10.0 음식 × hero ingredient cut 매핑 표 (12장)
+
+| ID | food | hero ingredient cut 결과 | pair cut style | 시각 핵심 (한 줄) |
+|----|------|------------------------|---------------|----------------|
+| ICUT-01 | F-01 Ramyeon | spring onion 송송 sliced thin rounds | CUT-05 송송썰기 | 20-30 small bright green disc rounds 1-1.5cm × 1-3mm + white center ring |
+| ICUT-02 | F-02 Janchi-guksu | Korean zucchini 통썰기 round discs | CUT-04 통썰기 | 5-8 round green-rim + pale flesh discs 4-5cm × 3-5mm |
+| ICUT-03 | F-03 Kimbap | danmuji 채썰기 yellow matchstick | CUT-02 채썰기 | 15-20 thin elongated bright yellow strips 8-10cm × 4-5mm |
+| ICUT-04 | F-04 Tteokbokki | fish cake 어슷썰기 oval slices | CUT-03 어슷썰기 | 5-7 elongated golden-brown oval pieces 6-8cm × 3-4cm × 1-1.5cm |
+| ICUT-05 | F-05 Kimchi Bokkeumbap | kimchi 다지기 minced bits | CUT-01 다지기 | scattered fine red-coated 5-10mm irregular bits |
+| ICUT-06 | F-06 Corn Dog | mozzarella whole (no cut) | (no cut, same as ING-06) | single milky-white cylindrical cheese stick 10-12cm × 2-2.5cm |
+| ICUT-07 | F-07 Haemul Pajeon | daepa 어슷썰기 large green ovals | CUT-03 어슷썰기 | 5-7 elongated DOMINANT bright green oval pieces 5-7cm × 1.5-2.5cm + hollow center ring |
+| ICUT-08 | F-08 Bibimbap | carrot 채썰기 orange matchstick | CUT-02 채썰기 | 15-20 thin elongated bright orange strips 5-7cm × 2-3mm |
+| ICUT-09 | F-09 Bulgogi | thin beef marinade coated brown glaze | (no cut, marinade prep) | 5-7 thin brown-glaze-coated marbled beef slices fanned + small marinade pool at base |
+| ICUT-10 | F-10 Sundubu | soft tofu broken cloud-like curds | (no cut, broken curds) | mound of irregular fluffy white tofu fragments 2-4cm organic shapes |
+| ICUT-11 | F-11 Japchae | carrot 채썰기 orange matchstick (F-08 variation) | CUT-02 채썰기 | 15-20 thin orange strips 6-8cm slight diagonal pile angle ~15도 |
+| ICUT-12 | F-12 Galbi-gui | garlic 다지기 minced granules | CUT-01 다지기 | scattered fine yellowish-white 1-3mm granules |
+
+#### 5.10.1 STYLE_SUFFIX_INGREDIENT_CUT (모든 ingredient cut 12장 공통 suffix)
+
+> §5.6 STYLE_SUFFIX_INGREDIENT (whole)와 cross-asset 31+ anchor (cut 7 + whole 12 + cut 12) 일관성 통일 (도마 + 칼 LEFT static + Cool Sage bg + slim outline 2-3px + top-down). 본 suffix는 driver script `tools/gen_ingredient_cut_anchors_m1.py`의 `STYLE_SUFFIX_INGREDIENT_CUT` 상수 inline single source. **변경 시 driver script가 ground truth**. §5.6 whole suffix와 핵심 차이 = INGREDIENT PLACEMENT 절: whole "single intact whole + NO cut pieces" → cut "cut/prepared result cluster + NO whole intact ingredient (whole은 ING-XX whole anchor 영역)".
+
+#### 5.10.2 ~ 5.10.13 — ingredient cut 12장 본문 prompt
+
+> 12장 prompt body는 driver script `tools/gen_ingredient_cut_anchors_m1.py`의 `INGREDIENT_CUTS` list 12개 항목 inline body가 single source. 본 문서 §5.10.2~5.10.13는 (a) 음식 매핑 + (b) cut 결과 시각 핵심 + (c) reroll trigger 핵심만 명시. 본문 prompt 변경 시 driver script가 ground truth (gen_ingredient_anchors_m1.py와 동일 single-source 정책).
+
+##### 5.10.2 ICUT-01 — F-01 Ramyeon cut / spring onion 송송 (pair = CUT-05)
+
+**식별 핵심 시각 요소**:
+- 20-30 small thin round spring onion discs scattered (relaxed cluster, just-finished-cutting)
+- each disc ~1-1.5cm diameter × 1-3mm thick (very thin)
+- bright vivid green ring outer #52C160 + small white inner ring (scallion hollow center)
+- subtle 3D shading hint + ONE specular highlight per cluster
+- optional: 1-2cm partial unsliced root tip remnant on LEFT as "before" reference
+
+**Reroll trigger 핵심**: F-07 daepa 어슷썰기 large oval로 추론 (이건 small thin round) / 통썰기 large round disc 누수 (송송은 distinctly smaller+thinner) / julienne matchstick 누수 / 단순한 green disc (scallion center ring 누락) / 30+ 너무 많아 mince처럼 보임 / WHOLE intact spring onion 누수.
+
+##### 5.10.3 ICUT-02 — F-02 Janchi-guksu cut / Korean zucchini 통썰기 (pair = CUT-04)
+
+**식별 핵심 시각 요소**:
+- 5-8 round zucchini discs in slightly fanned row (just-finished, NOT geometric grid)
+- each disc ~4-5cm diameter × 3-5mm thick
+- BRIGHT MEDIUM GREEN outer rim #5FA060 + PALE GREEN-WHITE inner flesh #D8E8B8
+- subtle inner seed pattern (3-5 tiny pale dots center, very minimal)
+- ONE specular highlight + optional 1-2cm partial unsliced end tip on LEFT
+
+**Reroll trigger 핵심 (risk top 1)**: **cucumber 누수 ~50%** (darker green + bumpy skin + larger seed cavity) — "Korean zucchini bright medium green + smooth skin + minimal seed dots" 강제 / Italian zucchini darker forest green 누수 / yellow summer squash 누수 / 김밥 cylinder cross-section 누수 (이건 zucchini, NOT 김밥) / WHOLE intact zucchini 누수.
+
+##### 5.10.4 ICUT-03 — F-03 Kimbap cut / danmuji 채썰기 (pair = CUT-02)
+
+**식별 핵심 시각 요소**:
+- 15-20 thin elongated yellow matchstick strips parallel-aligned cluster (slightly fanned)
+- each strip ~8-10cm long × 4-5mm wide × 4-5mm thick (kimbap-length, LONGER than F-08/F-11)
+- VIBRANT YELLOW #F5D43E pickled radish color
+- smooth glossy slightly translucent + ONE specular highlight along top length
+- end cuts slightly paler #F5E58A
+- optional: 2-3cm partial unsliced danmuji cylinder end on LEFT
+
+**Reroll trigger 핵심**: fresh white daikon (raw, NOT pickled) 누수 / short matchsticks 3-4cm (NOT kimbap-length 8-10cm) / thick chunky 1cm+ (NOT thin 4-5mm) / banana 누수 (pale beige round) / WHOLE intact danmuji cylinder 누수.
+
+##### 5.10.5 ICUT-04 — F-04 Tteokbokki cut / 어묵 어슷썰기 (pair = CUT-03)
+
+**식별 핵심 시각 요소**:
+- 5-7 elongated oval fish cake pieces in relaxed overlapping cluster
+- each piece ~6-8cm long diagonal × 3-4cm wide × 1-1.5cm thick (medium oval, NOT small NOT large)
+- LIGHT GOLDEN-BROWN #C8923C with slim shading edge + subtle fish paste grain (1-2 lines)
+- rounded oval corners + ONE specular highlight
+- optional: 2-3cm partial unsliced flat sheet end on LEFT
+
+**Reroll trigger 핵심 (risk top 2)**: **Japanese naruto pink spiral cross-section 누수 ~50%** / chikuwa hollow tube 누수 / 통썰기 round perfect circle 누수 (어슷썰기 = ELONGATED OVAL) / 깍둑썰기 cube 누수 / 채썰기 strip 누수 / WHOLE intact flat sheet 누수.
+
+##### 5.10.6 ICUT-05 — F-05 Kimchi Fried Rice cut / 김치 다지기 (pair = CUT-01)
+
+**식별 핵심 시각 요소**:
+- generous scatter of fine minced kimchi bits in ~6-8cm oval area (just-finished, loose pile)
+- each bit ~5-10mm irregular angular shape (NOT round, finely chopped)
+- VIBRANT GOCHU RED #E84540 dominant (red kimchi paste coating each bit)
+- hint of pale green-white cabbage base ~10-20% per bit visible under red coating
+- few tiny red chili flake specks + ONE specular highlight (wet sheen)
+- optional: 2-3cm partial unminced folded leaf with white rib on LEFT
+
+**Reroll trigger 핵심**: large chunks 2-3cm (NOT fine 5-10mm) / Chinese pickled cabbage (different red paste) / Japanese tsukemono (color/texture) / round disc 슬라이스 누수 / WHOLE intact folded kimchi leaf 누수.
+
+##### 5.10.7 ICUT-06 — F-06 Corn Dog cut / 모짜렐라 whole (no cut, ING-06과 동일)
+
+**식별 핵심 시각 요소** (ING-06와 동일):
+- single whole mozzarella cheese stick lying flat ~10-12cm × 2-2.5cm
+- CLEAN MILKY WHITE #FAFAFA + subtle cylindrical shading + ONE specular highlight
+- creamier end caps #F5F0E8
+
+> F-06 cheese는 cut prep mechanic 없음 (whole 그대로 corn dog 안 insertion). ICUT-06 anchor는 카탈로그 완전성 위해 별도 생성하나 결과는 ING-06과 시각 동일. game-designer 후속 확정 시 ICUT-06 archive 가능 (ING-06 재사용).
+
+**Reroll trigger 핵심**: cheddar yellow 누수 / 두부 matte square edges 누수 / 소시지 pink/red 누수 / 시각 cut (sliced rounds / cubes / shreds) 누수 (이건 whole 그대로).
+
+##### 5.10.8 ICUT-07 — F-07 Haemul Pajeon cut / 대파 daepa 어슷썰기 (pair = CUT-03)
+
+**식별 핵심 시각 요소 (CRITICAL — F-04 어묵 oval과 시각 분리)**:
+- 5-7 elongated DOMINANT BRIGHT GREEN daepa oval pieces in relaxed overlapping cluster
+- each piece ~5-7cm long diagonal × 1.5-2.5cm wide × 1-1.5cm thick (LARGE oval, dominant green)
+- DOMINANT VIVID GREEN #52C160 outer ring (thick daepa stem wall ~5-8mm thickness)
+- WHITE-PALE inner center hollow ~3-5mm (scallion stem hollow cross-section pattern)
+- elongated oval shape (diagonal cut signature) + ONE specular highlight
+- optional: 2-3cm partial unsliced daepa cylinder end with white root on LEFT
+
+**Reroll trigger 핵심 (risk top 3)**: **F-04 어묵 oval로 색 누수 ~40%** (golden-brown 누수 — 강제 dominant green) / F-01 spring onion small thin round 누수 (이건 large daepa 5-7cm × 1.5-2.5cm) / Japanese negi 누수 (thinner variety) / round perfect circle 누수 (어슷썰기 = ELONGATED OVAL) / WHOLE intact daepa stalks 누수.
+
+##### 5.10.9 ICUT-08 — F-08 Bibimbap cut / 당근 채썰기 (pair = CUT-02)
+
+**식별 핵심 시각 요소**:
+- 15-20 thin elongated orange matchstick strips parallel-aligned cluster (just-finished julienne)
+- each strip ~5-7cm long × 2-3mm wide × 2-3mm thick (bibimbap-length, SHORTER than F-03/F-11)
+- VIBRANT ORANGE #FF9933 + smooth + slim edge shading + ONE specular highlight
+- end cuts slightly paler #FFB060
+- optional: 2-3cm partial unsliced carrot tip with small green leafy stub on LEFT
+
+**Reroll trigger 핵심**: F-03 단무지 길이 8-10cm 또는 F-11 6-8cm 누수 (F-08은 5-7cm 가장 짧음) / thick chunky 5mm+ strip 누수 / baby carrot 누수 / diagonal oval 누수 / WHOLE intact carrot 누수.
+
+##### 5.10.10 ICUT-09 — F-09 Bulgogi cut / 얇은 소고기 marinade coated (no cut, marinade prep)
+
+**식별 핵심 시각 요소 (CRITICAL — F-12 갈비 차별화)**:
+- stack/fan of 5-7 thin marbled beef slices coated with GLOSSY DARK BROWN soy-pear-garlic marinade
+- each slice ~8-12cm × 5-7cm × 2-3mm THIN (same as ING-09 raw whole dimensions)
+- GLOSSY DARK BROWN MARINADE COATING #5A3015-#6B3A1A dominant (sticky brown glaze)
+- ~30-40% original pink-red beef + white marbling 보이게 (under glaze)
+- small POOL of extra marinade ~2-3cm at stack base (glossy brown puddle)
+- optional: 송송 green scallion rounds 5-8 dots + 2-3 sesame seed dots on top (minimal accent)
+- slim edge shading + ONE specular highlight (glossy wet marinade sheen)
+
+**Reroll trigger 핵심 (risk top 4)**: **raw red 또는 cooked char marks 누수 ~40%** (marinade brown glaze coating 강제 — brown comes from marinade NOT grilling) / **F-12 갈비 bone visible 누수 CRITICAL** (NO bone, NO bone discs, NO cross-section discs along strips) / Japanese sukiyaki raw egg dipping plating 누수 / 삼겹살 thick layered stripes 누수 / 베이컨 parallel banded 누수 / thick steak slab 1cm+ 누수 (paper-thin 2-3mm 강제) / RAW unmarinated pink-red 누수 (이건 ING-09 whole, F-09 cut은 AFTER marinade).
+
+##### 5.10.11 ICUT-10 — F-10 Sundubu cut / 두부 soft broken curds (no cut, broken)
+
+**식별 핵심 시각 요소**:
+- generous mound of broken soft tofu curds ~10-12cm × 5-7cm domed pile
+- many small IRREGULAR CLOUD-LIKE white fragments (each ~2-4cm organic uneven shape)
+- CLEAN MATTE WHITE #FAFAFA (NOT yellowish, NOT cream)
+- subtle softer crevices between fragments + slim cel shading under mound
+- ONE specular highlight (moist fresh tofu surface)
+- optional: small empty open soft tofu tube remnant on LEFT (squeezed-out plastic packaging)
+
+**Reroll trigger 핵심 (risk top 5)**: **firm tofu cube 누수 ~40%** (sharp-edged white rectangular cube — 이건 SOFT broken irregular fragments) / smooth puree 누수 (mashed paste NOT broken into fragments) / single solid block 누수 (multiple fragments 강제) / geometric square pieces 누수 (organic uneven irregular) / mozzarella cylindrical solid 누수 / 흑백 cottage cheese 색 누수 / WHOLE intact tube 누수.
+
+##### 5.10.12 ICUT-11 — F-11 Japchae cut / 당근 채썰기 (F-08 variation, pair = CUT-02)
+
+**식별 핵심 시각 요소 (F-08과 slight variation)**:
+- 15-20 thin elongated orange matchstick strips SLIGHTLY DIAGONAL pile ~15도 (F-08은 perfectly horizontal)
+- each strip ~6-8cm long × 2-3mm wide × 2-3mm thick (SLIGHTLY LONGER than F-08 5-7cm)
+- same VIBRANT ORANGE #FF9933 as F-08
+- slightly LARGER green leafy stub partial remnant on LEFT (visual variation)
+- same smooth + slim edge shading + specular highlight as F-08
+
+**Reroll trigger 핵심**: F-08과 완전 동일 (slight variation 차별 안 됨) — diagonal pile angle + length 6-8cm로 차별 / longer than 8cm noodle-like 누수 (medium julienne) / thick chunky strip 누수 / WHOLE intact carrot 누수.
+
+> **game-designer 후속 확정**: F-11이 F-08 carrot cut anchor를 재사용하는 것으로 결정되면 ICUT-11 archive (assets-raw 파일은 보존, §0 anchor 표 status `재사용 결정 archived`로 갱신).
+
+##### 5.10.13 ICUT-12 — F-12 Galbi-gui cut / 마늘 다지기 (pair = CUT-01)
+
+**식별 핵심 시각 요소**:
+- generous scatter of fine minced garlic granules in ~6-8cm oval area (just-finished mince)
+- each granule ~1-3mm irregular angular shape (very fine granular, NOT round disc, NOT chunk)
+- YELLOWISH-WHITE #F5F0E0-#F8F2D8 (peeled garlic color, NOT pure white NOT yellow)
+- mix of more substantial bits 2-3mm + finer particles 1mm (natural mincing variation)
+- slim cluster underside shading + ONE specular highlight (moist garlic surface)
+- optional: 1.5-2cm partial unminced clove with pointed root tip on LEFT
+- optional: knife blade minor garlic juice sheen on edge (very minimal)
+
+**Reroll trigger 핵심**: thin garlic slices 5mm flat round disc 누수 (mince = 1-3mm granules) / whole garlic cloves intact 누수 (이건 ING-12 whole) / large chunks 5mm+ 누수 / onion mince 누수 (larger irregular + layered structure visible) / ginger mince 누수 (light tan + fiber strands) / WHOLE intact garlic cloves 누수.
+
+#### 5.10.14 ingredient cut 12장 cross-호환 운영
+
+- **Stage 1 (anchor seed inheritance)**: CUT-00 cutting_board base가 anchor seed로 작동 (cut anchor 7장 + ingredient whole 12장 + ingredient cut 12장 = 총 **31장**이 공유 anchor seed).
+- **Stage 2 (12 ingredient cut follow-up)**: 각 prompt에 CUT-00 image reference upload + 본문 prompt + "이 reference cutting board + knife와 같은 wood color, blade silhouette, outline 두께, Cool Sage bg 톤으로 일관성 유지" 명시. 추가 권장 = 페어 ING-XX whole image도 reference upload (cut "before-after" pair 시각 일관성 강화).
+- **세션 분기 권장**: ingredient cut 12장 한 세션 권장 (ingredient whole 12장 직후 같은 세션에서 follow-up 진행하면 anchor seed 재활용 + before-after pair 일관성 강화 가능). 또는 cut anchor 7장 + whole 12장 + cut 12장 = 31장을 chunk별 (cut 7 → whole 12 → cut 12) 세션 분기.
+- **subject anchor 단어 공통 부분**: "modern mobile casual game asset illustration of a Korean kitchen cutting board (도마) with [CUT/PREPARED hero ingredient result] arranged on top, top-down view, cutting/prep RESULT state (the visual 'after' pair of the ING-XX whole anchor's 'before' state)"
+
+#### 5.10.15 ingredient cut 12장 ChatGPT 약점 risk top 5 (G6 세분화)
+
+| Rank | Ingredient cut | 누수 risk | default % | 회피 전략 |
+|------|---------------|----------|-----------|----------|
+| 1 | ICUT-02 애호박 통썰기 | cucumber 누수 (darker green + bumpy skin + larger seed cavity) | ~50% | "Korean zucchini bright medium green #5FA060 + smooth skin + minimal seed dots (3-5 tiny center)" 강제 + "NOT cucumber" negative |
+| 2 | ICUT-04 어묵 어슷썰기 | Japanese naruto pink spiral cross-section 누수 | ~50% | "plain Korean 어묵 light golden-brown #C8923C oval, NO pink spiral, NO hollow tube" 강제 |
+| 3 | ICUT-07 daepa 어슷썰기 | F-04 어묵 oval로 색 누수 (golden-brown 누수) | ~40% | **CRITICAL — DOMINANT BRIGHT GREEN #52C160 강제** + F-04 분리 명시 "NOT F-04 fish cake golden-brown oval, this is daepa bright green hollow scallion cross-section" |
+| 4 | ICUT-09 marinade beef | raw red 또는 cooked char marks 누수 | ~40% | "GLOSSY DARK BROWN soy-pear-garlic marinade COATING (brown comes from marinade NOT grilling), NO char marks, NO bone visible (F-12 차별화 CRITICAL)" 강제 |
+| 5 | ICUT-10 broken tofu | firm cube 누수 | ~40% | "SOFT broken into IRREGULAR CLOUD-LIKE FLUFFY WHITE FRAGMENTS organic uneven shapes 2-4cm, NOT firm sharp cube, NOT smooth puree, NOT single block" 강제 |
+
+> 부차 risk (P2): ICUT-01 spring onion (송송 → 통썰기 large round 누수 ~25%) / ICUT-03 단무지 (kimbap-length 8-10cm → bibimbap-length 5-7cm 누수 ~25%) / ICUT-05 김치 (large chunk 2-3cm 누수 ~20%) / ICUT-11 carrot (F-08과 완전 동일하게 추론, slight variation 차별 안 됨 ~30%) / ICUT-12 garlic (slice 5mm 누수, mince는 1-3mm 강제 ~20%).
+
+#### 5.10.16 driver script + 실행 명령
+
+- 신규 driver: `tools/gen_ingredient_cut_anchors_m1.py` (`tools/gen_ingredient_anchors_m1.py` template 기반)
+- 첫 시도 (ICUT-01 test 권장, ~30초 / ~$0.05): `py tools/gen_ingredient_cut_anchors_m1.py --only F-01`
+- 12장 batch (~4-5분 / ~$0.50): `py tools/gen_ingredient_cut_anchors_m1.py --model gpt-image-1 --quality medium`
+- 출력 경로: `assets-raw/ingredient_cut_anchors_m1/<food_id>_<ingredient_cut_name>_v1.png` (예: `F-01_spring_onion_cut_v1.png`)
+- F-11 carrot variation 또는 F-06 cheese 재사용 결정 시 archive: `py tools/gen_ingredient_cut_anchors_m1.py --only F-11` 또는 `--only F-06`
+- build_prompt: `body.replace("%s", STYLE_SUFFIX_INGREDIENT_CUT, 1)` (Python old-style `body % SUFFIX` ValueError fix — gen_food/gen_ingredient에서 발생했던 패턴 회피)
+
+#### 5.10.17 game-designer 후속 confirm 사안 (ingredient cut 12장)
+
+> 본 v1.19 ingredient cut 12장 매핑은 §5.6 ingredient whole 12장 매핑 직접 follow-through. game-designer foods CSV `prep_*` 컬럼 lock 결과:
+
+| ICUT 매핑 | 검증 사안 | 영향 |
+|----------|----------|------|
+| ICUT-06 F-06 cheese whole (no cut) | F-06 prep mechanic이 cheese 외 sausage 자체 cut 있는가? | 있으면 ICUT-06이 sausage cut으로 swap, cheese는 ING-06 그대로 재사용 |
+| ICUT-09 F-09 marinade prep (no cut) | F-09 prep mechanic이 marinade 외 양파/대파 cut 있는가? | 있으면 ICUT-09는 양파/대파 cut로 swap, beef marinade는 별도 |
+| ICUT-10 F-10 broken curds (no cut) | F-10 prep mechanic이 broken curds 외 멸치/김치 cut 있는가? | 있으면 ICUT-10는 멸치/김치 cut로 swap, soft tofu는 별도 |
+| ICUT-11 F-11 carrot (F-08 variation) | F-11이 F-08 carrot cut anchor 재사용 결정 시 ICUT-11 archive | 재사용 시 assets-raw 보존 + §0 status `재사용 결정 archived` |
+
+> game-designer 확정 후 art-director는 (a) 본 §5.10 매핑 표 갱신 / (b) §5.10 ingredient cut prompt 일부 reroll / (c) driver script INGREDIENT_CUTS list sync 작업 진행.
+
+---
+
+### 5.7 양친 reaction 6컷 (v1.18 v2 image edit, supersedes v1.16 v1 prompt-only)
+
+> **v1.18 v2 image edit patch (2026-05-30)**: 사용자가 v1 (prompt-only, gpt-image-1 medium 1024×1024 6장 batch) 결과 시각 확인 후 2건 피드백 raise → v1 = **deprecated** for R-01/R-03/R-04/R-05/R-06 (R-02 어머니 ★2 anchor seed는 base와 가장 가까워 v1 결과 시각이 가장 안정적이었으나 통일성 위해 v2에서 함께 재생성):
+> - **R-01/R-03 어머니 hair mismatch**: 사용자 verbatim "reaction 에서 R-01, R-03가 원래 이미지와 좀 다름". v1에서 round-bun **+ side-puff** variant로 생성되어 CH-02 base의 round-bun **simple**과 다름.
+> - **R-04 vs R-05/R-06 아버지 family IP inconsistency**: 사용자 verbatim "R-04, R-05, R-06가 이미지가 좀 일관성이 없음". R-04는 darker hair/shirt (CH-03 base와 일치), R-05/R-06는 lighter tone으로 셋 사이 inconsistency.
+>
+> **해결 — image edit API 도입** (BG sprint v4에서 효과 입증된 패턴): prompt-only generation은 base의 family IP를 정확 재현 못함. `client.images.edit(model="gpt-image-1", image=open(base, "rb"), prompt=COMMON_FRAME + expression_prompt, size="1024x1024", quality="medium", n=1)`로 base PNG를 직접 입력 + 표정만 변경. 캐릭터 5장 anchor file을 직접 input으로 사용 → family IP 정확 보존.
+>
+> **Base image 2장** (Week 1 commit 7a6cffb 무영향):
+> - `assets-raw/week1-anchors/CH-02_mother.png` → R-01/R-02/R-03 어머니 3컷 base
+> - `assets-raw/week1-anchors/CH-03_father.png` → R-04/R-05/R-06 아버지 3컷 base
+>
+> **v2 single source of truth**: 6 reaction prompt body (COMMON_FRAME + expression_prompt)는 `tools/edit_reaction_anchors_v2.py` `COMMON_FRAME` 상수 + `REACTIONS` list 6개 항목 inline body가 single source. 본 문서 §5.7는 (a) trigger 사유 + (b) base image mapping + (c) approach 요약 + (d) 실행 명령만 명시 (본문 prompt 변경 시 driver script가 ground truth).
+>
+> **v1 prompt-only approach (deprecated archive)**: v1.16 §5.7 본문 (`tools/gen_reaction_anchors_m1.py`의 STYLE_SUFFIX_REACTION + REACTIONS 6 prompt-only body)는 deprecated 보존. v1 output (R-XX_<character>_star<N>_v1.png 6장)도 보존 — v2 (R-XX_<character>_star<N>_v2.png)와 공존, git history reference.
+>
+> **6 reaction × base 매핑**:
+>
+> | ID | character | star | base file | gradient 단계 |
+> |----|-----------|------|-----------|--------------|
+> | R-01 | mother | ★1 | CH-02_mother.png | mild satisfaction (subtle warm smile + 정상 open dot eyes, 30-59%) |
+> | R-02 | mother | ★2 | CH-02_mother.png | happy/pleased (bigger smile + soft upward crescent arc, 60-89%) — anchor seed (base default와 가장 가까움) |
+> | R-03 | mother | ★3 | CH-02_mother.png | very happy (big wide smile + closed-arc + heart accent, 90-100%) |
+> | R-04 | father | ★1 | CH-03_father.png | reserved (slim closed smile + NO thumb-up, 30-59%) |
+> | R-05 | father | ★2 | CH-03_father.png | relaxed (fuller open smile + single casual thumb-up, 60-89%) — anchor seed |
+> | R-06 | father | ★3 | CH-03_father.png | very excited (big wide smile + closed-arc + double thumb-up + sparkle, 90-100%) |
+>
+> **COMMON_FRAME 핵심 (driver script COMMON_FRAME 상수)** — 6 reaction 공통:
+> - **EXACT SAME family IP 강제**: hair shape (round-bun simple for mother / salt-and-pepper darker for father) / hair color / face proportions / outfit color (red jeogori + apron / teal-green shirt) / chibi 1:1.7 / outline 2-3px / saturation 80-90%. 어머니 hair는 round-bun + side-puff 추가 명시적 회피. 아버지 hair tone + shirt tone은 base와 EXACTLY 일치 명시 (NOT lighter).
+> - **bust-up portrait crop** (head and shoulders only, NO full body / lower body / legs / feet).
+> - **background replace with solid Cool Sage #C8D5C0** (cross-asset cluster 합류).
+> - **표정만 변경 명시** (everything else IDENTICAL).
+> - **negative**: sad teardrop / crying / sleeping closed peaceful eyes / disappointed cold / Japanese kimono / Chinese qipao / anime girl big sparkly eyes / school uniform / Cookie Run frosting / scrapbook / beige bg / multiple characters / readable text.
+>
+> **6 reaction expression_prompt 핵심** (driver script REACTIONS list 6 항목 body):
+> - **R-01 mother ★1**: SUBTLE small arc smile (mouth closed, slightly upturned) + normal OPEN dot eyes + slight head tilt + optional chin hand or chopsticks. Warm motherly nurturing acceptance.
+> - **R-02 mother ★2**: BIGGER warm smile (mouth slightly OPEN) + soft UPWARD CRESCENT ARC eyes + holding bowl/chopsticks. Warm motherly pleased amplification.
+> - **R-03 mother ★3**: BIG WIDE delighted smile + CLOSED-ARC HAPPY eyes + both hands near cheeks + optional 1-2 simple flat heart icons + optional sparkle. Motherly delight peak.
+> - **R-04 father ★1**: SLIM RESERVED small arc smile (mouth closed) + normal OPEN dot eyes + upright posture + **NO thumb-up** (★1 = reserved, NOT enthusiastic) + optional chin hand. Reserved masculine acceptance.
+> - **R-05 father ★2**: FULLER open smile (mouth slightly open) + soft UPWARD CRESCENT ARC eyes + **SMALL CASUAL SINGLE THUMB-UP** (like CH-03 base default pose). Reserved masculine breaking into pleasure.
+> - **R-06 father ★3**: BIG WIDE delighted smile + CLOSED-ARC HAPPY eyes + body tilted forward + **DOUBLE THUMB-UP gesture** (both hands thumb-up near chest) + 2-4 simple flat sparkle accents. Reserved masculine peak excitement.
+>
+> **driver script 실행 명령**:
+> ```
+> py tools/edit_reaction_anchors_v2.py --only R-01     # test 1 (어머니 mismatch)
+> py tools/edit_reaction_anchors_v2.py --only R-01,R-03  # 어머니 mismatch 2장
+> py tools/edit_reaction_anchors_v2.py --only R-04,R-05,R-06  # 아버지 inconsistency 3장
+> py tools/edit_reaction_anchors_v2.py                  # 6장 batch (권장)
+> py tools/edit_reaction_anchors_v2.py --quality high   # 더 높은 품질 (~5x cost)
+> ```
+> Default: gpt-image-1 image edit, medium quality, 1024×1024. 6장 × $0.042 ≈ $0.25, ~2-3분. v2 출력 경로: `assets-raw/reaction_anchors_m1/R-XX_<character>_star<N>_v2.png` (v1과 공존).
+>
+> **v2 G_reaction 평가** = art-anchor-rubric v1.18 §5.9 G_reaction 5 요소 게이트 사용. v2 PASS critical 요소 = (1) family IP 식별 명확 (CH-02/CH-03 base와 hair/outfit/face features 일치 — v1에서 FAIL했던 핵심 게이트) / (2) ★1/★2/★3 expression gradient 명확 / (3) Cool Sage bg + cross-asset 일관성 / (4) bust-up + chibi proportions / (5) sad/sleeping/negative 누수 0건. **LOCK = 6/6 anchors × 5 요소 = 30/30 PASS** (변경 없음).
+>
+> **risk for v2** (image edit이 prompt-only 대비 family IP 더 잘 보존하나 새로운 risk):
+> - **base image의 default expression 유지 risk** (~25%): image edit이 표정 변경을 충분히 강하게 적용 안 하면 6장 모두 base의 default 표정 (subtle smile + thumb-up)에 가까워 ★1/★2/★3 gradient 무너짐. EXPRESSION CHANGE 절이 prompt 시작부에 명시 + ★N 차이 explicit description으로 회피.
+> - **base의 bowl/물건 prop 유지 risk** (~20%): CH-02 base는 양손으로 그릇 들고 있는데 ★3은 손이 cheeks 옆으로 가야 함. 이 prop이 carry over되면 ★3 prompt와 conflict. prompt에서 hand position을 명확히 명시.
+> - **base의 thumb-up 유지 risk** (~30%, R-04 ★1 영향): CH-03 base의 thumb-up이 R-04 ★1에서 carry over되면 ★1 reserved 의도와 conflict. prompt에서 "NO thumb-up" 명시.
+>
+> **R3 fallback (사용자 ChatGPT 웹 UI 수동 워크플로)**: v2 image edit 결과가 여전히 family IP consistency 부족하거나 expression gradient 불명확하면, 사용자가 ChatGPT 웹 UI에서 수동 chain-of-references 워크플로 실행. (a) CH-02_mother.png upload + R-02 ★2 prompt → 어머니 anchor seed lock / (b) seed image를 reference로 R-01 ★1 / R-03 ★3 generation / (c) 새 세션 + CH-03_father.png upload + R-05 ★2 prompt → 아버지 anchor seed lock / (d) seed image + (R-06만) CH-05_father_star3.png 추가 reference로 R-04 ★1 / R-06 ★3 generation.
+
+#### 5.7.archive v1 (deprecated 2026-05-30, prompt-only approach, family IP consistency 부족)
+
+> v1.16 §5.7 본문은 `tools/gen_reaction_anchors_m1.py` STYLE_SUFFIX_REACTION + REACTIONS 6 prompt-only body 형태. 사용자 R1 v1 시각 확인 후 어머니 hair mismatch (R-01/R-03) + 아버지 family IP inconsistency (R-04/R-05/R-06) 2건 FAIL → v2 image edit approach (`tools/edit_reaction_anchors_v2.py`)로 supersede. v1 output (R-XX_<character>_star<N>_v1.png 6장)은 보존 (v2 비교 reference).
+
+### 5.8 재료 카드 / UI / VFX (M2)
 
 - 재료 ~20개: 음식 anchor의 hero ingredient crop으로 시작 → 부족 재료만 별도 prompt
 - UI 일러스트 ~7개: 장바구니, 메모지, 간판 5종 등 — flat 톤 단순 icon (간판 텍스트는 W1으로 placeholder block만, 한글 후보정)
@@ -1986,6 +3166,10 @@ hyperdetailed, gore, blood, raw meat.
 
 ## 6. 변경 이력
 
+- **2026-05-30 v1.18** (M1 후반 reaction 6컷 v2 image edit — CH-02/CH-03 base + 표정만 변경, 사용자 R1 v1 피드백 2건 fix [어머니 R-01/R-03 hair mismatch + 아버지 R-04/R-05/R-06 family IP inconsistency], supersedes v1.17) — 사용자가 v1 (`tools/gen_reaction_anchors_m1.py` prompt-only generation, gpt-image-1 medium 1024×1024 6장 batch) 결과 시각 확인 후 verbatim "reaction 에서 R-01, R-03가 원래 이미지와 좀 다름, 그리고, R-04, R-05, R-06가 이미지가 좀 일관성이 없음" 2건 피드백 raise. main thread 시각 분석: (a) R-01/R-03 어머니 hair shape mismatch (v1 round-bun + side-puff vs CH-02 base round-bun simple) / (b) R-04 vs R-05/R-06 아버지 family IP inconsistency (R-04 darker hair+shirt vs R-05/R-06 lighter tone). prompt-only가 base의 family IP를 정확 재현 못함을 확인 → **gpt-image-1 image edit API** (BG sprint v4에서 효과 입증된 패턴) 도입. **§5.7 본문 전면 재작성** (v1.16 prompt-only 본문은 §5.7.archive v1 deprecated 절로 이동 보존). v2 approach = `client.images.edit(model="gpt-image-1", image=open(base, "rb"), prompt=COMMON_FRAME + expression_prompt, size="1024x1024", quality="medium", n=1)`: (a) CH-02_mother.png base 직접 입력 (R-01/R-02/R-03) / (b) CH-03_father.png base 직접 입력 (R-04/R-05/R-06) + COMMON_FRAME (family IP IDENTICAL 강제 + 어머니 hair = round-bun simple 명시 + 아버지 hair tone + shirt tone base와 EXACTLY 일치 NOT lighter 명시 + bust-up crop + Cool Sage bg + 표정만 변경 명시 + sad/sleeping/Japanese kimono/anime girl 회피 negative) + 6 expression_prompt (★1/★2/★3 어머니 + 아버지 각각 specific). 사용자 v1 피드백 2건 1:1 fix. **§0 anchor 표 R-01~R-06 row 6장 status 갱신** (v1 prompt-only deprecated 2026-05-30 → v2 image edit pending). **새 driver `tools/edit_reaction_anchors_v2.py` 신설** — `tools/edit_bg_anchors_v4.py` template 기반 (image edit API + base image dimensions 검증 + PIL resize fallback + b64_json 응답 처리). 구조 = (1) COMMON_FRAME 상수 inline (single source) / (2) REACTIONS list 6개 inline (id / name / character / star / base / expression_prompt) / (3) base image 사전 검증 (CH-02/CH-03 2장만) / (4) CLI args (`--only` `--version` `--quality` `--out-dir`) / (5) gpt-image-1 medium 1024×1024 default, version v2 default. v1 prompt-only driver (`tools/gen_reaction_anchors_m1.py`)는 보존 (git history). v1 output 6장도 보존 (v2와 공존). main thread 실행 명령: (1) test `py tools/edit_reaction_anchors_v2.py --only R-01 --quality medium` (1장 ~$0.05, ~30초) → (2) batch `py tools/edit_reaction_anchors_v2.py --quality medium` (6장 × $0.042 ≈ $0.25, ~2-3분, 출력 `assets-raw/reaction_anchors_m1/R-XX_<character>_star<N>_v2.png`). 또는 어머니만 `--only R-01,R-03` / 아버지만 `--only R-04,R-05,R-06`. v2 risk top 3 = base의 default expression 유지 ~25% / bowl prop carry over ~20% / R-04 ★1 thumb-up carry over ~30% (prompt explicit "NO thumb-up" 회피). **R3 fallback (사용자 ChatGPT 웹 UI 수동 chain-of-references)** = v2 결과가 여전히 family IP/gradient 부족하면 사용자 수동 워크플로 (CH-02/CH-03 upload + seed lock + ★1/★3 follow-up + CH-05 추가 reference for R-06). 음식 12장 / 환경 5장 v4 / cut anchor 7장 / ingredient whole 12장 / 캐릭터 5장 본문 무변경.
+- **2026-05-30 v1.17** (mvp-food-selection v2.2 sync — F-02 호떡 → 잔치국수 + F-09 김치찌개 → 불고기 음식 anchor 2장 + ING-02/ING-09 ingredient anchor 2장 전면 교체, supersedes v1.16) — game-designer가 2026-05-28 mvp-food-selection v2.1 → v2.2 갱신 완료 (F-02 호떡 → 잔치국수 T1 — 곡물+잡화+어물+청과 4가게 순회 / F-09 김치찌개 → 불고기 T2 — 정육+청과+잡화). game-designer hero ingredient 매핑 = F-02 hero 소면 (white wheat thin noodle, 부 hero 멸치/김/애호박/대파) / F-09 hero 얇은 소고기 (thin-sliced marbled sirloin fanned, 부 hero 양파/대파/당근/표고). art-director는 본 v1.17에서 (a) **§5.2 F-02 본문 전면 교체** (호떡 → 잔치국수 Janchi-guksu, hero = 소면 white wheat thin noodles + 멸치 dashi clear LIGHT GOLDEN-AMBER broth + 계란 지단 yellow ribbon strips + 김 julienned strips + 애호박 zucchini garnish + 멸치 dried anchovy minor accent + optional 빨간 고추 slice; 넓고 얕은 흰 baekja shallow bowl; cross-cultural negative critical — NOT Japanese somen tsuyu cold dipping with ice + separate cup / NOT Japanese udon thick chunky / NOT Japanese ramen curly yellow + miso/tonkotsu/shoyu + narutomaki/chashu/nori sheet / NOT Japanese soba buckwheat brown-gray / NOT Vietnamese pho cinnamon-clove beef broth + lime/sprouts/basil/cilantro herbs + sliced beef / NOT Chinese egg noodle soup or wonton soup. **F-01 라면 vs F-02 잔치국수 차별화**: 둘 다 noodle soup이지만 F-01 spicy red gochugaru + curly yellow noodles + sunny-side-up egg + spring onion, F-02 OPPOSITE = clear gentle anchovy broth + thin white wheat noodles + egg ribbon strips + gim strips. 호떡 본문은 deprecated archive 보존) / (b) **§5.2 F-09 본문 전면 교체** (김치찌개 → 불고기 Bulgogi, hero = 얇은 marbled 소고기 thin-sliced sirloin 5-7 fanned slices each ~6-10cm × ~4-6cm × ~2-3mm paper-thin + GLOSSY BROWN soy-pear-garlic marinade pool 간장+배+마늘+설탕+참기름 양념 + 양파 onion half-moon slices + 대파 scallion segments + 당근 carrot julienne + 표고/느타리 mushroom slices + optional 당면 dangmyeon strands mixed in SAME dark cast-iron Korean BBQ pan; 깨 generous sprinkle + 송송 sliced 대파 chopped rounds garnish; **CRITICAL F-12 갈비 차별화** — NO BONE-IN LA CUT, NO visible white rib bone, NO bone cross-section discs along strips, NOT grilled on wire mesh grill grate over hot coals, NOT large 18-25cm LA strips, NOT separated meat strips. cross-cultural negative — NOT Japanese sukiyaki raw egg dipping bowl + deeper broth bath + square iron pan + napa cabbage dominant / NOT Japanese shabu-shabu clear simmering broth + dipping sauce setup / NOT Japanese yakiniku grilled boneless on tabletop grate / NOT Chinese beef stir-fry wok hei + cornstarch sauce + Chinese vegetable set / NOT American BBQ red sauce + thick slab + bone-on-side / NOT Korean Kimchi Jjigae F-09 deprecated (vibrant red-orange gochugaru + ttukbaegi + 두부 tofu cubes — 완전 다른 visual). 김치찌개 본문은 deprecated archive 보존) / (c) **§5.6.2 ING-02 본문 전면 교체** (peanut R1 archive + 흑설탕 brown_sugar R2 archive → 소면 somen v1.17 신규. 소면 = single small BUNDLE of dry SOMEN-STYLE white wheat noodles ~18-22cm × 4-5cm × 15-25 fine parallel slim ~1-2mm strands clean off-white #F5F0E0-#FAFAFA + PLAIN white/cream paper band tied at center NO printed text + two ends fanning slightly + optional 2-3 stray loose strands beside bundle; cross-cultural negative — NOT Japanese DECORATIVE PINK-AND-WHITE paper band / NOT 노란 Chinese egg noodles / NOT Italian spaghetti rigid 2-3mm / NOT 일본 udon thick chunky / NOT Korean ramyeon curly yellow egg; cut 없음, 칼 LEFT side static per cross-asset convention. peanut R1 본문 + brown_sugar R2 본문 모두 deprecated archive 보존) / (d) **§5.6.9 ING-09 본문 전면 교체** (firm tofu R1 archive → 얇은 raw 소고기 thin-sliced marbled beef v1.17 신규. 얇은 소고기 = STACK or FANNED arrangement of 5-7 THIN sliced raw marbled beef sheets each ~8-12cm × 5-7cm × 2-3mm paper-thin + PINK-RED RAW BEEF base #C44545-#B82F2F + VISIBLE WHITE MARBLED FAT VEINS #F0E8D8 scattered ~3-5 organic irregular marbling lines per slice + slight diagonal FAN slight overlap top 2-3 slices offset showing cross-section edges underneath + ~2-3mm THIN slice cross-section visible on side + subtle slim cel shading + ONE specular highlight (fresh moist raw beef sheen); **CRITICAL F-12 갈비 차별화** — NO BONE-IN LA CUT, NO bone visible, NO bone cross-section discs, NOT grilled or cooked brown (RAW pink-red state), NOT thick steak slab; cross-cultural negative — NOT Japanese wagyu A5 extreme intricate marbling + premium plating / NOT sukiyaki beef on decorative platter + raw egg dipping bowl + 다른 vegetable / NOT bacon parallel striped white-pink bands / NOT salami cured uniform / NOT 삼겹살 thick alternating layered stripes; cut 없음, 칼 LEFT side static per cross-asset convention; 게임 prep mechanic = 양념재우기 marinade application NOT chopping. firm tofu R1 본문 deprecated archive 보존). **§0 anchor 표 4 row 갱신**: F-02 row (Hotteok → Janchi-guksu T1 v1.17 pending v9, 호떡 deprecated 2026-05-30 mvp v2.2 trigger) / F-09 row (Kimchi Jjigae → Bulgogi T2 v1.17 pending v9, 김치찌개 deprecated 2026-05-30 mvp v2.2 trigger + F-12 갈비 차별화 CRITICAL NO bone-in LA cut) / ING-02 row (peanut R1 + brown_sugar R2 deprecated → somen pending v3 v1.17 mvp v2.2 trigger 호떡 → 잔치국수) / ING-09 row (firm tofu R1 deprecated → thin marbled beef pending v3 v1.17 mvp v2.2 trigger 김치찌개 → 불고기 + F-12 갈비 차별화 CRITICAL NO bone visible + RAW NOT cooked). 다른 8 음식 anchor (F-01/F-03/F-04/F-05/F-06/F-07/F-08/F-10/F-11/F-12) + 10 ingredient anchor (ING-01/ING-03/ING-04/ING-05/ING-06/ING-07/ING-08/ING-10/ING-11/ING-12) + cut anchor 7장 (CUT-00~06) + 환경 5장 (BG-01~05 v4) + 캐릭터 5장 (CH-01~05) + reaction 6컷 (R-01~06) 본문 **전면 무변경** (LOCK status 유지). **driver script `tools/gen_food_anchors_m1.py` FOODS list F-02 item name (hotteok → janchi_guksu) + F-09 item name (kimchi_jjigae → bulgogi) + body inline 전면 갱신 + docstring v1.17 sync** (v1.17 sync 절 신설). **driver script `tools/gen_ingredient_anchors_m1.py` INGREDIENTS list F-02 item name (brown_sugar_whole → somen_whole) + food (Hotteok → Janchi-guksu) + cut_style (no cut, sprinkle/scoop filling → no cut, noodle prep — sprinkle/serve) + body inline 전면 갱신 + F-09 item name (firm_tofu_whole → thin_beef_whole) + food (Kimchi Jjigae → Bulgogi) + cut_style (CUT-06 깍둑썰기 → no cut, 양념재우기 marinade prep mechanic — raw before marinade state) + body inline 전면 갱신 + docstring v1.17 sync** (v1.17 sync 절 신설). main thread 실행 명령 = (1) **음식 anchor 2장**: `py tools/gen_food_anchors_m1.py --only F-02,F-09 --version v9 --model gpt-image-1 --quality medium` (2장 × $0.042 ≈ $0.08, ~30-60초, 출력 `assets-raw/food_anchors_m1/F-02_janchi_guksu_v9.png` + `F-09_bulgogi_v9.png` — version v9 = previous F-01~F-11 R1~R7 / F-12 R7 version과 충돌 회피 + F-02/F-09 mvp v2.2 신규 첫 generation 명시 식별 가능) / (2) **ingredient anchor 2장**: `py tools/gen_ingredient_anchors_m1.py --only F-02,F-09 --version v3 --model gpt-image-1 --quality medium` (2장 × $0.042 ≈ $0.08, ~30-60초, 출력 `assets-raw/ingredient_anchors_m1/F-02_somen_whole_v3.png` + `F-09_thin_beef_whole_v3.png` — version v3 = previous v1 peanut/brown_sugar/firm_tofu / v2 (있다면) 회피 + F-02/F-09 mvp v2.2 신규 generation 식별 가능). **총 4장 × $0.042 ≈ $0.17, ~2분**. ChatGPT 약점 risk top 5 갱신 = (1) 잔치국수 Japanese somen tsuyu cold 누수 ~50% / (2) 잔치국수 Vietnamese pho 누수 ~30% / (3) 불고기 Japanese sukiyaki raw egg dipping 누수 ~50% / (4) 불고기 F-12 갈비 bone visible cross-contamination ~40% CRITICAL / (5) 소면 Japanese pink-white decorative band 누수 ~40% / (6) 얇은 소고기 Japanese wagyu extreme marbling 누수 ~40% / (7) 얇은 소고기 cooked brown 누수 ~30% (이 anchor는 RAW state). 음식 12 평가 표 §0 + §5.4 risk top 5 부분 갱신 (F-12 R7 LOCK candidate / F-04/F-01/F-03/F-05/F-06 LOCK 유지 status 무변경, F-02/F-09 신규 pending status).
+- **2026-05-30 v1.15** (M1 후반 art sprint 2번째 — 음식 12 × hero ingredient whole anchor 12장 prompt set 신설 §5.6 full prompts + §5.5.0 음식↔cut 매핑 표 추가, ADR-005 Stage 2A "before"-cut pair, supersedes v1.14) — M1 후반 art sprint 1번째 (cut anchor 7장 LOCK 완료) 후 2번째 sprint 진입. ADR-005 Stage 2A 재료 준비 미니게임은 음식별 hero ingredient를 적절한 cut style로 자르는 형태 → 음식 12 × hero ingredient 매핑 + whole(자르기 전) state asset이 필요. **§5.5.0 음식 12 × hero ingredient × cut style 매핑 표 신설** (임시; game-designer foods CSV `prep_*` 후속 확정 시 일부 reroll 가능): F-01→대파/CUT-05, F-02→견과류/CUT-01, F-03→단무지/CUT-02, F-04→어묵/CUT-03, F-05→김치/CUT-01, F-06→모짜렐라/(no cut), F-07→대파 daepa/CUT-03, F-08→당근/CUT-02, F-09→두부 firm/CUT-06, F-10→두부 soft/(no cut), F-11→당근/CUT-02(F-08 재사용 가능), F-12→마늘/CUT-01. cut style 분포 = mince 3 / julienne 3 / diagonal 2 / sliced_rounds 1 / cube 1 / no cut 2 / whole-disc(통썰기) 0 — CUT-04는 hero ingredient cut prep 매핑 없음 (game-designer 검증 필요). **§5.6 신설 ingredient whole 12장 prompt set** (§5.6.0 single source = driver script note + §5.6.1~§5.6.12 12개 항목 식별 핵심 시각 요소/reroll trigger/약점 회피 요약 + §5.6.13 cross-호환 운영 + §5.6.14 약점 risk top 5 + §5.6.15 driver script 실행 명령 + §5.6.16 game-designer 후속 confirm 사안 12행 표). 각 ingredient는 도마 위 center-right placement + 칼 LEFT side static + WHOLE/UNCUT state (cut pieces scattered 회피). **§2.5에 STYLE_SUFFIX_INGREDIENT note 추가** = STYLE_SUFFIX_CUT 재활용 + INGREDIENT PLACEMENT 절 추가 (driver script `tools/gen_ingredient_anchors_m1.py` `STYLE_SUFFIX_INGREDIENT` 상수가 single source of truth). **§0 anchor 표 ING-01~12 row 12개 추가** (pending M1 후반 2번째 sprint, ING-11은 F-08 재사용 확정 시 archive note). **새 driver script `tools/gen_ingredient_anchors_m1.py` 신설** — `tools/gen_cut_anchors_m1.py` template 기반. 구조 = (1) STYLE_SUFFIX_INGREDIENT inline (cut suffix 재활용 + INGREDIENT PLACEMENT 절 추가 + cut pieces scattered 회피 negative) / (2) INGREDIENTS list 12개 항목 (id=food_id / name=ingredient_slug / food=food_name_en / cut_style=cut_style_id / body) inline / (3) build_prompt body % STYLE_SUFFIX_INGREDIENT 자동 append / (4) CLI args `--only` `--version` `--model` `--quality` `--out-dir` (cut anchor와 동일 패턴) / (5) gpt-image-1 medium 1024×1024 default, dall-e-3 option 보존 / (6) 출력 default `assets-raw/ingredient_anchors_m1/<food_id>_<ingredient_name>_v1.png`. main thread 실행 명령: `py tools/gen_ingredient_anchors_m1.py --model gpt-image-1 --quality medium` (12장 × $0.042 ≈ $0.50, ~4-5분, 출력 경로 `assets-raw/ingredient_anchors_m1/`). 시각 risk top 5 = ING-03 단무지 (백색 daikon/banana 누수 ~50%) / ING-04 어묵 (Japanese naruto/chikuwa ~50%) / ING-07 daepa (F-01 spring onion 변종으로 추론 ~40%) / ING-06 모짜렐라 (cheddar/두부 누수 ~40%) / ING-12 마늘 (whole bulb/양파 누수 ~35%). 음식 12장 F-01~F-12 본문 무변경 (LOCK status 유지). 캐릭터 5장 / 환경 5장 v4 / cut anchor 7장 본문 무변경. §5.5.10 placeholder는 §5.6 신설로 supersede note. §5.7 양친 reaction (이전 §5.6) 번호 shift / §5.8 UI/VFX (이전 §5.7) M2로 격리.
+- **2026-05-29 v1.14** (M1 후반 sprint 진입 — 칼/도마 base anchor 1장 + cut style 6종 prompt set 신설 §5.5 full prompts, ADR-005 Stage 2A rhythm tap prerequisite, supersedes v1.13) — M1 anchor 22/22 LOCK 완료 (음식 12 + 환경 5 + 캐릭터 5, commit dfb141e) 후 M1 후반 art sprint 진입. **ADR-005 Stage 2A 재료 준비 = rhythm tap + Knife indicator** prerequisite로 칼/도마 base + cut style 6종 anchor가 필요. **§2.5 STYLE_SUFFIX_CUT 신설** — 모든 cut anchor 공통 suffix (square 1:1, top-down view, Korean cutting board + knife 통일 silhouette description, Cool Sage `#C8D5C0` bg, modern saturated 80-90%, slim outline 2-3px). negative = Japanese kitchen knife (santoku/deba/yanagiba single-bevel asymmetric blade + kanji), Chinese cleaver (rectangular tall blade), Western chef knife (large triangular blade with bolster), mortar and pestle (절구), traditional Korean stone tools (replaced by knife + cutting board per ADR-005 Stage 2A direct gameplay mechanic mapping). **이전 §2.5 anchor consistency 운영 규칙 → §2.6으로 번호 shift**. **§5.5 placeholder → full prompts 확장** (cutting_board base 1장 + cut_style_mince/julienne/diagonal/whole/sliced_rounds/cube 6장 = 총 7장). 각 cut style은 **cutting RESULT state** (cut된 결과 상태, NOT cutting action mid-motion) — 게임 asset 사용 형태로 도마 + cut된 재료 + 칼 옆에 놓임. 시그니처 재료 매핑 = (a) **mince (다지기) → 마늘** (F-12 갈비/F-09 김치찌개, BPM 140 가장 빠름, fine irregular bits 1-3mm) / (b) **julienne (채썰기) → 당근** (F-08 비빔밥/F-11 잡채, thin elongated matchstick strips 4-6cm × 2-3mm × 2-3mm) / (c) **diagonal (어슷썰기) → 어묵+대파** (F-04 떡볶이/모든 국물, elongated oval shapes — 어묵 5-7cm long diagonal × 2-3cm wide + 대파 3-4cm long diagonal × 1-1.5cm wide) / (d) **whole (통썰기) → 김밥 cylinder 단면** (F-03, BPM 70 가장 느림, perfect round disc 3cm 지름 × 1.5-2cm thick + 5색 cross-section) / (e) **sliced_rounds (송송썰기) → 대파** (F-12 갈비 hero garnish/모든 가니쉬, small thin round discs 1-1.5cm × 1-3mm + scallion ring pattern) / (f) **cube (깍둑썰기) → 두부** (F-09 김치찌개/F-10 순두부 contrast, small equal-sided cubes 2-2.5cm × 2-2.5cm × 2-2.5cm + 3D volume hint). 각 cut anchor prompt = 식별 핵심 시각 요소 (시그니처 재료 + cut shape + 두께 + 배치) + Tier comparison (다지기↔통썰기 / 통썰기↔송송썰기 spectrum) + 본문 prompt (cutting RESULT state + 도마 위 칼 LEFT side 통일) + reroll 트리거 3-5종 (cross-cut style 누수 + cross-cultural 누수 회피). §5.5.8 **cut anchor 7장 cross-호환 운영** (CUT-00 anchor seed → CUT-01~06 reference upload + 일관성 instruction). §5.5.9 **ChatGPT 약점 risk top 3** (CUT-04 통썰기 Japanese maki sushi ~50% / CUT-06 깍둑썰기 Chinese mapo tofu ~40% / CUT-00~06 Japanese kitchen knife santoku/deba ~30%). §5.5.10 ingredient cut variation M2 sprint placeholder. **§0 anchor 표 cut anchor 7장 row 추가** (CUT-00 ~ CUT-06, pending M1 후반 status). **새 driver script `tools/gen_cut_anchors_m1.py` 신설** — `tools/gen_food_anchors_m1.py` template 기반. 구조 = (1) STYLE_SUFFIX_CUT inline (도마 + 칼 통일 silhouette + Cool Sage bg + modern saturated + slim outline + 한식 negative) / (2) CUTS list 7개 항목 (cutting_board + cut_style_mince/julienne/diagonal/whole/sliced_rounds/cube) inline / (3) build_prompt body % STYLE_SUFFIX_CUT 자동 append / (4) CLI args `--only` `--version` `--model` `--quality` `--out-dir` / (5) gpt-image-1 medium 1024×1024 default, dall-e-3 option 보존 / (6) 출력 default `assets-raw/cut_anchors_m1/<name>_v1.png`. main thread 실행 명령: `py tools/gen_cut_anchors_m1.py --model gpt-image-1 --quality medium` (7장 × $0.042 ≈ $0.29, ~3-4분, 출력 경로 `assets-raw/cut_anchors_m1/`). 음식 12장 F-01~F-12 본문 무변경 (각 LOCK status 유지). 캐릭터 5장 CH-01~05 본문 무변경 (v1.2 lock candidate 유지). 환경 5장 BG-01~05 v4 image edit approach 무변경. **§5.6~§5.7 양친 reaction/UI/VFX는 M2 sprint placeholder 유지**.
 - **2026-05-28 v1.11** (M1 환경 BG-01~05 v2 갱신 — 한옥 양식 + 검정 기와 곡선 지붕 + 처마 + 큰 나무 간판 + 옹기 + hanging lantern + icon+영어 minimal signage 5건 fix, supersedes v1.10) — 사용자가 정통 한식 가게 reference image (경주 참기름 방앗간 한옥 양식, 1963년 since 1963) 제공 + 명시 "**한식 정통 요소만 차용 + 기존 lock 유지**". main thread 시각 분석으로 차용할 5건 추출: (1) **한옥 양식 외관** — 목조 frame (warm brown wood beams 정통 한국 건축) / (2) **검정 기와 지붕** — curved eave tiles (처마 곡선 + 처마 끝 흰 와당 patterns) / (3) **큰 나무 간판** — 가게명 wooden rectangular signboard (단 v2는 icon+영어 minimal로 변환 — [feedback_i18n_icon_first] 2026-05-27 lock 유지, 한글 prompt 회피) / (4) **옹기 항아리** — 갈색 traditional Korean pottery 1-2개 (외부 배치) / (5) **Hanging lantern** — 양쪽 warm yellow glow. 회피 3건 (LOCK 유지): (a) **베이지 배경** — reference의 cream/베이지 storybook tone 회피, art-style v1.1 modern saturated Cool Sage `#C8D5C0` 유지 / (b) **한글 dominant signage** — reference의 "경주 참기름 방앗간", "기름", "직접 짠 고소한 참기름", "100% 국산품 참기름" 4건 한글, v2는 icon + 영어 minimal로 변환. 한글 prompt 절대 회피 / (c) **Warm storybook tone** — illustrated/vintage 느낌, modern saturated/clean hyper-casual flat 톤 유지. **§2.2 STYLE_SUFFIX_BG 전면 재작성** = v1.11 STYLE_SUFFIX_BG_V2 (한옥 양식 LOCK + 검정 기와 곡선 지붕 + 처마 깊이 + 큰 나무 간판 + 옹기 + lantern + icon-first 영어 minimal signage + slight 7/8 isometric view + Cool Sage `#C8D5C0` solid bg + cross-shop one-market identity 위한 공통 한식 정통 5 요소). DALL-E 약점 회피 신규 4건 = 한글 누수 (한자/카타카나) / Chinese/Japanese architecture 누수 (Chinese pagoda 곡선/Japanese irimoya hip-and-gable) / 베이지 누수 (reference cream tone) / vintage storybook 누수. **§4 BG-01~05 본문 v2.0 전면 재작성** (5장 각각 한옥 + 기와 + 처마 + 옹기 + lantern + icon+영어 signage + 카테고리 시그니처 통합): BG-01 청과상 (cabbage+apple, GREENGROCER 영어) / BG-02 정육점 (meat slab+cutting board, BUTCHER) / BG-03 어물전 (fish+ice, FISHMONGER) / BG-04 곡물상 (grain sacks+옹기 prominent 2-3개+plant, GRAIN SHOP) / BG-05 잡화점 (참기름 방앗간 직접 inspired, seasoning bottles+옹기 prominent+wooden stool accent, GENERAL GOODS — vintage tone 회피 critical). 각 BG-XX마다: 식별 핵심 시각 요소 7개 / Prompt body 전면 / DALL-E 약점 회피 노트 (한글/한자, Chinese/Japanese architecture, 베이지, 카테고리별 risk 음식 시각 디테일 등) / Reroll trigger 6종 (한옥 양식 누락 / 기와 지붕 X / 한글·한자 누수 / 베이지 / 일본·중국 양식 / 카테고리 시그니처 누락). **§4.6 v1.2 archive 절 신설** (v1.2 BG-01~05 본문 deprecated archive + v1.2 → v1.11 V2 핵심 diff 요약 표: 시점 / 외관 / awning→기와 지붕 / signboard → wooden signboard + icon+영어 / 옹기 / lantern / 배경 / 카테고리 시그니처 / 회피 LOCK). §0 anchor 표 BG-01~05 row 5장 status `pending` → **`v1.2 invalidated, v2 pending (anchor seed BG-01 / reference upload BG-02~05)`** 갱신. **Week 1 anchor candidate (commit 7a6cffb)의 BG 5장은 invalidate** (캐릭터 5장 CH-01~05는 무영향, v1.2 lock candidate 유지). 음식 12장 F-01~F-12 본문 무변경 (F-12는 v1.10 R7 plated white plate LOCK candidate 유지). 캐릭터 5장 CH-01~05 본문 무변경.
 - **2026-05-28 v1.9** (M1 음식 F-12 R7 reroll LA-cut long strip form + multiple cross-section bone discs along length + green scallion rounds + wire mesh grill grate + 7/8 perspective 5건 fix, supersedes v1.8) — R6 v6 결과 시각 확인 후 사용자가 **또 다른 reference image** (정통 LA갈비 — round wire mesh grill grate 위에서 굽고 있는 large rectangular strips with cross-section bone discs along length)를 제시하며 verbatim "이걸로 해줘" 명시. R6 v6의 small square pieces grid form + SHORT EDGE long single bone + chopped minced garlic dots + black cast iron plate + top-down view 패턴이 새 reference와 어긋남 진단 → R6 v6 = **deprecated**, R7 v7 = 사용자 새 reference 시각 요소 1:1 매칭으로 5건 전면 fix: (1) **Fix 1 form 전면 교체 (small square pieces grid → LA-cut long strips)**: v6 `multiple small square-shaped meat pieces (12~16 pieces, each 3-4cm × 3-4cm × 0.5-0.8cm thick) in grid pattern (3-4 rows × 4 columns)` 폐기 → v7 `4-6 large rectangular LA-style meat strips (each ~18-25cm long × 8-12cm wide × 0.5-0.8cm thick) arranged side by side parallel on the grill grate (slight natural overlap or aligned, NOT perfectly geometric grid)`. 정통 LA갈비 cross-cut form 회귀. / (2) **Fix 2 bone form 완전 재정의 (long bone at short edge → 3-4 cross-section discs along each strip's length, CRITICAL signature)**: v6 `SINGLE LONG WHITE RIB BONE (12-15cm) laid horizontally alongside meat grid on ONE SHORT EDGE side` 폐기 → v7 `Each meat strip has 3-4 small ROUND WHITE BONE CROSS-SECTION DISCS (each ~1.5-2cm diameter, cream-white color) visible along its LENGTH — LA-style cross-cut bones (ribs cut perpendicular to original direction), EVENLY SPACED along the length of each strip (approximately 3-5cm apart). The LA-Galbi traditional cut signature.` R3에서 시도됐다가 폐기됐던 패턴이 R7 reference의 정확한 패턴 (사용자 시각 의도 진화). negative `NOT a single long bone alongside the meat (R6 deprecated), NOT bone discs partially embedded along TOP LONG EDGE only (R5 deprecated), NOT one big bone at one end (R3 deprecated)`. / (3) **Fix 3 garnish 변경 (chopped minced garlic → chopped green scallion rounds)**: v6 `finely CHOPPED MINCED GARLIC bits scattered all over meat pieces (small yellowish-white garlic granules)` 폐기 → v7 `Generous scattering of CHOPPED GREEN SCALLION ROUNDS (송송 sliced spring onion / 대파, each round ~1-3mm thick disc, bright green color) scattered across the meat strips as the hero garnish. Plus a light sprinkle of white sesame seeds as additional accent.` negative `NOT chopped minced garlic dots (R6 deprecated), NOT thin garlic slices, NOT whole garlic cloves, NOT only sesame seeds`. / (4) **Fix 4 plate/grill context 변경 (cast iron plate → round metallic wire mesh grill grate)**: v6 `On a clean black cast iron grill plate (or copper grill grate or white plate)` 폐기 → v7 `Sitting on a ROUND METALLIC WIRE MESH GRILL GRATE (silver-gray wire grate, the traditional Korean BBQ tabletop grill) — the wire mesh pattern is visible underneath/around the meat strips. Optional: subtle hint of red-orange glow underneath the grate suggesting hot coals (a touch of warm fire atmosphere, not dominant).` negative `NOT a flat solid plate (v4/v5/v6 polished but deprecated for this LA-galbi form), NOT a white ceramic plate, NOT a black cast iron flat pan`. / (5) **Fix 5 view angle 변경 (top-down → slight 7/8 perspective)**: v6 `top-down view` 폐기 → v7 `slight 7/8 perspective view (mostly top-down but slightly angled to show meat thickness side profile + grill grate depth) — the slight 7/8 angle reveals the THIN slice thickness (0.5-0.8cm) from the side, confirming the paper-thin slice appearance`. **v6 유지 요소 4건 (LOCK, 무변경)**: well-grilled caramelized dark brown + glossy glaze sheen / char marks visible on surface from grill (LA-cut form에서 char marks가 dominant) / thin slice 0.5-0.8cm thickness / cross-cultural negative (yakiniku/American BBQ/char siu/steak/raw) + 추가 `NOT v6 small square pieces grid form (deprecated for this LA-galbi reference)`. **부분 폐기 — 칼집 (knife score marks)**: v3~v6 핵심 LOCK 시그니처였으나 R7 reference에서는 cross-cut bones이 dominant signature이고 score marks는 reference에 명확히 보이지 않음. **칼집은 optional로 격하** (만약 표면에 보이면 OK, 없어도 PASS). LA-cut form의 시그니처는 cross-cut bones이지 score marks가 아님. F-01~F-11 본문 무변경 (각 LOCK status 유지). §5.2 F-12 본문만 v7로 전면 교체 (5건 fix). v6 본문은 §5.2 F-12 archive 절 `R6 v6 (deprecated, 2026-05-28)`에 보존 (R3/R4/R5/R6 모두 archive 보존 — 사용자 시각 의도 진화 기록). 식별 핵심 시각 요소 7개 갱신 (LA-cut long strip / multiple parallel strips / **3-4 bone discs along length CRITICAL LA cross-cut signature** / thin 0.5-0.8cm / well-grilled brown + char marks + 칼집 optional / green scallion rounds garnish / round wire mesh grill grate context). reroll trigger 7종 갱신 — (a) form 잘못 (small square pieces grid로 회귀 CRITICAL) / (b) bone form 잘못 (single long bone at short edge로 회귀 CRITICAL) / (c) garnish 잘못 (minced garlic / garlic slice 누수) / (d) plate context 잘못 (flat plate / cast iron 누수) / (e) view angle 잘못 (top-down 회귀) / (f) thickness 두꺼움 / (g) raw / steak 색 누수. §2.4 STYLE_SUFFIX_FOOD / §5.1 개요 / §5.3 cross-호환 운영 / §5.4 risk top 5 / 캐릭터 5 + 환경 5 prompt 무변경.
 - **2026-05-28 v1.8** (M1 음식 F-12 R6 reroll form 전면 교체 + thickness 더 얇게 + bone short edge + 마늘 dots 4건 fix, supersedes v1.7) — R5 v5 결과 시각 확인 후 사용자가 새 reference image (정통 한식 갈비구이 — 가위로 자른 후의 eating-style state)를 제시하며 시각 의도 재정의 + verbatim "가위로 자르고 난후의 갈비구이....Short Edge쪽에 뼈가 길게 있잖어....그리고 고기 자체도 훨씬 얇게 되어 있고....". R5 v5의 4 long elongated strip + bone along TOP LONG EDGE 패턴이 새 reference와 어긋남 진단 → R5 v5 = **deprecated**, R6 v6 = 사용자 새 reference 시각 요소 1:1 매칭으로 4건 전면 fix: (1) **Fix 1 form 전면 교체**: v5 `4 thin elongated rectangular meat strips arranged in a strictly parallel row, 12-15cm × 3cm × 0.7-1cm` 묘사 폐기 → v6 `multiple small square-shaped grilled meat pieces (12~16 pieces, each 3-4cm × 3-4cm square, very thin 0.5-0.8cm thick) arranged in a grid pattern (3-4 rows × 4 columns) — the Korean galbi-gui eating style AFTER kitchen scissors cut the strips into smaller pieces`. 한식 갈비구이의 eating-style state 명확화 + negative `NOT uncut long strips (v3/v5 form obsolete)`. / (2) **Fix 2 thickness 더 얇게**: v5 `0.7-1cm thick (6-8mm)` → v6 `0.5-0.8cm thick (5-8mm, much thinner than v5, paper-thin appearance but still substantial enough to recognize as meat)`. 사용자 명시 "고기 자체도 훨씬 얇게". / (3) **Fix 3 bone 위치 완전 재정의 (TOP LONG EDGE → SHORT EDGE long bone)**: v5 `bone discs visible along the TOP LONG EDGE of each meat strip (각 strip마다 small bone discs partially embedded)` 폐기 → v6 `On ONE SHORT EDGE SIDE of the meat grid, a single LONG WHITE RIB BONE (12-15cm × 1-1.5cm × 1-1.5cm cream-white color) is laid horizontally alongside the grid — original strip의 bone이 cut 후에도 short edge에 남아 있는 형태. The bone is a SINGLE LONG PIECE laid alongside the grid (perpendicular to the rows of meat pieces), NOT multiple small discs, NOT embedded into individual pieces`. 사용자 명시 "Short Edge쪽에 뼈가 길게 있잖어". negative `NOT bone discs along the top edge of each piece (v5 deprecated), NOT bone at the end of strips (v3 deprecated), NOT bones between pieces`. / (4) **Fix 4 garnish 잘게 다진 마늘 dots 강조**: v5 `Generous sprinkle of white sesame seeds across the strips. 1-2 thin garlic slices placed on top or beside the meat as accent` → v6 `Generous sprinkle of finely CHOPPED MINCED GARLIC bits scattered all over the meat pieces (small yellowish-white garlic granules visible on top of each meat piece, a signature Korean galbi-gui garnish after grilling). Optional: a light sesame seed sprinkle`. 사용자 새 reference 시각 시그니처 = 잘게 다진 마늘 dots. negative `NOT thin garlic slices on top, NOT whole garlic cloves`. **v5 유지 요소 5건 (LOCK, 무변경)**: 칼집 (3-5 horizontal score marks maintained on each cut piece) / strictly parallel/aligned arrangement (grid pattern, NOT random scatter) / well-grilled caramelized brown + glossy glaze sheen / plate context (검정 cast iron grill plate or 흰 plate) / cross-cultural negative (yakiniku/American BBQ/char siu/steak/raw/LA-cut + 추가 `NOT uncut long strips`). F-01~F-11 본문 무변경 (각 LOCK status 유지). §5.2 F-12 본문만 v6로 전면 교체 (form + thickness + bone 위치 + garnish 4건 fix). v5 본문 archive 절(§5.2 F-12 deprecated archive R5) 추가 보존 + R4 v4 / R3 v3 archive 절 유지. 식별 핵심 시각 요소 6→7개 갱신 (square form / grid pattern / thin 5-8mm / long bone at short edge / 칼집 maintained / caramelized brown / 마늘 dots). reroll trigger 7종 신설 — (a) form 잘못 (long strips로 회귀 CRITICAL) / (b) thickness 두꺼움 (v5 thin 회귀) / (c) bone 위치 잘못 (TOP LONG EDGE 또는 multiple discs로 회귀 CRITICAL) / (d) garnish 잘못 (slice/whole garlic 누수) / (e) grid pattern 흐트러짐 (random scatter) / (f) 칼집 maintained 누락 (각 small piece score marks 없음) / (g) raw/steak 색 누수. §2.4 STYLE_SUFFIX_FOOD / §5.1 개요 / §5.3 cross-호환 운영 / §5.4 risk top 5 / 캐릭터 5 + 환경 5 prompt 무변경.

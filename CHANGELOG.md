@@ -16,6 +16,158 @@
 
 ---
 
+## [2026-05-31] M1 reaction 6컷 v3 코믹 amplification — v2 family IP LOCK 유지 + 표정 3축 강화
+- **무엇**: art-director가 사용자 v2 피드백 "reaction을 코믹하게 만드는게 어때? 지금 reaction 이미지는 너무 심심해" trigger로 reaction 6컷 v3 image edit driver 신설 + prompts-library v1.20 → v1.21 + art-anchor-rubric v1.20 → v1.21 갱신. v2 family IP consistency LOCK 유지 + 코믹 amplification 3축 (눈/입/body+icons) 강화.
+- **왜**: v2는 image edit API로 어머니/아버지 family IP consistency PASS 했으나, subtle smile / big smile / single-double thumb-up gradient가 점잖아서 player가 ★1/★2/★3 차이를 즉시 체감 못함. "Korean variety show / K-drama exaggerated reaction" 톤 부재.
+- **결과/다음 단계**: 새 driver `tools/edit_reaction_anchors_v3.py` 신설 (v2 driver는 보존, v1/v2/v3 output 공존). COMMON_FRAME_V3에 TONE TARGET 절 + CRITICAL BOUNDARIES 5건 (anime sparkly pupils 회피 + over-exaggerated goofy 회피 신규 2건). main thread 실행: (1) test `py tools/edit_reaction_anchors_v3.py --only R-03,R-06 --quality medium` (★3 peak 2장 ~$0.08 ~1분) → (2) batch `py tools/edit_reaction_anchors_v3.py --quality medium` (6장 ~$0.25 ~2-3분, 출력 `assets-raw/reaction_anchors_m1/R-XX_<character>_star<N>_v3.png`). G_reaction_v3 5 요소 (코믹 amplification 3축 PASS 기준 추가) 통과 시 LOCK candidate.
+
+## [2026-05-31] C-2 basic_pantry 5종 정책 lock — 떡볶이·잡채 3가게 강등 + 잡화점 SKU 17→12 + 4 docs sync + ADR-007 pm 위임
+
+- **무엇**:
+  - **사용자 verbatim 결정 (2026-05-31)**: "default 수용 — C-1 떡볶이/잡채 3가게 강등 + C-2 basic_pantry 5종 (간장/고추장/참기름/설탕/소금) lock + C-3 양념재우기 = marinade rhythm 정합 + C-4 accuracy_ingredients 완전 제외 + C-5 Kitchen rack 위치 ui-designer 위임 + C-6 ADR-007 신설 pm 위임"
+  - **C-2 lock 핵심**: 한국 가정 부엌 상시 비치 양념 5종 (`ing_x_003` 간장 / `ing_x_004` 고추장 / `ing_x_005` 설탕 / `ing_x_006` 참기름 / `ing_x_007` 소금) → Stage 1 재래시장 진열대 미표시 + Scene 2 kitchen rack 자동 표시 (시각 cue만) + accuracy_ingredients 분모 N에서 자동 차감.
+  - **소금 ing_x_007 신규 row** (basic_pantry default base, foods CSV `used_in_foods = implicit_all` 명시 X). 기존 ing_x_007 = 깨는 **ing_x_019로 ID 재매핑** (사용자 명시 ID list 정합 위함).
+  - **떡볶이·잡채 4가게 → 3가게 강등** (잡화점 정답 0): 떡볶이 잡화 = 고추장 1종 (basic_pantry 제거 후 0) / 잡채 잡화 = 간장·참기름 2종 (basic_pantry 제거 후 0).
+  - **4 docs ripple sync**:
+    - `docs/ingredients-database.csv` — 신규 컬럼 `is_basic_pantry: bool` 추가 (헤더 sync). 양념 4 row(간장·고추장·참기름·설탕) → `is_basic_pantry: true` + `store_type: pantry` + `distractor_weight: 0` + `is_distractor_friendly: false`. 일반 재료 36 row → `is_basic_pantry: false`. **소금 ing_x_007 신규 row** (`store_type: pantry`, `used_in_foods: implicit_all`). 기존 깨 → `ing_x_019` ID 이동.
+    - `docs/store-distribution.md` v1.2 → **v1.3** — 5×12 매트릭스 재산정 (잡화 음식 등장 12→10, 정답 합계 29→17, 평균 2.42→1.7). 떡볶이·잡채 3가게 강등 명시. 가게 수 분포: 5가게(1) / 4가게(6→4) / 3가게(5→7) / 2가게(0 유지). 어물전 floor 5 유지 확인. §X "Basic Pantry 제외 정책" 신설 (정의·룰·Remote Config 3 키·후속 작업). §1.5 잡화점 정답 합계 산정 상세 표 신설 (12 차감 검증).
+    - `docs/balance-config.md` v0.3.2 → **v0.3.3** — §4A "Basic Pantry 정책" 신설 (5종 정의 + Remote Config 키 3종). §2.2.2 음식별 Stage 1 time_limit 재산정 (떡볶이 22→18s / 잡채 30→25s / 그 외 변동 없음). §2.2.3 디스트랙터 평균 재산정 (T1 3.86→3.43 / T2 3.4→2.8, 잡화 SKU pool 17→12 distractor=1 충분 검증 PASS). §5.1 accuracy_ingredients 공식 갱신 (분모 N에서 basic_pantry 자동 차감). §11 #13·#14·#15 신규 (alpha 검증 / ADR-007 격상 / ing_x_007 ID 재매핑 ripple).
+    - `docs/systems/cooking-mechanics.md` v0.5 → **v0.6** — §2.2.1 basic_pantry 자동 제외 룰 신설. §2.2.7 Kitchen rack 자동 표시 신설 (Scene 1→2 transition 시 자동, art-director 옹기 5종 anchor 후속). §2.5 accuracy_ingredients 공식 분모 N에서 basic_pantry 차감 명시. §2A.X 양념재우기 정합 명시 신설 (양념 자동 제공 + marinade rhythm tap, 양념 "고르기" 행위 X). §8 store_type mapping에 `pantry` 카테고리 추가 (basic_pantry 5종 전용 enum).
+    - `CHANGELOG.md` — 본 entry.
+  - **Remote Config 신규 키 3종** (`balance-config.md` v0.3.3 §4A.2):
+    - `cooking.basic_pantry_ingredient_ids` = `["ing_x_003","ing_x_004","ing_x_005","ing_x_006","ing_x_007"]`
+    - `cooking.stage1.exclude_basic_pantry` = `true`
+    - `cooking.accuracy.exclude_basic_pantry` = `true`
+- **왜**: 사용자 직관 정확 — 한국 가정 부엌의 base seasoning을 매 음식마다 잡화점에서 픽업하는 반복 노동이 게임 인지 부담을 dilute. basic_pantry 정책으로 음식별 unique signature 재료(어물 멸치 / 정육 얇은소고기 / 곡물 소면 등)에 집중 가능 + 잡화점 dominant 패턴(평균 2.42) 자연 해소 (어물 1.6과 비슷한 1.7로 중-tier 자연 위치). 떡볶이·잡채 3가게 강등은 의도된 결과 — 두 음식 모두 잡화점 정답이 basic_pantry 단독이라 정책 적용 후 0이 됨, 그러나 다른 가게(곡물·청과·정육·어물) 정답 재료는 충분해 음식 정체성 손실 없음.
+- **결과/다음 단계**:
+  - **godot-dev 후속 sprint 영향 (Resource 스키마 sync)**:
+    - `ingredient_definition.gd` Resource 스키마에 `is_basic_pantry: bool = false` field 추가
+    - `store_type` enum에 `pantry` value 추가 (기존 vegetable_shop/butcher/seafood_shop/grain_shop/general_store + pantry 6종)
+    - Stage 1 진열대 build 로직: `is_basic_pantry == true` filter 적용
+    - Scene 2 kitchen rack 노드 instantiate 로직 신규 (basic_pantry 5종 fetch + AnimationPlayer fade-in 0.3s)
+    - accuracy_ingredients 분모 N에 `N_effective = required.filter(NOT IN basic_pantry_ingredient_ids).count` 적용
+    - **소금 ing_x_007 ID 재매핑 ripple**: 기존 ing_x_007 (깨) Resource(.tres) 인스턴스를 ing_x_019로 rename + 갈비구이 t2_012 ingredients[] 배열 sync (foods CSV는 명시 변경 없음, ID는 Resource path 기반 매핑이라 Resource rename으로 처리). 즉시 처리 vs migrate 정책 결정 필요.
+    - Remote Config 신규 키 3종 Console 등록
+  - **ui-designer 후속 sprint 위임 (C-5)**:
+    - Kitchen rack 위치 결정 (좌측 상단 vs 우측 상단 vs 가스레인지 옆 선반 vs 도마 뒤 배경)
+    - 옹기 5종 표시 layout (가로 정렬 / 세로 정렬 / 옹기 항아리 클러스터)
+    - Stage 2A 양념재우기 진입 시 양념이 marinade bowl로 자동 이동하는 transition animation 사양
+    - components.md에 KitchenRack 컴포넌트 신규 추가
+  - **art-director 후속 sprint (Post-M1)**:
+    - 옹기 5종 anchor (간장 옹기 / 고추장 옹기 / 설탕 단지 / 참기름 호리병 / 소금 항아리) — kitchen rack 시각 identity
+    - 옹기 시각 디스트랙터 손실(간장↔고추장 페어) 회복 차원 — Stage 1 잡화점에서 빠진 옹기 페어가 kitchen rack에서 시각 학습 보존
+  - **qa-tester 후속 sprint**:
+    - C-2 정책 검증 테스트 케이스: 떡볶이 round (고추장 미표시 → 사용자 혼란 없음 확인) / 잡채 round (간장·참기름 미표시 → 정답 재료 6개 안 5종 100% pickup 가능) / 갈비구이 round (3 basic_pantry 차감 후 N_effective=6 → ★3 도달 가능 검증)
+    - accuracy_ingredients 분모 차감 unit test
+  - **pm 후속 sprint 위임 (C-6)**:
+    - **ADR-007 신설** = basic_pantry 정책 정식 ADR 격상 (의사결정 배경 + 대안 검토 + Remote Config 운영 정책 + post-launch M1 들기름 추가 검토 hook)
+  - **art-director / ui-designer / godot-dev / qa-tester 후속 작업 list**:
+    1. art-director: 옹기 5종 anchor (Post-M1, ~$0.21 generation, ~2h evaluation)
+    2. ui-designer: Kitchen rack 위치 + 옹기 layout + transition animation 사양 (M1 후반 sprint, ~3-5h)
+    3. godot-dev: Resource 스키마 sync + 진열대 filter + kitchen rack node + accuracy 분모 차감 + ID 재매핑 ripple (M2 sprint, ~6-10h)
+    4. qa-tester: C-2 정책 검증 테스트 케이스 작성 (M2 후반, ~2h)
+    5. pm: ADR-007 신설 (별도 sprint, ~1h)
+
+---
+
+## [2026-05-30] MVP 음식 list v2.1 → v2.2 — F-02 호떡 → 잔치국수 / F-09 김치찌개 → 불고기 (사용자 N-1·N-2 lock, 8 docs ripple sync)
+
+- **무엇**:
+  - **사용자 verbatim 결정 2건 (2026-05-30)**:
+    - "잔치국수가 좋을거 같고, 순두부나 김치찌게 중에 하나도 다른거로 바꿨으면 해...둘다 찌게 종류라 MVP에서는 다른 종류의 음식이 더 나을거 같음"
+    - 후속 선택: "**순두부 유지 + 김치찌개 → 불고기**"
+  - **N-1 lock**: F-02 호떡 (t1_001) → **잔치국수 (t1_008)** — T1. 사유: 호떡 디저트/길거리 음식이라 cooking matching fit 약함, 잔치국수 = 정통 한식 면 요리 + 곡물·잡화·어물 3가게 순회 + 명절·잔치 시그니처. 어물전 멸치 hero로 floor 5 유지.
+  - **N-2 lock**: F-09 김치찌개 (t2_009) → **불고기 (t2_014)** — T2. 사유: T2 끓이기 2개(김치찌개+순두부찌개) 카테고리 중복 해소. 순두부찌개는 T2 어물전 단독 책임이라 유지(사용자 명시). 불고기 = K-BBQ 시그니처 (단맛 양념 marinade + thin-slice + 채소 mixed) + ADR-005 §7 양념재우기 60 BPM cut style 시그니처 음식.
+  - **8 docs ripple sync**:
+    - `docs/systems/mvp-food-selection.md` v2.1 → **v2.2** — Final 12 lock 갱신. §1.5·§1.6 신규(불고기 데이터 포인트 + F-12 갈비구이 vs F-09 불고기 차별화 매트릭스). 호떡·김치찌개 post-launch M1 1순위 격리.
+    - `docs/foods-database.csv` — t1_001 호떡 행 삭제 + t1_008 잔치국수 신규 / t2_009 김치찌개 행 삭제 + t2_014 불고기 신규. ID gap 정책 유지 (Resource(.tres) id-key 매핑이라 무영향).
+    - `docs/ingredients-database.csv` — 호떡 전용 재료(밀가루 ing_g_004, 이스트, 견과류, 계피, 소금) 삭제 / 잔치국수 신규 재료(소면 ing_g_008, 애호박 ing_p_012, 다진마늘 ing_x_018) 추가 + 멸치·김 used_in_foods 확장 / 김치찌개 전용 재료(돼지고기 ing_m_003, 두부 ing_x_009) 삭제, 김치 used_in_foods에서 t2_009 제거 / 불고기 신규 재료(얇은소고기 ing_m_007) 추가 + 기존 재료(양파·당근·표고·배·간장·설탕·참기름·다진마늘) used_in_foods 확장.
+    - `docs/store-distribution.md` v1.1 → **v1.2** — 5×12 합계 재산정 (청과 10→11, 정육 7 유지, 어물 5 유지, 곡물 9 유지, 잡화 12 유지). T2 정육 메커닉 carrier 3종(양념재우기+볶기/굽기/볶기+무치기) 완성. 신규 디스트랙터 클러스터 4종(곡물 면 트리오 라면사리·당면·소면 / 정육 형태 트리오 LA갈비·꽃갈비·얇은소고기 / 애호박↔호박 변종 / 다진마늘↔통마늘 form factor).
+    - `docs/balance-config.md` v0.3.1 → **v0.3.2** — §2.2.2 Stage 1 time_limit 행 교체 (호떡 18s → 잔치국수 22s / 김치찌개 25s → 불고기 28s) / §3.2 perfect_width 행 교체 (호떡 8s·1100ms·0.14 → 잔치국수 12s·1000ms·0.10 / 김치찌개 15s·950ms·0.06 → 불고기 16s·900ms·0.09) / **§7.1 음식별 prep_bpm placeholder 신설** (잔치국수=대파 송송 110 BPM·4 taps / 불고기=양념재우기 60 BPM·3 taps ADR-005 시그니처 음식 lock).
+    - `docs/friends-system.md` v0.2 → **v0.3** — 호불호 axis 매트릭스 갱신 (호떡 sweet+oily → 잔치국수 mild+salty / 김치찌개 spicy+salty → 불고기 sweet+salty+oily light). 어머니/아버지 net 보정 + 가족 합산 재계산. 가족 최고 선호 음식(+2) 그룹 5 → 7개 확장 (잔치국수·불고기 추가).
+    - `docs/ui/ftue.md` v0.2 → **v0.3** — U-1 호떡 LOCK 폐기 (호떡 MVP 음식 제외). **FTUE 첫 음식 신규 LOCK = 라면 (t1_002)** — 3가게 / 재료 3 / 끓이기 / 글로벌 SS급. Step 1~4 화면 흐름·카피·룰 일괄 갱신 (호떡 굽기 → 라면 끓이기 / 밀가루 → 라면사리 / 호떡 접시 → 라면 냄비). FT-08 신규 (FTUE 종료 후 Round 2 음식 잔치국수 권고).
+    - `CHANGELOG.md` — 본 entry.
+- **왜**: 사용자 직관 정확 — MVP 12개 음식 중 찌개 카테고리 2종 중복(김치찌개·순두부찌개)이 다양성 약화. 호떡은 디저트 카테고리 단독이나 cooking matching 게임 메커니즘 fit이 약함(5재료 중 3개가 잡화 코너 = "잡화점에서 다 사오기" 단조). 잔치국수+불고기 swap으로 메커니즘 carrier 다양화 + 어물전 floor 5 유지 + T2 정육 메커닉 carrier 3종 완성.
+- **결과/다음 단계**:
+  - **art-director 후속 sprint 요청 (음식 2 + ingredient 4 anchor 신규)**:
+    - F-02 잔치국수 음식 anchor 신규 작성 (hero ingredient = 소면, 부 hero = 멸치/김/애호박/대파, cross-cultural risk = 일본 somen 50% / 베트남 phở 30% — clear shallow bowl + bright yellow egg ribbon + dark gim strips + dried anchovy garnish 명시)
+    - F-09 불고기 음식 anchor 신규 작성 (hero ingredient = 얇은 소고기, 부 hero = 양파/대파/당근/표고, cross-cultural risk = 일본 sukiyaki/shabu 40% — brown marinade pool + Korean cast-iron pan + mixed vegetables in same dish 명시)
+    - F-02 ingredient anchor 매핑 (소면 신규 + 애호박 신규 + 멸치 확장 사용처)
+    - F-09 ingredient anchor 매핑 (얇은 소고기 신규 + 양파 채썰기 CUT-02 매핑)
+    - **양념재우기 cut style anchor 확인 sprint** (CUT-00이 base anchor만 표현이면 별도 양념재우기 60 BPM marinade rhythm cut anchor 신규 작성 트리거 — art-director cut anchor 7장 v1.14 sync 확인 필요)
+    - M1 anchor 22/22 LOCK은 무효화 X (다른 20 anchor 영향 없음, F-02·F-09 두 음식 anchor만 신규).
+  - **godot-dev sprint 영향**: foods/ingredients 데이터베이스 .tres Resource instance 신규 2개 추가 (t1_008 잔치국수 + t2_014 불고기) + 신규 ingredient .tres 4개 (소면·애호박·얇은소고기·다진마늘). 삭제된 ID(t1_001 호떡·t2_009 김치찌개·관련 ingredient) Resource는 deprecation 처리(즉시 삭제 vs migrate 정책 결정 필요).
+  - **사용자 confirm 필요 (low priority)**:
+    - 잔치국수 prep BPM 선택: 대파 송송썰기 110 BPM·4 taps (권고, 시그니처 마무리 임팩트) vs 애호박 통썰기 70 BPM·3 taps (정통 잔치국수 시그니처, T1 가장 부드러운 진입 곡선) — game-designer ADR-005 본격 sprint에서 결정.
+    - 불고기 prep BPM: 양념재우기 60 BPM·3 taps 단독 vs 양념재우기 + 양파 채썰기 sequential — Stage 2A multi-cut sub-sequence 도입 결정 (open question).
+    - FTUE 종료 후 Round 2 음식 lock: 잔치국수(권고, anchor 작성 후 활성) vs 떡볶이(anchor 기존 LOCK, 즉시 활성) vs 김치볶음밥 — ftue.md v0.3 §10 #6.
+
+---
+
+## [2026-05-29] M1 후반 art sprint 시작 — Cut anchor 7장 (칼/도마 base + cut style 6종) prompt set + driver script
+
+- **무엇**:
+  - **ADR-005 Stage 2A rhythm tap prerequisite**: 재료 준비 = rhythm tap + Knife indicator. 칼/도마 base + cut style 6종 anchor가 Stage 2A 구현 시작 prerequisite.
+  - **prompts-library v1.13 → v1.14 패치**:
+    - §2.5 STYLE_SUFFIX_CUT 신설 (square 1:1, top-down view, Korean cutting board + knife 통일 silhouette, Cool Sage #C8D5C0 bg, modern saturated, slim outline 2-3px). 이전 §2.5 anchor consistency 운영 규칙 → §2.6 번호 shift.
+    - §5.5 placeholder → full prompts 확장 (cutting_board base + cut_style_mince/julienne/diagonal/whole/sliced_rounds/cube 7장 full prompt).
+    - 시그니처 재료 매핑: mince → 마늘 (BPM 140) / julienne → 당근 / diagonal → 어묵+대파 / whole → 김밥 cylinder 단면 (BPM 70) / sliced_rounds → 대파 / cube → 두부.
+    - §0 anchor 표에 CUT-00 ~ CUT-06 7장 row 추가.
+  - **art-anchor-rubric v1.13 → v1.14 패치**:
+    - §3.4 cut anchor 평가 표 신설 (CUT-00 ~ CUT-06 × G1/G3/G4/G5/G6/G7/G_new + G_cut 컬럼).
+    - §5.7 G_cut 5 요소 평가 게이트 신설: (1) cut style 시각 식별 명확 CRITICAL / (2) hero ingredient 매칭 / (3) Cool Sage bg + 도마/칼 통일 CRITICAL / (4) modern saturated 톤 / (5) cutting RESULT state + cross-cultural negative CRITICAL.
+    - LOCK 조건 = 7/7 anchors × 5 요소 = 35/35 PASS. CUT-00 anchor seed FAIL 시 전체 FAIL.
+    - §6.13 Decisions Log 신설 (M1 후반 art sprint 시작 + cut anchor 7장 trigger 행 + 시그니처+BPM 매핑 표 + M1 anchor 22장 LOCK 무영향 확인).
+  - **새 driver script `tools/gen_cut_anchors_m1.py` 신설**:
+    - `tools/gen_food_anchors_m1.py` template 기반 (STYLE_SUFFIX_CUT inline + CUTS list 7개 inline + build_prompt body % suffix 자동 append).
+    - CLI args: `--only` `--version` `--model` `--quality` `--out-dir`.
+    - default: gpt-image-1 medium 1024×1024, 출력 `assets-raw/cut_anchors_m1/<name>_v1.png`.
+- **왜**: M1 anchor 22/22 LOCK 완료 (음식 12 + 환경 5 + 캐릭터 5, commit dfb141e) 후 M1 후반 art sprint 진입. ADR-005 (4-stage rhythm) Stage 2A = 재료 준비 rhythm tap + Knife indicator. 칼 자동 위아래 움직임 (AnimationPlayer), 도마 닿기 직전 = perfect tap. Stage 2A 구현 시작에 cut anchor 7장 필요.
+- **결과/다음 단계**:
+  - 패치 파일 3 + 신규 1: `docs/prompts-library.md` v1.14 / `docs/art-anchor-rubric.md` v1.14 / `tools/gen_cut_anchors_m1.py` 신설 / `CHANGELOG.md` 본 entry.
+  - main thread 실행 명령: `py tools/gen_cut_anchors_m1.py --model gpt-image-1 --quality medium` (7장 × $0.042 ≈ $0.29, ~3-4분, 출력 `assets-raw/cut_anchors_m1/`).
+  - 사용자 시각 확인 + G_cut 5 요소 게이트 평가 (35/35 PASS 시 LOCK → ADR-005 Stage 2A 구현 진입).
+  - CUT-00 anchor seed 우선 평가 후 CUT-01~06 일관성 확인 (reference upload 패턴).
+
+---
+
+## [2026-05-31] M1 후반 art sprint 완료 — 조리도구 12 + ingredient cut 12 + reaction v3 코믹 + 양념 제거 + ADR-007 + rembg transparent
+
+- **무엇**:
+  - **조리도구 12종 신설** (`assets-raw/tool_anchors_m1/TOOL-01~12_*_v1.png`, ~$0.50): Cookingo-inspired single sprite (애니메이션 prerequisite). 가스레인지/냄비/후라이팬/튀김기/그릴/국자/주걱/뒤집개/집게/김발/그릇/한식 가위. 각 도구 별도 sprite로 godot AnimationPlayer transform animation 대상.
+  - **Ingredient cut variation 12장** (`assets-raw/ingredient_cut_anchors_m1/F-XX_*_cut_v1.png`, ~$0.50): 음식별 hero ingredient cut된 결과 (whole의 "after" pair, ADR-005 Stage 2B/2C 시각 자산).
+  - **F-02 ingredient v4 mapping fix** (`assets-raw/ingredient_anchors_m1/F-02_zucchini_whole_v4.png`): 사용자 지적 — 소면 자르기 메커닉 불일치 → 애호박 통썰기 (CUT-04 mapping 0건 활성화). hero ingredient 진화 timeline: peanut → 흑설탕 → 소면 → **애호박** (lock).
+  - **MVP 음식 v2.2 변경 반영** (이전 sprint 후속):
+    - F-02 호떡 → 잔치국수 (T1, 곡물+잡화+어물+청과 4가게 순회)
+    - F-09 김치찌개 → 불고기 (T2, 정육+청과+잡화, F-12 갈비 차별화 — bone X, grill grate X, plate hero shot)
+    - 8 docs ripple sync (mvp-food-selection v2.2 / foods CSV / ingredients CSV / store-dist v1.2 / balance-config v0.3.2 / friends-system v0.3 / ftue v0.3 / CHANGELOG)
+  - **ADR-007 Accepted (Basic Pantry 자동 제공)** — 사용자 명시 "기본 양념은 구매하러 가지 않아도 되고 그냥 제공". 간장/고추장/참기름/설탕/소금 5종을 `basic_pantry` 카테고리로 분리. 잡화점 floor 12 → 10. **떡볶이/잡채 4→3가게 강등** (양념이 잡화 유일 SKU였음). ADR-005 4-stage 무변경 (Stage 2A 양념재우기 = marinade rhythm 유지, 자동 제공과 호환). 4 docs ripple sync (ingredients CSV / store-dist v1.3 / balance-config v0.3.3 / cooking-mechanics v0.6).
+  - **rembg AI background removal 도입** (`tools/strip_bg.py`): Python rembg + onnxruntime CPU + u2net/isnet-general-use model. 116장 transparent PNG 생성 (`assets-raw/transparent_m1/<category>/`). 게임 asset 표준 (Godot/Unity sprite 합성 자유).
+    - u2net: food/bg/cut/ingredient 우수 (Cool Sage 솔리드 bg 깨끗 alpha)
+    - isnet-general-use: reaction/scissors detail 보존 (인물 portrait + 가위 blade 보존)
+    - TOOL-12 가위 alpha = handle ring 가운데 transparent + blade 보존 정상
+  - **Reaction v3 코믹 amplification** (`assets-raw/reaction_anchors_m1/R-01~R-06_*_v3.png`, ~$0.25): 사용자 v2 피드백 "심심해" → cartoon-style EXAGGERATED. 3축 amplification (눈/입/body+icons). image edit API + CH-02/CH-03 base family IP consistency 유지 (v2 LOCK 패턴 계승).
+    - ★1: chin hand + thinking icon (?/sweat drop) + 비대칭 eyebrow + 코믹 사고 표정
+    - ★2: closed crescent ^_^ + O-mouth + 한 손 cheek (mother) / DOUBLE thumb-up (father, v3 KEY: single → double)
+    - ★3 (EXPLOSIVE): GIANT closed-arc + WIDE open with teeth + 양손 raised cheek/over head + 다중 hearts (mother) / stars (father) + 5-6 sparkles + motion lines
+  - **Option 1 motion animation lock** — 사용자 결정 "도구 motion = Godot AnimationPlayer Transform only". 추가 frame art 0건. M2 godot-dev 영역 (rotation/translation/scale keyframe으로 motion 구현, 칼 위↕아래/가위 회전/주걱 좌↔우 등). 재료 변화 = whole(ING-XX) fade-out → cut(ICUT-XX) fade-in transition.
+- **왜**:
+  - M1 art sprint 완료 milestone — anchor 71-83장 LOCK + transparent 116장 archive + 8+4=12 docs ripple + 2 ADR (ADR-005 marinade rhythm + ADR-007 basic pantry).
+  - 사용자 빠른 turnaround + 직관 검증 흐름: 각 sub-sprint마다 시각 확인 → 즉시 reroll/패치 사이클.
+  - rembg 도입 — game asset 표준 transparent PNG 확보 (godot sprite 합성 자유).
+  - Reaction v3 코믹 — Cookingo-inspired tone + K-drama variety show 인상.
+- **결과/다음 단계**:
+  - **누적 비용 (M1 후반)**: ~$1.50 (음식 list v2.2 reroll + ingredient cut + reaction v3 + 조리도구 + ingredient v4)
+  - **M1 anchor 종합**: 71 LOCK (음식 12 + 환경 5 + 캐릭터 5 + cut 7 + ingredient whole 12 + ingredient cut 12 + reaction 6 + 조리도구 12) + ~30장 reroll archive + 116장 transparent
+  - **사용자 다음 액션 결정**:
+    - M1 후반 잔여 UI ~7장 + VFX ~4-5장 (task #33, 선택)
+    - M2 gameplay code sprint 진입 (godot-dev/game-designer)
+    - ADR-005 motion spec 명확화 (도구별 Transform sequence + BPM 매핑)
+  - **TOOL-07 minor 보류**: paddle 흰색 (원본 prompt 이슈), silver-gray reroll 가능 (사용자 dismissed)
+  - **commit point**: 본 sprint LOCK 박제 후 git commit + push
+
+---
+
 ## [2026-05-28] M1 anchor 종합 22/22 LOCK — 음식 12 (R1~R8) + 환경 5 (v1.2→v4) + 캐릭터 5
 
 - **무엇**:
