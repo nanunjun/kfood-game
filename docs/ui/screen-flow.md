@@ -1,10 +1,12 @@
 # Screen Flow — 전체 화면 전이도
 
-> 버전: **v0.1** · 작성일: 2026-05-23 · 작성자: ui-designer
-> 상위 문서: [`../GDD.md`](../GDD.md) §2 Core Loop, [`../systems/cooking-mechanics.md`](../systems/cooking-mechanics.md), [`../decisions.md` ADR-003](../decisions.md#adr-003-mvp-first-전환--34개월-출시--점진-확대-supersedes-adr-002), [`../art-style-guide.md`](../art-style-guide.md), [`../systems/mvp-food-selection.md`](../systems/mvp-food-selection.md)
-> 관련 문서: [`tier-1-2-flow.md`](tier-1-2-flow.md), [`ftue.md`](ftue.md), [`components.md`](components.md)
-> **MVP scope**: Tier 1~2, 친구 1~2명, 다점포 5가게, Scene 3 식탁 2종.
+> 버전: **v0.3** · 갱신일: 2026-05-31 · 작성자: ui-designer
+> 상위 문서: [`../GDD.md`](../GDD.md) §2 Core Loop, [`../systems/cooking-mechanics.md` v0.6](../systems/cooking-mechanics.md), [`../decisions.md` ADR-003](../decisions.md#adr-003-mvp-first-전환--34개월-출시--점진-확대-supersedes-adr-002), [`../decisions.md` ADR-005](../decisions.md#adr-005), [`../decisions.md` ADR-007](../decisions.md#adr-007), [`../art-style-guide.md`](../art-style-guide.md), [`../systems/mvp-food-selection.md`](../systems/mvp-food-selection.md)
+> 관련 문서: [`scene-2-kitchen-layout.md` v0.1](scene-2-kitchen-layout.md), [`components.md` v0.3](components.md), [`tier-1-2-flow.md`](tier-1-2-flow.md), [`ftue.md`](ftue.md)
+> **MVP scope**: Tier 1~2, 친구 1~2명, 다점포 5가게, Scene 3 식탁 2종, **ADR-005 4-stage** (Stage 2A 재료 준비 / Stage 2B 조리 방법 / Stage 2C 조리 시간).
 > **Out of scope (post-launch placeholder만)**: Tier 3~5 친구 초대 / 파티 모드 / 다중 요리.
+
+> **v0.3 변경 (2026-05-31)**: ADR-005 4-stage 정합. 기존 v0.1 = 3-stage (Stage 1 / 2 / 3) → v0.3 = **4-stage** (Stage 1 → Scene 2 안의 Sub-flow Stage 2A / 2B / 2C). §2 ROUND 다이어그램 4-stage 재작성 + §4 Scene 2 sub-flow 전면 재작성 (구 §4.1 Stage 2 → §4.1 Stage 2A 재료 준비 신설 + §4.2 Stage 2B 조리 방법 + §4.3 Stage 2C 조리 시간으로 분리). §2.1 광고 트리거 표 Stage 2C 표기 sync. §7 전이 매트릭스 Stage 2A→2B→2C 행 신규. ADR-007 Kitchen rack 시각 cue (basic_pantry 5종) §4.0 신규 + §6 공통 UI에 Kitchen rack 행 추가. Decisions SF-07~10 신설. 상세 layout은 `scene-2-kitchen-layout.md` v0.1 위임.
 
 ---
 
@@ -93,12 +95,16 @@ Round 1개 = Scene 1 → Scene 2 → Scene 3 (총 30~60초). cooking-mechanics �
                                  │ 1.5s 서빙 트랜지션
                                  ▼
 ╔═════════════════════════════════════════════════════════════════╗
-║  Scene 2 — 🍳 키친                                              ║
-║  Stage 2: 조리 방법 선택 (5~10s)   → §4 sub-flow                ║
-║  Stage 3: 조리 시간 (요리별 cook_time)                          ║
+║  Scene 2 — 🍳 키친 (ADR-005 4-stage sub-flow)                   ║
+║  Stage 2A: 재료 준비 (rhythm tap, 도마+칼)   → §4.1 sub-flow    ║
+║  Stage 2B: 조리 방법 선택 (5~10s, 가스레인지+도구) → §4.2       ║
+║  Stage 2C: 조리 시간 (요리별 cook_time, timing bar) → §4.3      ║
+║  Kitchen rack (basic_pantry 5종 시각 cue, ADR-007) 항상 표시    ║
 ║  IN: 도마 zoom-in 1.5s   OUT: 접시 담기 → 식탁 이동 1.5s        ║
-║  스킵: ❌                                                       ║
-║  광고: ┄┄▶ 📺 [Rewarded "PERFECT 폭 확대"] (Stage 3 시작 직전)  ║
+║  스킵: Stage 2A만 📺 Rewarded auto-perfect 가능 (cooking-mech §2A)║
+║  광고: ┄┄▶ 📺 [Rewarded "재료 준비 Skip"] (Stage 2A 시작 직후)  ║
+║        ┄┄▶ 📺 [Rewarded "PERFECT 폭 확대"] (Stage 2C 시작 직전) ║
+║  상세 layout: `scene-2-kitchen-layout.md` v0.1                  ║
 ╚════════════════════════════════╤════════════════════════════════╝
                                  │ 1.5s 서빙 모션 (cooking-mech §10.1 #8)
                                  ▼
@@ -116,12 +122,13 @@ Round 1개 = Scene 1 → Scene 2 → Scene 3 (총 30~60초). cooking-mechanics �
                             (Round 종료)
 ```
 
-### 2.1 광고 트리거 요약 (Round 1회 기준)
+### 2.1 광고 트리거 요약 (Round 1회 기준, v0.3 4-stage sync)
 
 | 위치 | 종류 | 트리거 | 빈도 |
 |------|------|--------|------|
 | Scene 1 Stage 1 (타이머 50% 이하) | 📺 Rewarded "힌트" | 자발적 탭 | Round당 1회 |
-| Scene 2 Stage 3 직전 | 📺 Rewarded "PERFECT 폭 확대" | 자발적 탭 | Round당 1회 |
+| **Scene 2 Stage 2A 시작 직후** | 📺 Rewarded **"재료 준비 Skip"** (auto-perfect) | 자발적 탭 | Round당 1회 |
+| **Scene 2 Stage 2C 직전** | 📺 Rewarded "PERFECT 폭 확대" (10→20%) | 자발적 탭 | Round당 1회 |
 | Scene 3 채점 실패 후 | 📺 Rewarded "한 번 더" | 자발적 탭 | Round당 1회 |
 | Scene 3 Round 종료 | 🟦 Interstitial | 자동 | **3 레벨마다 1회** (FTUE 5분 이내 차단) |
 | 메인 메뉴 / 상점 | 🟩 Banner | 자동 | 항상 (IAP Remove 시 숨김) |
@@ -256,28 +263,109 @@ Round 1개 = Scene 1 → Scene 2 → Scene 3 (총 30~60초). cooking-mechanics �
 
 ---
 
-## 4. Scene 2 키친 sub-flow
+## 4. Scene 2 키친 sub-flow (v0.3 ADR-005 4-stage 재작성)
 
-### 4.1 Stage 2 — 조리법 선택
+> Scene 2 안에 **3개 sub-stage** (Stage 2A / 2B / 2C) — Scene 전환 없이 sub-flow로 연속 진행.
+> Stage 사이 transition은 짧은 슬라이드/페이드 모션만 (0.3~1.0s).
+> 상세 layout (좌표·픽셀·anchor)은 **`scene-2-kitchen-layout.md` v0.1** 위임 — 본 문서는 sub-flow 흐름만.
+
+### 4.0 Scene 2 공통 (모든 sub-stage)
+
+- **Kitchen rack (CP-22, basic_pantry 5종 시각 cue, ADR-007)**: 우측 상단 항상 표시 (Stage 2A fade-in / 2B·2C dim 50%).
+- **HUD** (CP-9 코인 / CP-8 타이머 / Pause): 상단 stationary, Stage 전환에도 재 build 없음.
+- **CH-01 주인공 chibi** (선택사항, M2 alpha test 결정): 우측 하단 idle, interactive X.
+- Scene 2 진입 시 IN transition = "귀가" 1.5s (Scene 1 장바구니 → 도마 zoom-in).
+- Scene 2 종료 시 OUT transition = "서빙" 1.5s (가스레인지 zoom-out + plated dish swap + Scene 3 식탁 slide-in).
 
 ```
-[Scene 1 → Scene 2 트랜지션 0.8s]
-   │ 도마 위에 재료 자동 배치
+[Scene 1 → Scene 2 트랜지션 1.5s "귀가"]
+   │ HUD + Kitchen rack fade-in
+   │ 도마 + 칼 + ING-XX whole 등장
+   ▼
+[Stage 2A 재료 준비 (도마+칼 rhythm tap)]
+   │ 마지막 tap → ING-XX → ICUT-XX cross-fade
+   │ 도마 LEFT slide-out + 가스레인지 RIGHT slide-in (1.0s parallel)
+   ▼
+[Stage 2B 조리 방법 선택 (가스레인지+도구 카드)]
+   │ 카드 tap → 도구 dock motion (0.5s arc)
+   │ 카드 fade-out, timing bar fade-in (0.3s, Scene 유지)
+   ▼
+[Stage 2C 조리 시간 (timing bar + tap)]
+   │ tap → 판정 0.5s
+   │ 가스레인지 zoom-out + plated dish swap (1.5s "서빙")
+   ▼
+[Scene 3 식탁]
+```
+
+### 4.1 Stage 2A — 재료 준비 (rhythm tap + Knife indicator)
+
+> cooking-mechanics §2A + scene-2-kitchen-layout §1 + components.md CP-18/19 정합.
+
+```
+[Scene 1 → Scene 2 트랜지션 1.5s "귀가"]
+   │ HUD + Kitchen rack fade-in 0.3s
+   │ 도마 (CUT-00) 중앙 fade-in
+   │ ING-XX whole hero ingredient 도마 위 배치
+   │ Knife indicator (CP-19) 칼 sprite Y 900 idle 위치
    ▼
 ┌────────────────────────────────────────┐
-│ 상단 HUD: 💰 ❤️ ⏸                      │
+│ 상단 HUD: 💰 ❤️ ⏸           🫙🫙🫙🫙🫙 │  ← Kitchen rack (ADR-007)
 ├────────────────────────────────────────┤
-│  📝 요리 카드 (상단) + 재료 미리보기   │
-│  도마 위 재료 정렬 (0.5s 모션)         │
+│  📝 요리 카드 + "Stage 2A 재료 준비"   │
+│  "잔치국수 — 멸치 다지기 ♪ x4"          │
 ├────────────────────────────────────────┤
 │                                        │
-│   🍳 키친 BG (정면 카운터)             │
+│              [ ING-XX whole ]           │   ← visual focus zone
+│                                        │
+│   ┌───── 칼 (위↕아래 motion) ─────┐    │   ← Knife indicator (CP-19)
+│   │           🔪                  │    │     Y 900~1150 translation
+│   │   ↕ AnimationPlayer            │    │     BPM speed_scale 조정
+│   │     "knife_loop"               │    │
+│   └────── [ CUT-00 도마 ] ────────┘    │   ← 도마 (CP-18) = tap target
+│            tap anywhere                 │     Y 1100~1450 X 240~840
+│                                  CH-01  │     one-thumb zone
+├────────────────────────────────────────┤
+│ ⏱ Tap 2/4 (BPM 90)    📺 Skip          │  ← Rewarded Video auto-perfect
+└────────────────────────────────────────┘
+```
+
+**상호작용**:
+- 칼 sprite가 도마 닿는 순간 ±80ms = **Perfect** (accuracy 100%), ±200ms = **Good** (60%), 그 외 = **Miss** (0%).
+- 정답 tap 시 🔊 `cut_perfect` / `cut_good` + 도마 shake 0.2s + 칼 flash + chunk particle 1회.
+- 마지막 tap (예: 4/4) 완료 시 → ING-XX whole → ICUT-XX cut **cross-fade 0.3s**.
+- **양념재우기 variant** (불고기 t2_014 / 갈비구이 t2_012): Kitchen rack 양념 3종 (간장+설탕+참기름) Gold highlight → marinade bowl로 arc 1.0s → 60 BPM × 3 taps 진행 (cooking-mech §2A.X 정합).
+- **📺 Skip 옵션** (Rewarded Video): 즉시 ICUT-XX 변환 + `accuracy_prep = 1.0` (cooking-mech §2A).
+- 시간 만료 = 현재 상태로 Stage 종료 (남은 taps = miss 처리).
+
+**transition (2A → 2B)**:
+- 마지막 tap 또는 Skip 직후 t=0.0s:
+  - t=0.3s: 도마 + ICUT-XX LEFT slide-out (X -1080, 0.5s)
+  - t=0.5s: 가스레인지 + 도구 카드 3장 RIGHT slide-in (X +1080 → 0, 0.5s)
+  - **총 1.0s**
+
+### 4.2 Stage 2B — 조리 방법 선택 (가스레인지 + 도구 카드)
+
+> cooking-mechanics §3 + scene-2-kitchen-layout §2 + components.md CP-20 정합.
+
+```
+[Stage 2A → 2B transition 1.0s]
+   │ 도마 LEFT slide-out + 가스레인지/카드 RIGHT slide-in
+   ▼
+┌────────────────────────────────────────┐
+│ 상단 HUD: 💰 ❤️ ⏸           🫙🫙🫙🫙🫙 │  ← Kitchen rack dim 50%
+├────────────────────────────────────────┤
+│  📝 요리 카드 + "Stage 2B 조리 방법은?"│
+├────────────────────────────────────────┤
+│                                        │
+│       [ TOOL-01 가스레인지 ]            │  ← base substrate (항상 표시)
+│       (4-burner stovetop idle)          │
 │                                        │
 │   ┌──────┐ ┌──────┐ ┌──────┐           │
-│   │ 🔥   │ │ 🍳   │ │ ♨️   │            │
-│   │ 끓이기│ │ 볶기 │ │ 찌기 │  ← 조리법 │
-│   └──────┘ └──────┘ └──────┘   카드 3~4 │
-│                                        │
+│   │TOOL  │ │TOOL  │ │TOOL  │           │  ← cooking_tool_slot x 3~4
+│   │ -02  │ │ -03  │ │ -05  │           │    (CP-04 + CP-20)
+│   │냄비  │ │후라이│ │그릴  │           │    Y 1100~1500 one-thumb
+│   │끓이기│ │볶기  │ │굽기  │           │
+│   └──────┘ └──────┘ └──────┘  CH-01    │
 ├────────────────────────────────────────┤
 │ ⏱ ▓▓▓░░░░ 6s                          │
 └────────────────────────────────────────┘
@@ -285,36 +373,62 @@ Round 1개 = Scene 1 → Scene 2 → Scene 3 (총 30~60초). cooking-mechanics �
 
 **상호작용**:
 - 카드 한 번 탭 → 즉시 결정 (취소 없음, cooking-mech §3.2).
-- 정답 시 🔊 `method_correct` + 도구로 재료가 옮겨가는 0.5s 모션.
-- 오답 시 🔊 `method_wrong` + 빨간 shake 0.2s + 자동 진행 (점수만 0 처리).
-- 시간 만료 = 오답 자동 처리.
+- 정답 시 🔊 `method_correct` + 카드 0.95x flash 0.1s + 도구가 가스레인지 위로 dock (0.4s arc Tween, scale 240→400).
+- 오답 시 🔊 `method_wrong` + 빨간 shake 0.2s + **정답 도구가 자동으로 같은 모션으로 dock** (시각 일관성, 점수만 0 처리).
+- 시간 만료 = 오답 자동 처리 + 정답 도구 자동 dock.
 
-### 4.2 Stage 3 — 조리 시간 (도구 자동 배치 직후)
+**transition (2B → 2C)**:
+- 도구 dock 완료 (t=0.5s) → 즉시 Stage 2C 진입 (Scene 유지).
+- 도구 카드 fade-out 0.3s + Timing bar fade-in 0.3s (parallel).
+- 가스레인지 + 도구 + 음식 sprite는 그대로 유지.
+
+### 4.3 Stage 2C — 조리 시간 (timing bar)
+
+> cooking-mechanics §4 + scene-2-kitchen-layout §3 + components.md CP-21 정합.
 
 ```
-[조리법 선택 직후, Scene 유지]
-   │ 도구 자동 배치 (가스레인지 위 냄비 / 무쇠팬 / 찜기) 0.5s
+[Stage 2B → 2C transition 0.3s]
+   │ 카드 fade-out + Timing bar fade-in
+   │ 가스레인지 burner 🔥 glow + 도구 위 음식 VFX 시작
    ▼
 ┌────────────────────────────────────────┐
-│  📝 요리 카드 (축소, 상단)              │
+│ 상단 HUD: 💰 ❤️ ⏸           🫙🫙🫙🫙🫙 │  ← Kitchen rack dim 50%
+├────────────────────────────────────────┤
+│  📝 요리 카드 + "Stage 2C 끓는 타이밍!"│
 ├────────────────────────────────────────┤
 │                                        │
-│   조리도구 위 VFX (끓는 거품 / 볶는    │
-│   불꽃 / 찜기 김) — BG 애니             │
+│       [ TOOL-01 가스레인지 ]            │
+│       + [ TOOL-02 냄비 dock ]           │  ← Stage 2B에서 dock된 도구
+│       🔥 burner glow + 💨 steam VFX     │
+│       + [ ICUT-XX cooking ]             │
 │                                        │
 │   ┌────────────────────────────────┐    │
-│   │ │miss│good│ PERFECT │good│miss│ │   │  ← 게이지 바
-│   │              ▲                 │   │   (인디케이터)
-│   └────────────────────────────────┘    │
+│   │ │miss│good│ PERFECT │good│miss│ │   │  ← Timing bar (CP-21)
+│   │           ▼ ↔                  │    │    Y 1150~1280 full width
+│   └────────────────────────────────┘    │    Perfect ±80ms (Gold halo)
 │                                        │
-│         [   탭!   ]  ← 전체 탭         │
-│                                        │
+│       [   탭!   any tap area   ]       │  ← Y 1380~1620 tap area
+│                                  CH-01  │
+├────────────────────────────────────────┤
+│ ⏱ cook_time progress (별도 bar)        │
 └────────────────────────────────────────┘
 ```
 
-- 인디케이터 위치에 따라 accuracy 판정 (cooking-mech §4.3).
-- 🔊 `tap_perfect` / `tap_good` / `tap_miss` 차등.
-- 탭 즉시 또는 인디케이터 한 번 왕복 후 → Scene 3 트랜지션 (1.5s 서빙).
+**상호작용**:
+- 인디케이터 ▼ 좌→우 왕복 (Tween linear, 1 cycle = `food.cook_time_sec`).
+- tap 즉시 인디케이터 X 좌표 → 구간 판정 (PERFECT 10%, 또는 Rewarded ad 시 20%):
+  - PERFECT (Gold + 빗금) → `accuracy_timing = 1.0` 🔊 `tap_perfect`
+  - good → 0.6 🔊 `tap_good`
+  - miss → 0.2 🔊 `tap_miss`
+- 결과 텍스트 ("PERFECT!" / "GOOD" / "MISS") 0.5s fade-in/out.
+- 탭 안함 → 인디케이터 1 왕복 완료 시점 강제 종료 (accuracy_timing = 0.0).
+
+**transition (2C → Scene 3)**:
+- tap 후 t=0.0s 판정 fade 0.5s
+- t=0.5s 가스레인지 zoom-out (1.0x → 0.6x) + 접시 sprite zoom-in (0.6x → 1.0x) cross-fade 0.5s
+- t=1.0s plated dish hero shot (F-XX) sprite로 변환 + Scene 3 식탁 BG RIGHT slide-in
+- t=1.5s Scene 3 fully visible
+- **총 1.5s "서빙"**
 
 ---
 
@@ -412,12 +526,21 @@ Round 1개 = Scene 1 → Scene 2 → Scene 3 (총 30~60초). cooking-mechanics �
 | Lv.N | 현재 레벨 | Scene 1·2·3 모두 표시 |
 | ⏸ Pause | 우측 상단 | §2.2 참조 |
 
-### 6.2 하단 액션 바
+### 6.1A Kitchen rack (Scene 2 only, v0.3 신규 ADR-007)
+
+| 요소 | 표시 | 비고 |
+|------|------|------|
+| 🫙🫙🫙🫙🫙 | basic_pantry 5종 (간장/고추장/설탕/참기름/소금) | 우측 상단 Y 130~340 X 820~1060 |
+| state | Stage 2A fade-in / 2B·2C dim 50% / 양념재우기 highlight + arc | interactive X (시각 cue only) |
+| 정합 | ADR-007 + cooking-mech §2.2.7 + CP-22 | 옹기 5종 sprite는 Post-M1 art-director |
+
+### 6.2 하단 액션 바 (v0.3 4-stage sync)
 
 - Scene 1 입구: 타이머 + 장바구니 미리보기
 - Scene 1 가게 내부: 타이머 + `← 입구로` + 📺 힌트
-- Scene 2 Stage 2: 타이머만
-- Scene 2 Stage 3: 탭 버튼 (또는 전체 화면 탭)
+- **Scene 2 Stage 2A: tap count (예: 2/4) + BPM 표기 + 📺 Skip (Rewarded auto-perfect)**
+- **Scene 2 Stage 2B: 타이머만**
+- **Scene 2 Stage 2C: tap area (Y 1380~1620 full width) + cook_time progress bar**
 - Scene 3: CTA 2~3개
 
 ### 6.3 배너 광고 영역 (🟩)
@@ -437,9 +560,10 @@ Round 1개 = Scene 1 → Scene 2 → Scene 3 (총 30~60초). cooking-mechanics �
 | Level Select → Round Start | zoom-in | 0.6s | ❌ |
 | Round Start → Scene 1 | fade+zoom | 0.8s | ❌ |
 | Scene 1 입구 ↔ 가게 내부 | zoom-in/out | 0.4s | ❌ |
-| Scene 1 → Scene 2 | "귀가" 트랜지션 (장바구니 → 도마) | 1.5s | ⚙️ "빠른" 0.3s |
-| Scene 2 Stage 2 → Stage 3 | 도구 배치 모션 | 0.5s | ❌ |
-| Scene 2 → Scene 3 | "서빙" 모션 (접시 → 식탁) | 1.5s | ⚙️ "빠른" 0.3s |
+| Scene 1 → Scene 2 (Stage 2A 진입) | "귀가" 트랜지션 (장바구니 → 도마) | 1.5s | ⚙️ "빠른" 0.3s |
+| **Scene 2 Stage 2A → Stage 2B** | **도마 LEFT slide-out + 가스레인지 RIGHT slide-in (parallel)** | **1.0s** | ❌ |
+| **Scene 2 Stage 2B → Stage 2C** | **카드 fade-out + Timing bar fade-in (Scene 유지)** | **0.3s** | ❌ |
+| Scene 2 → Scene 3 (Stage 2C 종료) | "서빙" 모션 (가스레인지 zoom-out + plated dish swap) | 1.5s | ⚙️ "빠른" 0.3s |
 | Scene 3 → 다음 Round | fade | 0.4s | ❌ |
 | Scene 3 → Main Menu | fade-out | 0.6s | ❌ |
 | 광고(Interstitial) ↔ 게임 | 광고 SDK 기본 | 가변 | ❌ |
@@ -456,8 +580,13 @@ Round 1개 = Scene 1 → Scene 2 → Scene 3 (총 30~60초). cooking-mechanics �
 | SF-04 | 5가게 풀 순회 음식(김밥/떡국)에 **가게 방문 인디케이터** 추가 | 신규 플레이어 가이드 |
 | SF-05 | Scene 3 CTA = **"다음 요리" / "메뉴로"** 2개 default + 실패 시 📺 추가 | cooking-mech §6.3 준수 |
 | SF-06 | 일시정지 = 5분 cap, 백그라운드 = 자동 Pause | cooking-mech §10.1 #1 |
+| **SF-07 (v0.3)** | **Scene 2 = Stage 2A/2B/2C sub-flow (별도 Scene 전환 X)** | ADR-005 4-stage, HUD/Kitchen rack/CH-01 stationary 유지로 transition cost ↓ |
+| **SF-08 (v0.3)** | **Stage 2A에 📺 Rewarded "재료 준비 Skip" 신규 위치 추가** | cooking-mech §2A Rewarded auto-perfect 정합, Round당 광고 1회 추가 (총 3 Rewarded slot) |
+| **SF-09 (v0.3)** | **Stage 2A → 2B transition = 1.0s slide (LEFT/RIGHT parallel), Stage 2B → 2C = 0.3s fade (Scene 유지)** | 시각 일관성 + 빠른 흐름, 가스레인지/도구 sprite Stage 2B↔2C 공유 |
+| **SF-10 (v0.3)** | **Kitchen rack (CP-22, basic_pantry 5종) Scene 2 전체에서 항상 표시** | ADR-007 정합, 옹기 5종 시각 cue (interactive X), Stage 2A fade-in / 2B·2C dim 50% / 양념재우기 highlight |
 
 ---
 
 ## 9. 변경 이력
+- **2026-05-31 v0.3** — ADR-005 4-stage 정합 + ADR-007 basic_pantry Kitchen rack 통합. 기존 v0.1 Stage 2 / 3 → **Stage 2A 재료 준비 (rhythm tap + Knife indicator) / 2B 조리 방법 / 2C 조리 시간**으로 분리. §2 Round 다이어그램 4-stage 재작성 + §4 Scene 2 sub-flow 전면 재작성 (§4.0 공통 + §4.1 Stage 2A + §4.2 Stage 2B + §4.3 Stage 2C). §2.1 광고 트리거 표 Stage 2A "Skip" 신규 행 + Stage 2C 표기 sync. §6.1A Kitchen rack 신규 + §6.2 하단 액션 바 4-stage sync. §7 전이 매트릭스 Stage 2A→2B (1.0s) + 2B→2C (0.3s) 행 신규. Decisions SF-07~10 신설. 상세 layout은 신규 문서 `scene-2-kitchen-layout.md` v0.1 위임 (1080×1920 portrait, one-thumb zone, Y 좌표, transition timeline). 의존 art lock: CUT-00 + CUT-01~06 + TOOL-01~12 + ING-01~12 whole + ICUT-01~12 cut + CH-01 (모두 2026-05-31 LOCK 완료). components.md v0.3 (CP-18~22 신설) sync.
 - **2026-05-23 v0.1** — 초안. 부트 → Round 3-scene → Scene 1 다점포 sub-flow(2×3 부채꼴, 빈 가게 처리, 자동 복귀) / Scene 2 키친 / Scene 3 식탁(Tier 1·2 구분) 전이도. 광고·사운드 hook overlay. Decisions 6항.

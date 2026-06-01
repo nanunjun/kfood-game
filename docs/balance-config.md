@@ -1,16 +1,25 @@
 # Balance Config — MVP
 
-> 버전: **v0.3.3 (2026-05-31, supersedes v0.3.2)** · 작성자: game-designer
-> Scope: **MVP (Tier 1~2, 음식 12개, 친구 1~2명) + ADR-005 4-stage 메커닉 + C-2 basic_pantry 정책**.
-> 상위 문서: [`systems/cooking-mechanics.md` v0.6](systems/cooking-mechanics.md), [`systems/mvp-food-selection.md` v2.2 §3.1](systems/mvp-food-selection.md), [`foods-database.csv`](foods-database.csv), [`store-distribution.md` v1.3](store-distribution.md), [`friends-system.md` v0.3](friends-system.md), [`decisions.md` ADR-005 + ADR-007 (pending)](decisions.md#adr-005)
+> 버전: **v0.4 (2026-05-31, supersedes v0.3.3)** · 작성자: game-designer
+> Scope: **MVP (Tier 1~2, 음식 12개, 친구 1~2명) + ADR-005 4-stage 메커닉 + C-2 basic_pantry 정책 + M2 prerequisite D3 본격 BPM lock**.
+> 상위 문서: [`systems/cooking-mechanics.md` v0.7](systems/cooking-mechanics.md), [`systems/motion-spec.md` v0.1](systems/motion-spec.md), [`systems/mvp-food-selection.md` v2.2 §3.1](systems/mvp-food-selection.md), [`foods-database.csv`](foods-database.csv), [`store-distribution.md` v1.3](store-distribution.md), [`friends-system.md` v0.3](friends-system.md), [`decisions.md` ADR-005 + ADR-007 (pending)](decisions.md#adr-005)
 >
 > 본 문서는 **공식·범위·갯수**만 lock한다. 정확한 튜닝 수치는 alpha 빌드 이후 데이터 기반 조정. 본 문서의 모든 숫자는 **placeholder default**.
 >
-> ⚠️ **v0.3 high-level 추가만**: §5 4-factor weights / §6 Prep Rhythm Window / §7 BPM by Tier / §8 Skip Bonus 신설. 음식별 정확 BPM/tap 수치는 **game-designer 본격 sprint** (foods-database.csv `prep_*` 컬럼 sync 후).
+> ⚠️ **v0.4 본격**: §7.1 음식별 prep_bpm 12 음식 모두 lock (v0.3.2 placeholder 2개 + v0.4 신규 10개 = 12/12). foods-database.csv `prep_*` 4 컬럼 sync 완료 (M2-D2). motion-spec.md v0.1 sync (M2-D1). ADR-005 §7 BPM 음식별 본격 spec.
 
 ---
 
-## 0. v0.3.3 변경 요약 (vs v0.3.2)
+## 0. v0.4 변경 요약 (vs v0.3.3)
+
+| # | 항목 | 변경 내용 |
+|---|------|----------|
+| **D2** | **foods CSV prep_* 4 컬럼 sync 완료** | foods-database.csv 헤더에 `prep_ingredient_id` / `prep_cut_style` / `prep_bpm` / `prep_taps` 4 컬럼 신설 + 12 음식 모두 row 값 lock. 본 문서 §7.1 12 음식 본격 매핑 표와 1:1 sync. |
+| **D3** | **§7.1 음식별 prep_bpm 12음식 전체 lock** | v0.3.2 placeholder 2개 (잔치국수·불고기) → v0.4 본격 12/12. 라면 100 / 떡볶이 100 / 김밥 70 / 김치볶음밥 90 / 해물파전 110 / 콘도그 80 (dip substitute) / 잔치국수 110 / 비빔밥 115 / 잡채 120 / 갈비구이 140 / 순두부찌개 80 / 불고기 60 (marinade). |
+| **D1** | **motion-spec.md v0.1 cross-ref** | motion-spec §2 12 음식 × Stage × 도구 × motion 매핑 표 sync. AnimationPlayer keyframe spec 9종. Option 1 motion lock (Transform-only). |
+| **분포 검증** | BPM 분포 7 buckets PASS | T1 평균 BPM = (100+100+70+90+110+80+110)/7 = 94.3 (T1 범위 70~110 약간 outlier 콘도그 80 dip은 cut 외 substitute라 enforce X) / T2 평균 = (115+120+140+80+60)/5 = 103 (T2 범위 90~140; 순두부 80은 통썰기 T1 fall-back, 불고기 60은 marinade 별도 카테고리 = 정합). |
+
+## 0.1 v0.3.3 변경 요약 (vs v0.3.2, 보존)
 
 | # | 항목 | 변경 내용 |
 |---|------|----------|
@@ -378,25 +387,66 @@ total = (accuracy_ingredients × 0.25)
 
 > 음식별 정확 BPM/tap 수치는 `foods-database.csv` `prep_bpm` / `prep_tap_count` 컬럼 (game-designer 본격 sprint).
 
-### 7.1 음식별 prep_bpm / prep_tap_count placeholder 매핑 (v0.3.2 N-1·N-2 sync)
+### 7.1 음식별 prep_bpm / prep_taps 본격 매핑 (v0.4 D3 lock — 12음식 전체)
 
-> ADR-005 본격 prep sprint(open #9) 진입 전 잔치국수·불고기 prep 시그니처만 placeholder lock. 나머지 음식은 후속 sprint에서 일괄 lock.
+> v0.4 M2-D3 본격 sprint lock. foods-database.csv `prep_*` 4 컬럼 1:1 sync. motion-spec.md v0.1 §2 매핑 표와 동일.
 
-| food_id | 음식 | prep_cut_style | prep_ingredient | prep_bpm | prep_tap_count | 비고 |
-|---------|------|---------------|-----------------|:--------:|:--------------:|------|
-| t1_008 | **잔치국수** | 송송썰기 (CUT-05) | 대파 | 110 | 4 | N-1 신규 2026-05-30. 부 hero "애호박 통썰기 CUT-04" 70 BPM·3 taps 대안 검토 가능 (T1 가장 느린 cut style, 정통 잔치국수 시그니처 fit). 본격 sprint에서 사용자 결정 |
-| t2_014 | **불고기** | **양념재우기 (CUT-00 marinade rhythm)** | 얇은 소고기 + 양념 마사지 | **60** | 3 | **N-2 신규 2026-05-30. ADR-005 §7 양념재우기 cut style 시그니처 음식 lock**. 사용자 별 cut anchor 7장 (CUT-00 cutting_board base + CUT-01~06)에 CUT-00 양념재우기 anchor 별도 정의 필요 — art-director sync (만약 CUT-00이 base anchor만 표현이면 별도 marinade 60 BPM cut style anchor 신규 작성 sprint 트리거). 부 hero "양파 채썰기 CUT-02" 115 BPM·4 taps도 prep 단계에 추가 가능 (Stage 2A multi-cut sub-sequence) |
+| food_id | 음식 | prep_cut_style | prep_ingredient_id | prep_ingredient (한글) | prep_bpm | prep_taps | cook_time | perfect_window | 비고 |
+|---------|------|---------------|-------------------|----------------------|:--------:|:---------:|:---------:|:--------------:|------|
+| t1_002 | 라면 | CUT-05 송송 | ing_p_001 | 대파 | **100** | **4** | 9s | 0.11 | T1 standard. 송송썰기 100 BPM (`cooking.prep.bpm_by_cut_style.송송썰기` 100~120 mid). FTUE 1순위 — 학습 곡선 부드러움 |
+| t1_003 | 떡볶이 | CUT-03 어슷 | ing_s_002 | 어묵 | **100** | **5** | 13s | 0.10 | T1 mid. 어슷썰기 100 BPM (`bpm_by_cut_style.어슷썰기` 90~110 mid). 어묵 5조각으로 떡볶이 양 표현 |
+| t1_004 | 김밥 | CUT-04 통썰기 | ing_x_008 | 단무지 | **70** | **3** | 4s | 0.19 | T1 가장 느린 BPM. 통썰기 70 BPM (`bpm_by_cut_style.통썰기` lowest). 김밥 5가게 풀 순회 부담 보상 — 입문 부드러움 |
+| t1_005 | 김치볶음밥 | CUT-06 깍둑썰기 | ing_x_010 | 김치 | **90** | **4** | 10s | 0.10 | T1 mid. 깍둑썰기 90 BPM (`bpm_by_cut_style.깍둑썰기` 80~100 mid). 김치 cube cut 변별 |
+| t1_006 | 해물파전 | CUT-05 송송 | ing_p_002 | 쪽파 | **110** | **5** | 14s | 0.09 | T1 상한 BPM. 송송썰기 110 BPM (`bpm_by_cut_style.송송썰기` upper). 쪽파 fine slice 5회 = 해물파전 양 표현. 파(ing_p_001) vs 쪽파(ing_p_002) 디스트랙터 학습 |
+| t1_007 | 한국식 콘도그 | CUT-00 dip substitute | ing_g_005 | 부침가루 (batter) | **80** | **3** | 8s | 0.13 | **dip substitute** (칼 cut 메커닉 비적용 — 콘도그는 소시지를 batter에 dip 3회 chain). motion-spec §3.10. T1 mid BPM 80 (batter dip ceremony 속도). corndog_batter_bowl sprite art-director 미니 sprint 필요 |
+| t1_008 | 잔치국수 | CUT-05 송송 | ing_p_001 | 대파 | **110** | **4** | 12s | 0.10 | T1 상한 BPM. N-1 신규 placeholder 유지. 부 hero "애호박 통썰기 CUT-04 70 BPM·3 taps" 대안 사용자 confirm 대기. 시그니처 마무리 fresh garnish 임팩트 vs 정통 잔치국수 정서 trade-off |
+| t2_008 | 비빔밥 | CUT-02 채썰기 | ing_p_009 | 당근 | **115** | **5** | 5s | 0.13 | T2 mid BPM. 채썰기 115 BPM (`bpm_by_cut_style.채썰기` 110~120 mid). 당근 julienne 5회 = 6색 채소 비주얼 representative |
+| t2_010 | 잡채 | CUT-02 채썰기 | ing_p_009 | 당근 | **120** | **6** | 16s | 0.06 | T2 채썰기 upper BPM. 잡채는 비빔밥보다 채썰기 더 빠른 속도 (당근 strip가 더 가늘게) + 6 taps로 6색 채소 비주얼 강조. PERFECT 0.06 좁음 (T2 중반 난이도) |
+| t2_012 | 갈비구이 | CUT-01 다지기 | ing_p_005 | 마늘 | **140** | **6** | 18s | 0.04 | **T2 최고 BPM**. 다지기 140 BPM (`bpm_by_cut_style.다지기` 가장 빠름). 마늘 minced 6회 rapid down-stroke = "타이밍 핵심" 사용자 명시 정합. Stage 2C perfect_width 0.04 좁음 + Stage 2A 140 BPM = 갈비구이가 MVP 최고 난도 음식 위치 확정 |
+| t2_013 | 순두부찌개 | CUT-04 통썰기 | ing_p_011 | 호박 | **80** | **4** | 14s | 0.07 | T2 lower BPM. 통썰기 80 BPM (`bpm_by_cut_style.통썰기` 70 + 10 보정 — T2 음식은 통썰기 70도 약간 상향). 호박 round slice 4회. T2 끓이기 단독 |
+| t2_014 | 불고기 | **CUT-00 marinade rhythm** | ing_m_007 | 얇은 소고기 + 양념 | **60** | **3** | 16s | 0.09 | **T2 marinade 별도 카테고리**. 양념재우기 60 BPM (`bpm_by_cut_style.양념재우기` slow marinade pace). 얇은 소고기에 양념 마사지 3 press. ADR-005 §7 양념재우기 시그니처 음식. motion-spec §3.3 손바닥 + marinade bowl. 부 hero "양파 채썰기 CUT-02 115 BPM·4 taps" multi-cut sub-sequence 후보 (alpha 후 결정) |
 
-**잔치국수 prep BPM 선택 reasoning**:
-- **대파 송송썰기 110 BPM·4 taps 권고**: 잔치국수 fresh garnish 시그니처 (마지막 단계 토핑) → 시각·청각 마무리 임팩트. T1 평균 BPM(70~110) 상단으로 부드러운 ramp 유지.
-- 대안 1: 애호박 통썰기 70 BPM·3 taps — 가장 느린 cut style, 정통 잔치국수(어린 애호박 어슷썰기/통썰기) 시그니처 fit. T1 가장 부드러운 진입 곡선. **사용자 결정 필요 (정통 한식 정서 우선 vs 시그니처 마무리 임팩트 우선)**.
-- 대안 2: 다진마늘 다지기 140 BPM·5 taps — 잔치국수 육수 양념 (멸치 육수 + 다진마늘). but 140 BPM은 T1 상한 초과(70~110), 사용자 학습 부담. T1 음식에 다지기 적용은 부적합. → reject.
+**12음식 BPM 분포 검증** (D3):
 
-**불고기 prep BPM 선택 reasoning**:
-- **양념재우기 60 BPM·3 taps 권고**: ADR-005 §7 "양념 재우기 (별도) 60 BPM (마사지 식)" 정의의 시그니처 음식. 갈비구이는 통갈비라 양념재우기 가능하나 단독 cut style anchor로는 약함 (bone 표현이 dominant). 불고기 = thin-slice + marinade pool → marinade rhythm tap이 핵심 메커닉 carrier.
-- 60 BPM·3 taps = T2 BPM 하한 외 별도 정의 (Tier 2 90~140 BPM 외 cut style 특수). marinade는 cut이 아니므로 별도 카테고리.
-- **부 hero "양파 채썰기 CUT-02" 115 BPM·4 taps** = Stage 2A multi-cut sub-sequence 후보 (양념재우기 + 양파 채썰기 sequential). 본격 sprint에서 single cut vs sequence 결정.
-- 사용자 confirm 필요: Stage 2A에서 양념재우기 단독 vs 양념재우기 → 양파 채썰기 sequential 진행 결정.
+| BPM | 음식 수 | 음식 | Cut style |
+|:---:|:------:|------|-----------|
+| 60 | 1 | 불고기 | 양념재우기 (marinade 별도 카테고리) |
+| 70 | 1 | 김밥 | 통썰기 (T1 lowest) |
+| 80 | 2 | 콘도그(dip)·순두부찌개 | dip / 통썰기 |
+| 90 | 1 | 김치볶음밥 | 깍둑썰기 |
+| 100 | 2 | 라면·떡볶이 | 송송 / 어슷 |
+| 110 | 2 | 해물파전·잔치국수 | 송송 / 송송 |
+| 115 | 1 | 비빔밥 | 채썰기 |
+| 120 | 1 | 잡채 | 채썰기 (T2 fast) |
+| 140 | 1 | 갈비구이 | 다지기 (T2 maximum) |
+
+- **T1 평균 BPM**: (100+100+70+90+110+80+110) / 7 = **94.3** — T1 범위 70~110 정합 (콘도그 80은 dip substitute 별도 cap 외)
+- **T2 평균 BPM**: (115+120+140+80+60) / 5 = **103** — T2 범위 90~140 (순두부 80은 통썰기 T1 fall-back 정합 / 불고기 60은 marinade 별도 카테고리)
+- **Cut style 분포**: 송송 3 / 채썰기 2 / 통썰기 2 / 어슷 1 / 깍둑 1 / 다지기 1 / 양념재우기 1 / dip 1 — 7 cut style category + 1 dip substitute 모두 노출 (cut anim 12 LOCK 활용 최대화)
+- **Tap 수 분포**: 3 taps(2 — 김밥·콘도그·불고기 3) / 4 taps(3 — 라면·김치볶음밥·잔치국수·순두부 4) / 5 taps(3 — 떡볶이·해물파전·비빔밥) / 6 taps(2 — 잡채·갈비구이) — 점진 ramp T1 3~5 / T2 5~6 정합 (cooking-mechanics §7 `tap_range_by_tier` lock)
+
+**Stage 2C 보조 cook 행위 BPM** (`cooking.cook.bpm_by_action`, 신규 Remote Config 후보):
+
+| Cook 행위 | BPM | 적용 음식 | 도구 motion |
+|----------|:---:|----------|------------|
+| 끓이기 stir slow | 60 | 라면 / 잔치국수 / 순두부찌개 | TOOL-06 국자 scoop oneshot |
+| 볶기 stir medium-fast | 100 | 김치볶음밥 / 잡채 / 불고기 / 떡볶이 | TOOL-07 주걱 stir loop |
+| 부치기 flip | 80 | 해물파전 (MVP 정적, flip post-launch) | TOOL-08 뒤집개 정적 |
+| 굽기 grip | 70 | 갈비구이 | TOOL-09 집게 grip-and-lift |
+| 튀기기 dip | 90 | 콘도그 | TOOL-04 튀김기 정적 + dip oneshot |
+| 비비기 bibim | 90 | 비빔밥 | TOOL-11 + TOOL-07 orbit |
+| 말기 roll | 60 | 김밥 | TOOL-10 김발 roll oneshot |
+
+> Stage 2C cook 행위 BPM은 본격 보조 rhythm 메커닉 후보 (단일 탭 timing game 위주의 cooking-mechanics §4와 별도, alpha 후 도입 결정). 본 v0.4는 시각 ambient 용도 lock + motion-spec §4 sync.
+
+### 7.2 사용자 confirm 필요 사안 (D3)
+
+| # | 항목 | 권고 | 결정 |
+|---|------|------|------|
+| 1 | 잔치국수 hero ingredient final lock (대파 송송 110 BPM vs 애호박 통썰기 70 BPM) | 대파 110 BPM 유지 (placeholder lock 그대로 활성화) | 사용자 결정 대기 |
+| 2 | 불고기 multi-cut sub-sequence (양념재우기 단독 vs + 양파 채썰기 sequential) | 단독 유지 (alpha 후 재검토) | open |
+| 3 | 콘도그 Stage 2A dip substitute (칼 cut 메커닉 비적용) | 80 BPM × 3 taps batter dip lock | 사용자 confirm |
+| 4 | Stage 2C 보조 rhythm 메커닉 도입 시점 (cook BPM stir/grip/orbit) | 시각 ambient만 lock, 보조 rhythm은 alpha 후 결정 | open |
 
 ---
 
@@ -459,7 +509,7 @@ total = (accuracy_ingredients × 0.25)
 | 6 | 인터스티셜 간격 3 round → A/B (2 vs 3 vs 4) | data-analyst | open |
 | 7 | cooking-mechanics.md §4.4 30/60 → 45/45 sync 갱신 | game-designer (cooking-mechanics 차기 개정 시) | cooking-mechanics v0.5 일부 sync 완료, 잔여 §4.4 본문 sync 대기 |
 | 8 | 양념치킨 post-launch M1 부활 검토 (튀기기 다양성·KFC viral) | pm + game-designer | open (soft launch 데이터 후) |
-| **9** | **ADR-005 음식별 prep_bpm / prep_tap_count / prep_cut_style / prep_ingredient lock** | game-designer | **open (v0.3 high-level만 lock, foods-database.csv sync 본격 sprint)** |
+| ~~9~~ | ~~ADR-005 음식별 prep_bpm / prep_tap_count / prep_cut_style / prep_ingredient lock~~ | game-designer | **✅ resolved 2026-05-31 v0.4 D3 — 12음식 전체 본격 lock (§7.1 표). foods-database.csv `prep_*` 4 컬럼 sync 완료** |
 | ~~10~~ | ~~ADR-005 perfect_window 80ms vs 100ms lock~~ | pm | **✅ resolved 2026-05-26 → ±80ms** |
 | ~~11~~ | ~~ADR-005 Skip auto_perfect_score 1.0 vs 0.9 lock~~ | pm | **✅ resolved 2026-05-26 → 0.9** |
 | **12** | **ADR-005 ★ 임계 (30/60/90) sync — `scoring.star_thresholds` (v0.2 50/75/90) vs `scoring.star_thresholds_v05` (30/60/90) 이중 운영 정리** | game-designer + godot-dev | **open** |
@@ -470,6 +520,7 @@ total = (accuracy_ingredients × 0.25)
 ---
 
 ## 12. 변경 이력
+- **2026-05-31 v0.4** (supersedes v0.3.3) — **M2 prerequisite design sprint D3 본격 lock**. §7.1 음식별 prep_bpm 12음식 전체 매핑 본격 lock (v0.3.2 placeholder 2개 → v0.4 본격 12/12). foods-database.csv `prep_*` 4 컬럼 sync (M2-D2). motion-spec.md v0.1 cross-ref (M2-D1). BPM 분포 검증 표 신설 (T1 평균 94.3 / T2 평균 103, T1·T2 범위 정합 검증). Cut style 분포 8 카테고리 모두 노출 검증 (송송 3 / 채썰기 2 / 통썰기 2 / 어슷 1 / 깍둑 1 / 다지기 1 / 양념재우기 1 / dip substitute 1). Tap 수 분포 점진 ramp 검증 (T1 3~5 / T2 5~6). Stage 2C 보조 cook 행위 BPM 표 신설 (시각 ambient 용도, 보조 rhythm 메커닉 도입은 alpha 후 결정). §7.2 사용자 confirm 4건 정리. §11 #9 ADR-005 음식별 prep lock open 해소 (v0.4 D3 본격 lock).
 - **2026-05-31 v0.3.3** (supersedes v0.3.2) — **C-2 lock 적용 (basic_pantry 5종 정책)**. §4A "Basic Pantry 정책" 신설 (간장/고추장/설탕/참기름/소금 5종 정의 + Remote Config 키 3종 신설 `cooking.basic_pantry_ingredient_ids` / `cooking.stage1.exclude_basic_pantry` / `cooking.accuracy.exclude_basic_pantry`). §2.2.2 음식별 time_limit 재산정 (떡볶이 22→18s / 잡채 30→25s / 그 외 변동 없음). §2.2.3 디스트랙터 평균 재산정 (T1 3.86→3.43 / T2 3.4→2.8, 잡화 SKU pool 17→12 검증 PASS). §5.1 accuracy_ingredients 공식 갱신 (분모 N에서 basic_pantry 자동 차감). §11 #13·#14·#15 신규 (alpha 검증 / ADR-007 격상 / ing_x_007 ID 재매핑 ripple).
 - **2026-05-30 v0.3.2** (supersedes v0.3.1) — N-1·N-2 lock 적용 (F-02 호떡 → 잔치국수 / F-09 김치찌개 → 불고기). §2.2.2 Stage 1 time_limit 행 교체 (호떡 t1_001 18s → 잔치국수 t1_008 22s / 김치찌개 t2_009 25s → 불고기 t2_014 28s). §3.2 perfect_width 행 교체 (호떡 8s·1100ms·0.14 → 잔치국수 12s·1000ms·0.10 / 김치찌개 15s·950ms·0.06 → 불고기 16s·900ms·0.09). §2.2.3 디스트랙터 평균 재산정 (T1 3 → 3.7, 잔치국수 4가게 영향). **§7.1 음식별 prep_bpm placeholder 신설** (잔치국수=대파 송송 110 BPM·4 taps / 불고기=양념재우기 60 BPM·3 taps — ADR-005 §7 양념재우기 시그니처 음식 lock). §11 #5 FTUE 첫 음식 lock 해소 (라면 자동 결정).
 - **2026-05-26 v0.3.1** — Perfect window **±80ms LOCKED** (사용자 confirm, pm 권고 채택). Skip `accuracy_prep = 0.9` **LOCKED** (사용자 원안 1.0 → 0.9, skill bonus 명분 유지). §6 표 dual-column 단일화, §8 Skip default 1.0→0.9, §11 open question #10·#11 resolved.

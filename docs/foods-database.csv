@@ -1,13 +1,13 @@
-food_id,name_ko,name_en,tier,servings,store_count,primary_cooking_method,secondary_method,cook_time_sec,perfect_window_ms,difficulty_score,visual_appeal_score,recognition_score,ad_trigger_priority,notes
-t1_002,라면,Ramyeon,1,1,3,boil,,9,1000,1,3,5,low,FTUE 1순위 (N-1 lock 2026-05-30 — 호떡 supersede 후 신규); 글로벌 SS급 인지도; 끓이기 기본 조리법 데뷔
-t1_003,떡볶이,Tteokbokki,1,1,4,boil,,13,950,2,5,5,med,K-food 글로벌 시그니처; 어물전(어묵) 데뷔
-t1_004,김밥,Kimbap,1,1,5,roll,,4,1500,2,4,5,med,5가게 풀 순회 쇼케이스; no-cook 말기 타이밍
-t1_005,김치볶음밥,Kimchi Fried Rice,1,1,4,stirfry,,10,1000,3,3,4,med,냉장고 털이 정서; 볶기 조리법 데뷔
-t1_006,해물파전,Haemul Pajeon,1,1,4,panfry,,14,950,3,5,4,high,어물전 3SKU 동시 등장; 단일 탭 부치기(MVP); flip mechanic: post-launch (C-3 lock 2026-05-24)
-t1_007,한국식 콘도그,Korean Corn Dog,1,1,3,deepfry,,8,1000,3,5,4,high,튀기기 조리법 데뷔; SNS shareable (치즈 스트레치); C-1 ACCEPT: viral 우선 (2026-05-24)
-t1_008,잔치국수,Janchi Guksu,1,1,4,boil,,12,1000,2,4,4,low,N-1 lock 2026-05-30 (호떡 t1_001 supersede); 명절·잔치 시그니처 면 요리; 곡물(소면)+어물(멸치·김)+잡화(다진마늘·간장·계란)+청과(애호박·파) 4가게 순회; 어물전 floor 5 유지 핵심; hero ingredient=소면; cut style 매핑=대파 송송썰기 CUT-05 또는 애호박 통썰기 CUT-04
-t2_008,비빔밥,Bibimbap,2,2,4,mix,,5,1300,3,5,5,med,Tier 2 진입 default; no-cook 비비기 마무리
-t2_010,잡채,Japchae,2,2,4,stirfry,toss,16,900,4,5,4,med,명절 정서; 6색 채소 비주얼; 매운 카테고리 회피
-t2_012,갈비구이,Galbi-gui,2,2,3,grill,,18,650,5,5,5,high,MVP 최고 난도; 사용자 명시 타이밍 핵심; PERFECT 좁음(4~7%); Korean BBQ iconic
-t2_013,순두부찌개,Sundubu Jjigae,2,2,3,boil,,14,950,3,4,5,med,C-2 lock 2026-05-24 (유지); T2 어물전 단독 책임(멸치 육수); 매운+담백 hybrid; N-2 sync 2026-05-30 (T2 끓이기 페어 김치찌개 supersede 후 T2 끓이기 단독)
-t2_014,불고기,Bulgogi,2,2,3,marinate,stirfry,16,900,4,5,5,high,N-2 lock 2026-05-30 (김치찌개 t2_009 supersede); K-BBQ 시그니처; 양념재우기 60 BPM cut style 시그니처 음식 (ADR-005 §7); 갈비구이와 차별화 (thin-slice boneless marinade + 채소 mixed vs bone-in LA-cut grilled separate); hero ingredient=얇은 소고기; 부 hero=양파 채썰기 CUT-02
+food_id,name_ko,name_en,tier,servings,store_count,primary_cooking_method,secondary_method,cook_time_sec,perfect_window_ms,difficulty_score,visual_appeal_score,recognition_score,ad_trigger_priority,prep_ingredient_id,prep_cut_style,prep_bpm,prep_taps,notes
+t1_002,라면,Ramyeon,1,1,3,boil,,9,1000,1,3,5,low,ing_p_001,CUT-05,100,4,FTUE 1순위 (N-1 lock 2026-05-30 — 호떡 supersede 후 신규); 글로벌 SS급 인지도; 끓이기 기본 조리법 데뷔; Stage 2A 대파 송송썰기 CUT-05 100 BPM·4 taps (M2-D2 lock)
+t1_003,떡볶이,Tteokbokki,1,1,4,boil,,13,950,2,5,5,med,ing_s_002,CUT-03,100,5,K-food 글로벌 시그니처; 어물전(어묵) 데뷔; Stage 2A 어묵 어슷썰기 CUT-03 100 BPM·5 taps (M2-D2 lock)
+t1_004,김밥,Kimbap,1,1,5,roll,,4,1500,2,4,5,med,ing_x_008,CUT-04,70,3,5가게 풀 순회 쇼케이스; no-cook 말기 타이밍; Stage 2A 단무지 통썰기 CUT-04 70 BPM·3 taps (M2-D2 lock, T1 가장 느린 BPM 입문 부드러움)
+t1_005,김치볶음밥,Kimchi Fried Rice,1,1,4,stirfry,,10,1000,3,3,4,med,ing_x_010,CUT-06,90,4,냉장고 털이 정서; 볶기 조리법 데뷔; Stage 2A 김치 깍둑썰기 CUT-06 90 BPM·4 taps (M2-D2 lock)
+t1_006,해물파전,Haemul Pajeon,1,1,4,panfry,,14,950,3,5,4,high,ing_p_002,CUT-05,110,5,어물전 3SKU 동시 등장; 단일 탭 부치기(MVP); flip mechanic: post-launch (C-3 lock 2026-05-24); Stage 2A 쪽파 송송썰기 CUT-05 110 BPM·5 taps (M2-D2 lock)
+t1_007,한국식 콘도그,Korean Corn Dog,1,1,3,deepfry,,8,1000,3,5,4,high,ing_g_005,CUT-00,80,3,튀기기 조리법 데뷔; SNS shareable (치즈 스트레치); C-1 ACCEPT: viral 우선 (2026-05-24); Stage 2A 칼 cut 대신 batter dip substitute 80 BPM·3 taps (M2-D2 lock, motion-spec §3.10) — sub-motion = 콘도그를 batter bowl에 dip 3회 chain; corndog_batter_bowl sprite art-director 미니 sprint 필요
+t1_008,잔치국수,Janchi Guksu,1,1,4,boil,,12,1000,2,4,4,low,ing_p_001,CUT-05,110,4,N-1 lock 2026-05-30 (호떡 t1_001 supersede); 명절·잔치 시그니처 면 요리; 곡물(소면)+어물(멸치·김)+잡화(다진마늘·간장·계란)+청과(애호박·파) 4가게 순회; 어물전 floor 5 유지 핵심; Stage 2A 대파 송송썰기 CUT-05 110 BPM·4 taps (M2-D2 placeholder 유지 — balance-config §7.1 권고, 애호박 통썰기 70 BPM·3 taps 대안 사용자 confirm 대기)
+t2_008,비빔밥,Bibimbap,2,2,4,mix,,5,1300,3,5,5,med,ing_p_009,CUT-02,115,5,Tier 2 진입 default; no-cook 비비기 마무리; Stage 2A 당근 채썰기 CUT-02 115 BPM·5 taps (M2-D2 lock)
+t2_010,잡채,Japchae,2,2,4,stirfry,toss,16,900,4,5,4,med,ing_p_009,CUT-02,120,6,명절 정서; 6색 채소 비주얼; 매운 카테고리 회피; Stage 2A 당근 채썰기 CUT-02 120 BPM·6 taps (M2-D2 lock, T2 채썰기 fast)
+t2_012,갈비구이,Galbi-gui,2,2,3,grill,,18,650,5,5,5,high,ing_p_005,CUT-01,140,6,MVP 최고 난도; 사용자 명시 타이밍 핵심; PERFECT 좁음(4~7%); Korean BBQ iconic; Stage 2A 마늘 다지기 CUT-01 140 BPM·6 taps (M2-D2 lock, T2 최고 BPM = "타이밍 핵심" 정합)
+t2_013,순두부찌개,Sundubu Jjigae,2,2,3,boil,,14,950,3,4,5,med,ing_p_011,CUT-04,80,4,C-2 lock 2026-05-24 (유지); T2 어물전 단독 책임(멸치 육수); 매운+담백 hybrid; N-2 sync 2026-05-30 (T2 끓이기 페어 김치찌개 supersede 후 T2 끓이기 단독); Stage 2A 호박 통썰기 CUT-04 80 BPM·4 taps (M2-D2 lock)
+t2_014,불고기,Bulgogi,2,2,3,marinate,stirfry,16,900,4,5,5,high,ing_m_007,CUT-00,60,3,N-2 lock 2026-05-30 (김치찌개 t2_009 supersede); K-BBQ 시그니처; Stage 2A 양념재우기 CUT-00 marinade rhythm 60 BPM·3 taps (M2-D2 lock — ADR-005 §7 양념재우기 시그니처 음식); hero ingredient=얇은 소고기 + 양념 마사지 (손바닥 + marinade bowl, motion-spec §3.3); 부 hero=양파 채썰기 CUT-02 115 BPM·4 taps multi-cut sub-sequence 후보 (alpha 후 결정)

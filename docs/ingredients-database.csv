@@ -1,46 +1,46 @@
-ingredient_id,name_ko,name_en,store_type,used_in_foods,is_distractor_friendly,distractor_weight,is_basic_pantry,notes
-ing_p_001,파,Green Onion,produce,t1_002;t1_003;t1_005;t1_006;t1_008;t2_013;t2_014,true,3,false,쪽파(t1_006 별도)와 시각 유사; 한식 base; 잔치국수 송송썰기 hero CUT-05 (N-1 sync 2026-05-30); 불고기 대파 (N-2 sync 2026-05-30)
-ing_p_002,쪽파,Chive Onion,produce,t1_006,true,2,false,파(ing_p_001)와 디스트랙터 페어
-ing_p_003,양파,Onion,produce,t1_003;t1_006;t2_010;t2_014,true,3,false,한식 base; 잡채/떡볶이/해물파전 공용; 불고기 채썰기 CUT-02 부 hero (N-2 신규 2026-05-30); 김치찌개 t2_009 used_in_foods 제거
-ing_p_004,부추,Korean Chive,produce,t1_006,true,2,false,쪽파와 시각 디스트랙터 페어
-ing_p_005,마늘,Garlic,produce,t2_012,true,2,false,갈비 양념 통마늘
-ing_p_006,배,Korean Pear,produce,t2_012;t2_014,false,1,false,갈비 양념(연육) + 불고기 양념(연육·단맛) — 사용자 명시 재료
-ing_p_007,시금치,Spinach,produce,t1_004;t2_008;t2_010,true,2,false,비빔밥/잡채 색감 핵심
-ing_p_008,콩나물,Bean Sprout,produce,t2_008,true,2,false,비빔밥 식감
-ing_p_009,당근,Carrot,produce,t2_008;t2_010;t2_014,true,2,false,비빔밥/잡채/불고기 색감 (N-2 sync 2026-05-30)
-ing_p_010,표고버섯,Shiitake,produce,t2_010;t2_014,false,1,false,잡채/불고기 깊은 맛 (N-2 sync 2026-05-30)
-ing_p_011,호박,Korean Zucchini,produce,t2_013,true,2,false,순두부찌개 채소; 애호박; 호박색 변별
-ing_p_012,애호박,Young Korean Zucchini,produce,t1_008,true,2,false,잔치국수 채썰기/통썰기 채소 (N-1 신규 2026-05-30); 호박(ing_p_011)과 시각 디스트랙터 페어 — 동일 채소 변종 (잔치국수=어린 애호박 fresh, 순두부찌개=호박 일반)
-ing_m_001,소시지,Sausage,meat,t1_007,false,2,false,콘도그 핵심; 한국식 콘도그는 소시지+모짜렐라 hybrid
-ing_m_002,햄,Ham,meat,t1_004;t1_005,true,2,false,김밥/볶음밥 공용; 소시지와 디스트랙터 페어
-ing_m_004,소고기,Beef,meat,t2_008;t2_010,true,2,false,비빔밥/잡채 잘게 다짐; 김치찌개 t2_009 used_in_foods 제거(N-2; 돼지고기 ing_m_003도 같이 제거)
-ing_m_005,LA갈비,LA Galbi,meat,t2_012,false,3,false,사용자 명시; 갈비구이 핵심; bone-in cross-cut
-ing_m_006,꽃갈비,Premium Galbi,meat,t2_012,false,3,false,사용자 명시; LA갈비와 시각 유사 디스트랙터 페어
-ing_m_007,얇은 소고기,Thin-Sliced Beef,meat,t2_014,false,3,false,불고기 hero ingredient (N-2 신규 2026-05-30); thin-sliced marbled sirloin fanned arrangement; 소고기(ing_m_004)와 시각 디스트랙터 페어 — 다짐 vs 얇은 슬라이스 변별; art-director anchor 신규 작성 대상
-ing_s_001,김,Dried Seaweed,seafood,t1_004;t1_008,true,2,false,김밥 외피; 잔치국수 고명 (N-1 sync 2026-05-30); 어물전 SKU
-ing_s_002,어묵,Fish Cake,seafood,t1_003,true,3,false,떡볶이 핵심; 단무지와 디스트랙터 페어 가능
-ing_s_003,오징어,Squid,seafood,t1_006,true,2,false,해물파전 사용자 명시
-ing_s_004,새우,Shrimp,seafood,t1_006,true,2,false,해물파전 사용자 명시; 멸치와 디스트랙터 페어
-ing_s_005,조개,Clam,seafood,t1_006,true,2,false,해물파전 사용자 명시; 바지락 포함 표현
-ing_s_006,멸치,Anchovy,seafood,t1_008;t2_013,true,3,false,순두부찌개 육수 + 잔치국수 육수 hero (N-1 신규 2026-05-30); 새우와 디스트랙터 페어; T2 어물전 floor +1 핵심 SKU + T1 어물전 floor 5 유지 핵심
-ing_g_001,라면사리,Ramyeon Noodle,grain,t1_002,false,2,false,라면 핵심
-ing_g_002,밥,Cooked Rice,grain,t1_004;t1_005;t2_008,true,2,false,김밥/볶음밥/비빔밥 공용
-ing_g_003,떡,Tteok (Rice Cake),grain,t1_003,false,3,false,떡볶이 핵심; 흰 윤기
-ing_g_005,부침가루,Pancake Mix,grain,t1_006;t1_007,true,3,false,해물파전/콘도그 공용; (호떡 supersede로 밀가루 ing_g_004 제거 후 가루 클러스터 잔여)
-ing_g_006,빵가루,Bread Crumb,grain,t1_007,false,1,false,콘도그 외피
-ing_g_007,당면,Glass Noodle,grain,t2_010,false,3,false,잡채 핵심; 곡물 단독 SKU
-ing_g_008,소면,Somen (White Wheat Noodle),grain,t1_008,false,3,false,잔치국수 hero ingredient (N-1 신규 2026-05-30); raw bundled or fresh-cooked thin white wheat noodle; 라면사리(ing_g_001) 및 당면(ing_g_007)과 곡물 면 디스트랙터 트리오 클러스터; art-director anchor 신규 작성 대상
-ing_x_001,계란,Egg,sundry,t1_002;t1_004;t1_005;t1_006;t1_008;t2_013,true,3,false,한식 base 다목적; 라면/김밥/볶음밥/해물파전/잔치국수(지단)/순두부찌개(풀기); N-1 sync 2026-05-30
-ing_x_003,간장,Soy Sauce,pantry,t1_006;t1_008;t2_010;t2_012;t2_014,false,0,true,**basic_pantry LOCK 2026-05-30 (C-2)** — kitchen rack 자동 제공, Stage 1 진열대 미표시. 한식 base; 옹기 시각 디스트랙터 (고추장과 페어); 잔치국수 육수 양념 + 불고기 양념. accuracy_ingredients 분모 N에서 제외.
-ing_x_004,고추장,Gochujang,pantry,t1_003;t2_008,false,0,true,**basic_pantry LOCK 2026-05-30 (C-2)** — kitchen rack 자동 제공, Stage 1 진열대 미표시. 떡볶이/비빔밥; 간장과 옹기 디스트랙터 페어. accuracy_ingredients 분모 N에서 제외.
-ing_x_005,설탕,Sugar,pantry,t1_007;t2_012;t2_014,false,0,true,**basic_pantry LOCK 2026-05-30 (C-2)** — kitchen rack 자동 제공, Stage 1 진열대 미표시. 콘도그 코팅/갈비 양념/불고기 양념. accuracy_ingredients 분모 N에서 제외.
-ing_x_006,참기름,Sesame Oil,pantry,t2_010;t2_012;t2_014,false,0,true,**basic_pantry LOCK 2026-05-30 (C-2)** — kitchen rack 자동 제공, Stage 1 진열대 미표시. 잡채/갈비/불고기 마무리. accuracy_ingredients 분모 N에서 제외.
-ing_x_007,소금,Salt,pantry,implicit_all,false,0,true,**basic_pantry LOCK 2026-05-30 (C-2 신규 row)** — kitchen rack 자동 제공 기본 base seasoning. used_in_foods=implicit_all (모든 음식에 implicit base, foods CSV에 명시 X). accuracy_ingredients 분모 N에서 제외. ing_x_007 reassigned (이전 깨 row는 ing_x_019로 이동).
-ing_x_019,깨,Sesame Seed,sundry,t2_012,true,1,false,갈비 마무리 garnish (ID re-mapped from ing_x_007 → ing_x_019 on 2026-05-30 due to 소금 basic_pantry 신규 row가 ing_x_007 차지)
-ing_x_008,단무지,Pickled Radish,sundry,t1_004,true,3,false,김밥 핵심; 어묵과 시각 디스트랙터 페어
-ing_x_010,김치,Kimchi,sundry,t1_005;t2_013,false,3,false,한식 시그니처; 옹기 핵심; 순두부찌개 매운 베이스; 김치찌개 t2_009 used_in_foods 제거 (N-2 2026-05-30) — 김치볶음밥+순두부찌개 유지
-ing_x_014,모짜렐라,Mozzarella,sundry,t1_007,false,2,false,한국식 콘도그 hybrid 시그니처
-ing_x_015,케첩,Ketchup,sundry,t1_007,true,1,false,콘도그 토핑 (선택); 디스트랙터로 자주 등장
-ing_x_016,순두부,Soft Tofu,sundry,t2_013,false,3,false,순두부찌개 핵심; 두부(deprecated ing_x_009)와 시각 디스트랙터 페어 — but 두부 제거됨(N-2 김치찌개 supersede)으로 단독 SKU로 진화; 잡화 분류 (실 매장은 두부집/잡화 공용)
-ing_x_017,고춧가루,Red Pepper Powder,sundry,t2_013,true,2,false,순두부찌개 매운맛; 고추장과 색감 페어; 가루 클러스터 (부침가루 cross-store 페어)
-ing_x_018,다진마늘,Minced Garlic,sundry,t1_008;t2_014,true,2,false,잔치국수 육수 양념 + 불고기 양념 (N-1·N-2 신규 2026-05-30); 마늘(ing_p_005, 통마늘 produce)과 form factor 변별 디스트랙터 페어 — minced=잡화 분류 (병조림/팩 SKU); ADR-005 다지기 140 BPM cut style anchor 매핑 (CUT-01 mince)
+ingredient_id,name_ko,name_en,store_type,used_in_foods,is_distractor_friendly,distractor_weight,is_basic_pantry,cut_variations,notes
+ing_p_001,파,Green Onion,produce,t1_002;t1_003;t1_005;t1_006;t1_008;t2_013;t2_014,true,3,false,CUT-05;CUT-03,쪽파(t1_006 별도)와 시각 유사; 한식 base; 잔치국수 송송썰기 hero CUT-05 (N-1 sync 2026-05-30); 불고기 대파 (N-2 sync 2026-05-30); cut_variations=송송썰기 CUT-05 (라면·해물파전·잔치국수 primary) + 어슷썰기 CUT-03 (불고기 garnish)
+ing_p_002,쪽파,Chive Onion,produce,t1_006,true,2,false,CUT-05,파(ing_p_001)와 디스트랙터 페어; 해물파전 송송 CUT-05
+ing_p_003,양파,Onion,produce,t1_003;t1_006;t2_010;t2_014,true,3,false,CUT-02;CUT-06,한식 base; 잡채/떡볶이/해물파전 공용; 불고기 채썰기 CUT-02 부 hero (N-2 신규 2026-05-30); 김치찌개 t2_009 used_in_foods 제거; cut_variations=채썰기 CUT-02 (잡채·불고기) + 깍둑썰기 CUT-06 (떡볶이·해물파전 비주얼 다양화)
+ing_p_004,부추,Korean Chive,produce,t1_006,true,2,false,CUT-05,쪽파와 시각 디스트랙터 페어; 송송썰기 CUT-05
+ing_p_005,마늘,Garlic,produce,t2_012,true,2,false,CUT-01,갈비 양념 통마늘; 다지기 CUT-01 hero (M2-D2 lock, 140 BPM × 6 taps)
+ing_p_006,배,Korean Pear,produce,t2_012;t2_014,false,1,false,CUT-02,갈비 양념(연육) + 불고기 양념(연육·단맛) — 사용자 명시 재료; 채썰기 CUT-02 후보
+ing_p_007,시금치,Spinach,produce,t1_004;t2_008;t2_010,true,2,false,CUT-04,비빔밥/잡채 색감 핵심; 통썰기 CUT-04 (살짝 데친 후 줄기 통)
+ing_p_008,콩나물,Bean Sprout,produce,t2_008,true,2,false,,비빔밥 식감; cut 없음 (whole 그대로 무침)
+ing_p_009,당근,Carrot,produce,t2_008;t2_010;t2_014,true,2,false,CUT-02;CUT-06,비빔밥/잡채/불고기 색감 (N-2 sync 2026-05-30); 채썰기 CUT-02 hero (비빔밥 115 BPM·5 / 잡채 120 BPM·6 M2-D2 lock) + 깍둑썰기 CUT-06 대안
+ing_p_010,표고버섯,Shiitake,produce,t2_010;t2_014,false,1,false,CUT-02,잡채/불고기 깊은 맛 (N-2 sync 2026-05-30); 채썰기 CUT-02
+ing_p_011,호박,Korean Zucchini,produce,t2_013,true,2,false,CUT-04;CUT-03,순두부찌개 채소; 애호박; 호박색 변별; 통썰기 CUT-04 hero (M2-D2 lock 80 BPM·4 taps) + 어슷썰기 CUT-03 대안
+ing_p_012,애호박,Young Korean Zucchini,produce,t1_008,true,2,false,CUT-04;CUT-03,잔치국수 채썰기/통썰기 채소 (N-1 신규 2026-05-30); 호박(ing_p_011)과 시각 디스트랙터 페어 — 동일 채소 변종 (잔치국수=어린 애호박 fresh, 순두부찌개=호박 일반); 통썰기 CUT-04 대안 hero (잔치국수 사용자 confirm 시 70 BPM·3 taps 활성화 — 대파 110 BPM·4 와 swap)
+ing_m_001,소시지,Sausage,meat,t1_007,false,2,false,,콘도그 핵심; 한국식 콘도그는 소시지+모짜렐라 hybrid; 콘도그 Stage 2A는 cut 메커닉 X (반죽 dip substitute, motion-spec §3.10)
+ing_m_002,햄,Ham,meat,t1_004;t1_005,true,2,false,CUT-02;CUT-06,김밥/볶음밥 공용; 소시지와 디스트랙터 페어; 채썰기 CUT-02 (김밥 strip) + 깍둑썰기 CUT-06 (볶음밥 cube)
+ing_m_004,소고기,Beef,meat,t2_008;t2_010,true,2,false,CUT-01;CUT-02,비빔밥/잡채 잘게 다짐; 김치찌개 t2_009 used_in_foods 제거(N-2; 돼지고기 ing_m_003도 같이 제거); 다지기 CUT-01 (비빔밥 minced) + 채썰기 CUT-02 (잡채 strip)
+ing_m_005,LA갈비,LA Galbi,meat,t2_012,false,3,false,,사용자 명시; 갈비구이 핵심; bone-in cross-cut; Stage 2A cut 메커닉 X (마늘 다지기 hero — ing_p_005); LA갈비는 whole 그대로 굽기
+ing_m_006,꽃갈비,Premium Galbi,meat,t2_012,false,3,false,,사용자 명시; LA갈비와 시각 유사 디스트랙터 페어; cut 없음
+ing_m_007,얇은 소고기,Thin-Sliced Beef,meat,t2_014,false,3,false,CUT-00,불고기 hero ingredient (N-2 신규 2026-05-30); thin-sliced marbled sirloin fanned arrangement; 소고기(ing_m_004)와 시각 디스트랙터 페어 — 다짐 vs 얇은 슬라이스 변별; art-director anchor 신규 작성 대상; CUT-00 양념재우기 marinade rhythm hero (M2-D2 lock 60 BPM·3 taps)
+ing_s_001,김,Dried Seaweed,seafood,t1_004;t1_008,true,2,false,,김밥 외피; 잔치국수 고명 (N-1 sync 2026-05-30); 어물전 SKU; cut 없음 (가위 자르기 post-launch 후보)
+ing_s_002,어묵,Fish Cake,seafood,t1_003,true,3,false,CUT-03;CUT-04,떡볶이 핵심; 단무지와 디스트랙터 페어 가능; 어슷썰기 CUT-03 hero (M2-D2 lock 100 BPM·5 taps) + 통썰기 CUT-04 대안
+ing_s_003,오징어,Squid,seafood,t1_006,true,2,false,CUT-04,해물파전 사용자 명시; 통썰기 CUT-04 (ring slice)
+ing_s_004,새우,Shrimp,seafood,t1_006,true,2,false,,해물파전 사용자 명시; 멸치와 디스트랙터 페어; cut 없음 (whole)
+ing_s_005,조개,Clam,seafood,t1_006,true,2,false,,해물파전 사용자 명시; 바지락 포함 표현; cut 없음 (whole)
+ing_s_006,멸치,Anchovy,seafood,t1_008;t2_013,true,3,false,,순두부찌개 육수 + 잔치국수 육수 hero (N-1 신규 2026-05-30); 새우와 디스트랙터 페어; T2 어물전 floor +1 핵심 SKU + T1 어물전 floor 5 유지 핵심; cut 없음 (whole 마른 멸치)
+ing_g_001,라면사리,Ramyeon Noodle,grain,t1_002,false,2,false,,라면 핵심; cut 없음 (라면사리 그대로 끓이기, 파는 별도 ing_p_001 CUT-05 hero)
+ing_g_002,밥,Cooked Rice,grain,t1_004;t1_005;t2_008,true,2,false,,김밥/볶음밥/비빔밥 공용; cut 없음 (whole 밥)
+ing_g_003,떡,Tteok (Rice Cake),grain,t1_003,false,3,false,CUT-04,떡볶이 핵심; 흰 윤기; 통썰기 CUT-04 (가래떡 단면 slice) — 디자인 대안 (어묵 ing_s_002가 primary cut hero)
+ing_g_005,부침가루,Pancake Mix,grain,t1_006;t1_007,true,3,false,,해물파전/콘도그 공용; (호떡 supersede로 밀가루 ing_g_004 제거 후 가루 클러스터 잔여); cut 없음 (가루); 콘도그 Stage 2A의 batter dip substitute (M2-D2 prep_ingredient_id 매핑)
+ing_g_006,빵가루,Bread Crumb,grain,t1_007,false,1,false,,콘도그 외피; cut 없음 (가루)
+ing_g_007,당면,Glass Noodle,grain,t2_010,false,3,false,,잡채 핵심; 곡물 단독 SKU; cut 없음 (당면 그대로 불려 볶기, 당근 ing_p_009 CUT-02가 primary cut hero)
+ing_g_008,소면,Somen (White Wheat Noodle),grain,t1_008,false,3,false,,잔치국수 hero ingredient (N-1 신규 2026-05-30); raw bundled or fresh-cooked thin white wheat noodle; 라면사리(ing_g_001) 및 당면(ing_g_007)과 곡물 면 디스트랙터 트리오 클러스터; art-director anchor 신규 작성 대상; cut 없음 (whole bundle, 파 ing_p_001 또는 애호박 ing_p_012가 cut hero)
+ing_x_001,계란,Egg,sundry,t1_002;t1_004;t1_005;t1_006;t1_008;t2_013,true,3,false,,한식 base 다목적; 라면/김밥/볶음밥/해물파전/잔치국수(지단)/순두부찌개(풀기); N-1 sync 2026-05-30; cut 없음 (whole egg, 깨거나 풀기 행위 별도 메커닉 후보)
+ing_x_003,간장,Soy Sauce,pantry,t1_006;t1_008;t2_010;t2_012;t2_014,false,0,true,,**basic_pantry LOCK 2026-05-30 (C-2)** — kitchen rack 자동 제공, Stage 1 진열대 미표시. 한식 base; 옹기 시각 디스트랙터 (고추장과 페어); 잔치국수 육수 양념 + 불고기 양념. accuracy_ingredients 분모 N에서 제외; cut 메커닉 X (양념재우기 시 marinade bowl에 자동 부어짐, motion 시각 cue만)
+ing_x_004,고추장,Gochujang,pantry,t1_003;t2_008,false,0,true,,**basic_pantry LOCK 2026-05-30 (C-2)** — kitchen rack 자동 제공, Stage 1 진열대 미표시. 떡볶이/비빔밥; 간장과 옹기 디스트랙터 페어. accuracy_ingredients 분모 N에서 제외; cut 메커닉 X
+ing_x_005,설탕,Sugar,pantry,t1_007;t2_012;t2_014,false,0,true,,**basic_pantry LOCK 2026-05-30 (C-2)** — kitchen rack 자동 제공, Stage 1 진열대 미표시. 콘도그 코팅/갈비 양념/불고기 양념. accuracy_ingredients 분모 N에서 제외; cut 메커닉 X (양념재우기 시 marinade에 자동 흘러 들어감)
+ing_x_006,참기름,Sesame Oil,pantry,t2_010;t2_012;t2_014,false,0,true,,**basic_pantry LOCK 2026-05-30 (C-2)** — kitchen rack 자동 제공, Stage 1 진열대 미표시. 잡채/갈비/불고기 마무리. accuracy_ingredients 분모 N에서 제외; cut 메커닉 X
+ing_x_007,소금,Salt,pantry,implicit_all,false,0,true,,**basic_pantry LOCK 2026-05-30 (C-2 신규 row)** — kitchen rack 자동 제공 기본 base seasoning. used_in_foods=implicit_all (모든 음식에 implicit base, foods CSV에 명시 X). accuracy_ingredients 분모 N에서 제외. ing_x_007 reassigned (이전 깨 row는 ing_x_019로 이동); cut 메커닉 X
+ing_x_019,깨,Sesame Seed,sundry,t2_012,true,1,false,,갈비 마무리 garnish (ID re-mapped from ing_x_007 → ing_x_019 on 2026-05-30 due to 소금 basic_pantry 신규 row가 ing_x_007 차지); cut 없음 (whole seed sprinkle)
+ing_x_008,단무지,Pickled Radish,sundry,t1_004,true,3,false,CUT-04;CUT-02,김밥 핵심; 어묵과 시각 디스트랙터 페어; 통썰기 CUT-04 hero (M2-D2 lock 70 BPM·3 taps, T1 가장 느린 BPM 입문 부드러움) + 채썰기 CUT-02 strip 대안
+ing_x_010,김치,Kimchi,sundry,t1_005;t2_013,false,3,false,CUT-06,한식 시그니처; 옹기 핵심; 순두부찌개 매운 베이스; 김치찌개 t2_009 used_in_foods 제거 (N-2 2026-05-30) — 김치볶음밥+순두부찌개 유지; 깍둑썰기 CUT-06 hero (M2-D2 lock 김치볶음밥 90 BPM·4 taps)
+ing_x_014,모짜렐라,Mozzarella,sundry,t1_007,false,2,false,,한국식 콘도그 hybrid 시그니처; cut 없음 (whole stick or shredded, 콘도그 stage 2A는 batter dip substitute)
+ing_x_015,케첩,Ketchup,sundry,t1_007,true,1,false,,콘도그 토핑 (선택); 디스트랙터로 자주 등장; cut 없음 (양념)
+ing_x_016,순두부,Soft Tofu,sundry,t2_013,false,3,false,,순두부찌개 핵심; 두부(deprecated ing_x_009)와 시각 디스트랙터 페어 — but 두부 제거됨(N-2 김치찌개 supersede)으로 단독 SKU로 진화; 잡화 분류 (실 매장은 두부집/잡화 공용); cut 없음 (whole soft tofu, 끓일 때 자연 분쇄)
+ing_x_017,고춧가루,Red Pepper Powder,sundry,t2_013,true,2,false,,순두부찌개 매운맛; 고추장과 색감 페어; 가루 클러스터 (부침가루 cross-store 페어); cut 없음 (가루)
+ing_x_018,다진마늘,Minced Garlic,sundry,t1_008;t2_014,true,2,false,,잔치국수 육수 양념 + 불고기 양념 (N-1·N-2 신규 2026-05-30); 마늘(ing_p_005, 통마늘 produce)과 form factor 변별 디스트랙터 페어 — minced=잡화 분류 (병조림/팩 SKU); ADR-005 다지기 140 BPM cut style anchor 매핑 (CUT-01 mince) — but 다진마늘은 이미 minced state라 Stage 2A cut 메커닉 X (whole 마늘 ing_p_005가 cut hero); 잡화 SKU로 시각 디스트랙터 역할만

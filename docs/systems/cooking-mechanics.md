@@ -1,11 +1,13 @@
 # Cooking Mechanics
 
-> 버전: **v0.6 (2026-05-31, supersedes v0.5)** — [ADR-005](../decisions.md#adr-005) 4-stage + **C-2 basic_pantry 정책 lock**
+> 버전: **v0.7 (2026-05-31, supersedes v0.6)** — [ADR-005](../decisions.md#adr-005) 4-stage + **§X Motion Spec cross-ref 신설** (M2 prerequisite D1)
 > 작성일: 2026-05-23 · 최종 개정: 2026-05-31
 > 상위 문서: [`../GDD.md`](../GDD.md) §2 Core Loop / §3 Scoring System
 > 본 문서는 GDD §2의 **4단계** cooking matching 루프를 **구현 가능한 수준**으로 상세화한다.
 >
-> ⚠️ **v0.6 갱신**: **§2.2 basic_pantry 자동 제외 룰 신설** + **§2.2.7 Kitchen rack 자동 제공 신설** + **§2.5 accuracy_ingredients 공식 분모 N에서 basic_pantry 차감** + **§X 양념재우기 메커닉 정합 명시** (양념 "고르기" 행위 X) + **§8 store_type mapping에 `pantry` 카테고리 추가**.
+> ⚠️ **v0.7 갱신**: **§X Motion Spec cross-ref 신설** — 12 음식 × Stage × 도구 × motion + BPM 매핑 본격 정의는 [`motion-spec.md` v0.1](motion-spec.md)로 분리. 본 문서는 mechanic 룰 + motion 참조만 유지. Option 1 motion lock 명시 (Godot AnimationPlayer Transform-only, frame art 추가 0건).
+>
+> ⚠️ **v0.6 갱신 (보존)**: **§2.2 basic_pantry 자동 제외 룰 신설** + **§2.2.7 Kitchen rack 자동 제공 신설** + **§2.5 accuracy_ingredients 공식 분모 N에서 basic_pantry 차감** + **§X 양념재우기 메커닉 정합 명시** (양념 "고르기" 행위 X) + **§8 store_type mapping에 `pantry` 카테고리 추가**.
 
 ---
 
@@ -507,7 +509,45 @@ Dictionary<StoreType, List<Ingredient>> BuildStoreShelves(
 
 ---
 
+## X. Motion Spec — Tool Animation Cross-Reference (v0.7 신설, M2 prerequisite D1)
+
+> 본격 spec은 [`motion-spec.md` v0.1](motion-spec.md) 참조. 본 §X는 cooking-mechanics 본문 흐름에 motion 영역 위치만 명시.
+
+### X.1 Stage 2A — 칼/도마 Knife indicator (11/12 음식) + 손바닥/marinade bowl (1/12 불고기)
+
+- **시각 cue 통합 lock** (ADR-005): 별도 rhythm UI 없이 칼이 BPM-driven으로 자동 위↕아래 translate. 도마 닿기 직전 = perfect tap.
+- **AnimationPlayer Transform animation only** (Option 1, 사용자 명시 2026-05-31). 추가 frame art 0건. 재료 변화 = whole sprite fade-out → cut sprite fade-in.
+- 12 음식 × Stage 2A 도구·BPM·tap 수 매핑: [`motion-spec.md §2`](motion-spec.md#2-12-음식--stage--도구--motion-매핑-d1-main-표).
+- AnimationPlayer keyframe spec: [`motion-spec.md §3.1`](motion-spec.md#31-칼-down-stroke-stage-2a-primary-1112-음식) (칼 down-stroke) + [`§3.3`](motion-spec.md#33-손바닥-marinade-press-stage-2a-불고기-only) (손바닥 marinade press).
+
+### X.2 Stage 2B — 조리 방법 카드 (정적 도구 thumbnail)
+
+- 카드 3~4장에 표시되는 도구 thumbnail은 정적 (motion 없음). M1 TOOL-01~12 sprite 직접 사용.
+- 카드 선택 시 짧은 hover scale animation (1.0 → 1.05) 정도만, 별도 spec 불필요.
+
+### X.3 Stage 2C — 도구 motion + timing bar
+
+- timing bar 인디케이터 (cooking-mechanics §4) + 도구 motion이 병행. timing bar는 cooking-mechanics §4.4 perfect_width 정합. 도구 motion은 시각 ambient + 일부 음식(갈비·비빔밥·잡채)은 보조 rhythm 메커닉 후보 (M2 alpha 후 결정).
+- 도구별 motion: [`motion-spec.md §3.2`](motion-spec.md#32-주걱-stir-stage-2c-5음식) 주걱 stir / [`§3.6`](motion-spec.md#36-국자-scoop-stage-2c-마무리-cue-3음식) 국자 scoop / [`§3.7`](motion-spec.md#37-집게-grip-and-lift-stage-2c-갈비구이) 집게 grip-and-lift / [`§3.8`](motion-spec.md#38-김발-roll-stage-2c-김밥-single-shot) 김발 roll / [`§3.9`](motion-spec.md#39-그릇주걱-bibim-orbit-stage-2c-비빔밥) bibim orbit / [`§3.10`](motion-spec.md#310-콘도그-반죽-dip-stage-2a-콘도그-substitute-칼-메커닉-대체) 콘도그 dip.
+
+### X.4 Asset path 의존성
+
+| Path | M1 출처 |
+|------|--------|
+| `assets-processed/tools/tool_01_stove.png` ~ `tool_12_scissors.png` | M1 TOOL-01~12 LOCK |
+| `assets-processed/cuts/cut_00_marinade_board.png` ~ `cut_06_cube.png` | M1 CUT-00~06 LOCK (CUT-00 marinade anchor 신규 작성은 art-director open) |
+| `assets-processed/ingredients/ing_*_whole.png` / `ing_*_cut.png` | M1 ingredient whole 12 + ingredient cut 12 LOCK |
+| `assets-processed/hand_marinade.png` (TBD) | **art-director 미니 sprint 필요** (~$0.04 single sprite) |
+| `assets-processed/corndog_batter_bowl.png` (TBD) | **art-director 미니 sprint 필요** OR M1 ingredient 흡수 |
+
+### X.5 godot-dev 단계적 sprint plan (M2)
+
+[`motion-spec.md §5.3`](motion-spec.md#53-단계적-구현-추천-순서-m2-sprint-plan) 참조. W1 라면 single end-to-end → W2 cut style 11종 확장 → W3 불고기 marinade → W4 Stage 2C 도구 6종 → W5+ 콘도그 dip + 김발 roll + alpha 검증.
+
+---
+
 ## 11. 변경 이력
+- **2026-05-31 v0.7** (supersedes v0.6): M2 prerequisite design sprint D1. **§X Motion Spec cross-ref 신설** — 12 음식 × Stage × 도구 × motion + BPM 매핑 본격 정의는 `motion-spec.md` v0.1로 분리, 본 문서는 mechanic 룰 유지 + motion 영역 참조만. Option 1 motion lock 명시 (Godot AnimationPlayer Transform animation only, frame art 추가 0건, single sprite 회전/이동/스케일 keyframe만). Asset path 의존성 표 (M1 LOCK 출처 명시 + art-director 미니 sprint 2건 권고: hand_marinade + corndog_batter_bowl). godot-dev 단계적 sprint plan cross-ref (W1~W5+).
 - **2026-05-31 v0.6** (supersedes v0.5): **C-2 basic_pantry 정책 lock** ([`store-distribution.md` v1.3](../store-distribution.md) + [`balance-config.md` v0.3.3](../balance-config.md) sync). **§2.2.1 basic_pantry 자동 제외 룰 신설** (간장·고추장·설탕·참기름·소금 5종 Stage 1 진열대 미표시 + distractor pool 제외). **§2.2.7 Kitchen rack 자동 표시 신설** (Scene 1→2 transition 시 basic_pantry 5종 자동 표시, 시각 cue만, art-director 옹기 5종 anchor 후속). **§2.5 accuracy_ingredients 공식 갱신** (분모 N_effective = required.filter(NOT IN basic_pantry)). **§2A.X 양념재우기 정합 명시 신설** (양념 자동 제공 상태에서 marinade rhythm tap만, 양념 "고르기" 행위 X — 불고기/갈비구이 메커닉 정합 lock). **§8 store_type mapping에 `pantry` 카테고리 추가** (basic_pantry 5종 전용 enum, Resource(.tres) 스키마 sync 필요).
 - **2026-05-26 v0.5** (supersedes v0.4): [ADR-005](../decisions.md#adr-005) 반영. **3-stage → 4-stage** (Stage 2A 재료 준비 신설, rhythm tap + Knife indicator). §1 Round 구조에 4-stage 흐름 요약 추가. **§5.2 채점 공식 곱셈 모델 → 가중 평균 공식 supersede** (재료 25% × 준비 20% × 방법 20% × 시간 35%, ★1 30/★2 60/★3 90). **§2A 신설** (placeholder, rhythm tap / Knife indicator / Cut Styles 6종 / Per-Food BPM / Skip 옵션 / FTUE 흐름 high-level 요약). 상세 룰은 game-designer v0.5 본격 sprint 이월.
 - **2026-05-23 v0.4**: ADR-003 (MVP-first) 반영. §0에 MVP Scope callout 추가 — 5-tier 디자인 비전 유지, MVP 구현은 Tier 1~2 / 음식 10~15 / 친구 1~2 / 식탁 2종 / 다점포 5가게 유지. 메커닉 정의 자체는 변경 없음.

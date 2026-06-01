@@ -16,6 +16,93 @@
 
 ---
 
+## [2026-05-31] M2 prerequisite UI sprint — Scene 2 (Kitchen) layout 신설 + components CP-18~22 + screen-flow v0.3 (ADR-005 4-stage)
+
+- **무엇** (ui-designer 3 트랙 sprint):
+  - **U1 신규 문서 `docs/ui/scene-2-kitchen-layout.md` v0.1** — Scene 2 안의 sub-flow 3종 (Stage 2A/2B/2C) layout detail spec (1080×1920 portrait, one-thumb zone, Y 좌표 절대값 / pixel anchor / transition timeline / godot-dev Scene tree). Stage 2A 도마 (Y 1100~1450 X 240~840 one-thumb) + Knife indicator (Y 900~1150 translation, **Option 1 motion lock** = Y position only, AnimationPlayer "knife_loop" + BPM speed_scale, perfect ±80ms Gold halo). Stage 2B 가스레인지 (Y 600~1000) + 도구 카드 3~4 (Y 1100~1500). Stage 2C timing bar (Y 1150~1280 full width) + tap area (Y 1380~1620). Kitchen rack (Y 130~340 X 820~1060). 양념재우기 variant (불고기/갈비구이) Kitchen rack arc motion 정합. CH-01 chibi optional (우측 하단). transition timeline 4종 (2A→2B 1.0s slide / 2B→2C 0.3s fade / 2C→Scene3 1.5s "서빙"). Decisions K2-01~10 + Confirm 8건.
+  - **U2 `docs/ui/components.md` v0.2 → v0.3 갱신** — **CP-18~22 5종 신설**:
+    - **CP-18 도마 (cutting_board.tscn)** — Stage 2A tap target, CUT-00 art anchor, 전체 영역 단일 Button, perfect/good/miss hit 상태 + chunk particle.
+    - **CP-19 Knife indicator (knife_indicator.tscn)** — 위↕아래 motion (Y 900~1150 translation only, Option 1 motion lock), AnimationPlayer "knife_loop" + `set_bpm(bpm)` → speed_scale 조정, perfect ±80ms Gold glow halo, `signal knife_hit_bottom` (CuttingBoard와 timing sync).
+    - **CP-20 Tool sprite (tool_sprite.tscn)** — TOOL-01~12 generic swap layer, Stage 2B 카드 → 2C dock Tween arc motion (0.4s, scale 240→400), CP-04 (cooking_tool_slot)과 분리된 순수 sprite layer.
+    - **CP-21 Timing bar (timing_bar.tscn)** — Stage 2C 게이지 (Y 1150~1280 full width 960×130px), 5 구간 (miss 60% / good 30% / PERFECT 10% or 20%), 인디케이터 Tween linear, perfect ±80ms 변환 공식 명시 (balance-config §6 sync), Gold halo pulse 1Hz, **기존 §5 Timing bar deprecation alias**.
+    - **CP-22 Kitchen rack (kitchen_rack.tscn)** — basic_pantry 5종 옹기 (Y 130~340 X 820~1060), **interactive X (visual cue only, ADR-007 정합)**, Stage 2A fade-in / 2B·2C dim 50% / 양념재우기 highlight + arc Tween, 옹기 5종 sprite는 Post-M1 art-director sprint pending (MVP placeholder = ingredient_card 5개 mini).
+    - §16 Z-order에 Kitchen rack(80) + Stage 2A/2B/2C 영역(50) + 캐릭터(40) 신규 layer. Decisions CP-06~10 + Confirm #6~10.
+  - **U3 `docs/ui/screen-flow.md` v0.1 → v0.3 갱신** — ADR-005 4-stage 정합:
+    - §2 Round 다이어그램 4-stage 재작성 (Scene 2 안에 Stage 2A/2B/2C sub-flow + Kitchen rack + Skip Rewarded).
+    - §2.1 광고 트리거 표 **Stage 2A "재료 준비 Skip" Rewarded 신규 위치** + Stage 2C 표기 sync (총 Round당 3 Rewarded slot).
+    - §4 Scene 2 sub-flow 전면 재작성 (§4.0 공통 + §4.1 Stage 2A + §4.2 Stage 2B + §4.3 Stage 2C, 상호작용 + transition 명시).
+    - §6.1A Kitchen rack 신규 + §6.2 하단 액션 바 Stage 2A/2B/2C 행 신규.
+    - §7 전이 매트릭스 Stage 2A→2B (1.0s slide parallel) + 2B→2C (0.3s fade, Scene 유지) 행 신규.
+    - Decisions **SF-07~10 신설** (Scene 2 sub-flow / Stage 2A Skip 광고 / transition timing / Kitchen rack 항상 표시).
+  - **CHANGELOG.md** — 본 entry.
+- **왜**: M2 godot-dev sprint (Scene 2 키친 Godot scene tree 구현) prerequisite. ADR-005 4-stage mechanic이 cooking-mechanics v0.6에 lock + 같은 날 game-designer가 motion-spec.md / foods CSV prep_* / balance-config v0.4 BPM lock 완료 → UI layer만 미명세 상태였음. screen-flow v0.1은 3-stage 그대로 + Scene 2 안의 sub-stage 좌표/transition/Kitchen rack 위치가 미명세 → godot-dev가 scene 구조 의사결정 불가능 상태. 또한 art LOCK 완료 (CUT-00 + CUT-01~06 + TOOL-01~12 + ING-01~12 whole + ICUT-01~12 cut = 49+ anchor, art-anchor-rubric v1.21)된 상태라 UI prefab/Scene 구조 lock 시 즉시 godot-dev 구현 진입 가능. **Option 1 motion lock** (사용자 confirm 2026-05-31, Godot AnimationPlayer Transform animation only, frame art 추가 0건)을 모든 motion 컴포넌트 (Knife indicator / Tool sprite / Kitchen rack arc)에 일관 적용 → low cost + GDScript only ADR-004 정합.
+- **결과/다음 단계**:
+  - **godot-dev M2 sprint 후속 (즉시 구현 가능)**:
+    - 신규 Scene 7종 생성: `scenes/ui/cutting_board.tscn` (CP-18) / `scenes/ui/knife_indicator.tscn` (CP-19) / `scenes/ui/tool_sprite.tscn` (CP-20) / `scenes/ui/timing_bar.tscn` (CP-21) / `scenes/ui/kitchen_rack.tscn` (CP-22) / `scenes/scene_2_kitchen.tscn` (root composition) / `scripts/ui/scene2_transition.gd` (Stage 2A↔2B↔2C controller).
+    - 신규 Resource 스키마 2종: `resources/cut_style/{cut_id}.tres` (CutStyleResource — bpm / tap_count / cut_sprite_id / audio_id) + `resources/cooking_tool/{tool_id}.tres` (CookingToolResource — texture / display_name / audio_id / cooking_vfx_id) — game-designer D2 CSV 컬럼과 sync.
+    - 기존 `resources/food/{food_id}.tres` 확장 (D2 foods CSV prep_* 컬럼 import).
+    - AnimationPlayer keyframe 5종: "knife_loop" (Y position, BPM speed_scale) / "dock_motion" (Tween arc) / "halo_pulse" (Gold glow 1Hz) / "fade_in" (Kitchen rack) / "arc_to_marinade" (옹기 → marinade bowl).
+    - 의존 art lock 확인: CUT-00 + CUT-01~06 + TOOL-01~12 + ING-01~12 + ICUT-01~12 (49+ anchor, 모두 LOCK 완료) — 즉시 Sprite2D 노드 import 가능. **옹기 5종 (Kitchen rack)은 Post-M1 art-director pending** → MVP placeholder = ingredient_card.tscn 5개 mini 임시 사용.
+  - **art-director Post-M1 sprint**:
+    - 옹기 5종 individual sprite (간장 옹기 / 고추장 옹기 / 설탕 단지 / 참기름 호리병 / 소금 항아리) — CP-22 Kitchen rack 시각 identity lock 후 swap.
+    - 양념재우기 손 sprite (motion-spec.md §3.3 hand_marinade + §3.10 corndog_batter_bowl 미니 sprint와 합쳐서 진행) — 현재 MVP fallback은 CP-19 칼 motion 재사용.
+  - **qa-tester M2 후반 sprint**:
+    - Scene 2 transition timing 검증 (2A→2B 1.0s slide, 2B→2C 0.3s fade, 2C→Scene3 1.5s).
+    - Stage 2A Knife indicator BPM 60~140 전 range에서 perfect ±80ms hit 가능한지 검증 (D3 balance-config v0.4 BPM lock 후).
+    - one-thumb zone 도달 검증 (Stage 2A 도마 / Stage 2B 카드 / Stage 2C tap area 모두 Y 1100~1700).
+    - Kitchen rack interactive X 검증 (사용자 탭 무반응 확인).
+    - 양념재우기 variant (불고기 / 갈비구이) Kitchen rack arc motion 시각 검증.
+  - **pm 후속**:
+    - **확인 사안 8건** (scene-2-kitchen-layout §6): CH-01 표시 ON/OFF default / 양념재우기 손 sprite vs 칼 fallback / Stage 2B 카드 수 / cook_time_sec / Stage 2A miss tap 처리 / Kitchen rack 옹기 sprite / Scene 2→3 transition timing / Stage 2B 오답 자동 배치 UX.
+- **패치 파일**:
+  - `docs/ui/scene-2-kitchen-layout.md` — **신설 v0.1** (Stage 2A/2B/2C layout detail)
+  - `docs/ui/components.md` — v0.2 → **v0.3** (CP-18~22 5종 신설, §5 deprecation alias, §16 Z-order 갱신, CP-06~10 Decisions, Confirm #6~10)
+  - `docs/ui/screen-flow.md` — v0.1 → **v0.3** (§2 4-stage 다이어그램, §2.1 광고 표, §4 Scene 2 sub-flow 전면 재작성, §6.1A Kitchen rack, §6.2 액션바, §7 전이 매트릭스, SF-07~10 Decisions)
+  - `CHANGELOG.md` — 본 entry
+
+---
+
+## [2026-05-31] M2 prerequisite design sprint — D1 motion-spec.md 신설 + D2 foods CSV prep_* 4 컬럼 + D3 balance-config v0.4 BPM 본격 + D4 ingredients cut_variations + basic_pantry 5 row 검증
+
+- **무엇** (game-designer 4 트랙 묶음 sprint):
+  - **D1 motion-spec.md v0.1 신설** (`docs/systems/motion-spec.md`) — ADR-005 Stage 2A/2B/2C tool animation 본격 spec. 12 음식 × 3 stage × 도구 × motion 매핑 (§2 main 표). 9종 AnimationPlayer keyframe spec (§3.1 칼 down-stroke / §3.2 주걱 stir / §3.3 손바닥 marinade press / §3.4 가위 post-launch / §3.5 뒤집개 flip post-launch / §3.6 국자 scoop / §3.7 집게 grip-and-lift / §3.8 김발 roll / §3.9 그릇+주걱 bibim orbit / §3.10 콘도그 batter dip). BPM ↔ cut style ↔ hero ingredient cross-reference (§4). godot-dev 단계적 sprint plan W1~W5+ (§5.3). 사용자 confirm 8건 (§6). **Option 1 motion lock** (사용자 명시 2026-05-31): Godot AnimationPlayer Transform animation only, frame art 추가 0건. 재료 변화 = whole sprite fade-out → cut sprite fade-in.
+  - **D1 cooking-mechanics.md v0.6 → v0.7** — §X Motion Spec cross-ref 신설. 본격 spec은 motion-spec.md 분리, 본 문서는 mechanic 룰 + motion 영역 참조만. Asset path 의존성 표 (M1 LOCK 출처 + art-director 미니 sprint 2건 권고: hand_marinade + corndog_batter_bowl).
+  - **D2 foods-database.csv prep_* 4 컬럼 신설** — 헤더에 `prep_ingredient_id` / `prep_cut_style` / `prep_bpm` / `prep_taps` 4 컬럼 추가 + 12 음식 모두 row 값 lock. 라면 100 / 떡볶이 100 / 김밥 70 / 김치볶음밥 90 / 해물파전 110 / 콘도그 80 (dip) / 잔치국수 110 / 비빔밥 115 / 잡채 120 / 갈비구이 140 / 순두부찌개 80 / 불고기 60 (marinade).
+  - **D2 ingredients-database.csv cut_variations 컬럼 신설** — 헤더에 `cut_variations` 컬럼 추가 (콤마 구분, 예: `CUT-05;CUT-03` = 대파는 송송 + 어슷 둘 다). 41 row 모두 매핑 — primary cut hero + 디자인 대안 cut + cut 메커닉 X (whole 그대로 사용) 명시. basic_pantry 5종 모두 cut_variations 빈 값 (cut 메커닉 X).
+  - **D4 basic_pantry 5 row 검증** — 이미 v0.6 C-2 lock 시점에 ingredients CSV에 5 row 모두 존재 (ing_x_003 간장 / ing_x_004 고추장 / ing_x_005 설탕 / ing_x_006 참기름 / ing_x_007 소금). 본 sprint D4는 신규 row 추가가 아닌 cut_variations 컬럼 + used_in_foods 매핑 정합성 검증 (간장 = F-06/08/10/12/14 5음식 / 고추장 = F-03/08 / 설탕 = F-07/12/14 / 참기름 = F-10/12/14 / 소금 = implicit_all).
+  - **D3 balance-config.md v0.3.3 → v0.4** — §7.1 음식별 prep_bpm 12음식 전체 매핑 본격 lock (v0.3.2 placeholder 2개 → v0.4 본격 12/12). BPM 분포 검증 표 (T1 평균 94.3 / T2 평균 103). Cut style 8 카테고리 모두 노출 검증 (송송 3 / 채썰기 2 / 통썰기 2 / 어슷 1 / 깍둑 1 / 다지기 1 / 양념재우기 1 / dip substitute 1). Tap 수 분포 점진 ramp 검증 (T1 3~5 / T2 5~6). Stage 2C 보조 cook 행위 BPM 표 신설 (시각 ambient 용도). §7.2 사용자 confirm 4건. §11 #9 ADR-005 음식별 prep lock open 해소.
+  - **패치 파일 5종 + 신설 1종**:
+    - `docs/systems/motion-spec.md` **신설** v0.1 (D1)
+    - `docs/systems/cooking-mechanics.md` v0.6 → **v0.7** (D1 §X)
+    - `docs/foods-database.csv` (D2 prep_* 4 컬럼)
+    - `docs/ingredients-database.csv` (D2 cut_variations + D4 basic_pantry 검증)
+    - `docs/balance-config.md` v0.3.3 → **v0.4** (D3 본격)
+    - `CHANGELOG.md` — 본 entry
+- **왜**:
+  - M1 art sprint 71 anchor LOCK 완료 후 M2 gameplay code sprint 진입 prerequisite.
+  - **godot-dev가 즉시 implementation 시작 가능한 수준**으로 design 본격 lock: 12 음식 × Stage × 도구 × motion + BPM + AnimationPlayer keyframe spec 완비.
+  - **Option 1 motion lock** (사용자 명시): Godot AnimationPlayer Transform animation만 — single sprite 회전/이동/스케일 keyframe으로 모든 motion 구현. frame 추가 art 0건 = M1 anchor 71 LOCK만으로 M2 sprint 진입 가능 (단, hand_marinade + corndog_batter_bowl 2 sprite 미니 추가 권고).
+  - **balance-config v0.4 본격 BPM**은 ADR-005 §7 BPM by Tier high-level → 12음식 본격 lock의 maturity 단계. game-designer open question #9 해소.
+- **결과/다음 단계**:
+  - **godot-dev 후속 implementation 의존성 (M2 W1~W5+)**:
+    1. **W1**: `stage_2a_knife_indicator.tscn` + `tool_animations.tres` (칼 down-stroke keyframe §3.1) + 라면 (100 BPM × 4 taps) round 단독 end-to-end 검증
+    2. **W2**: Cut style 6 BPM 음식 11종 확장 + ingredient whole↔cut transition (fade-out/in)
+    3. **W3**: `stage_2a_marinade_indicator.tscn` (손바닥 marinade §3.3) + 불고기 round
+    4. **W4**: Stage 2C 도구 motion 6종 (stir / grip / orbit / dip / roll) + timing bar integration
+    5. **W5+**: 콘도그 batter dip chain (§3.10) + 김발 roll + 김밥 마무리 + alpha 검증
+  - **art-director 후속 미니 sprint 권고 (motion-spec asset gap)**:
+    1. `hand_marinade.png` single sprite (Cool Sage bg, transparent, ~$0.04, 1024×1024) — 불고기 Stage 2A 양념 마사지 손바닥
+    2. `corndog_batter_bowl.png` single sprite (~$0.04) — 콘도그 Stage 2A batter dip substitute
+    3. CUT-00 base anchor 활용 검토 — 양념재우기 시그니처 표현이 현재 base cutting_board만 표시되면, 별도 marinade 60 BPM cut anchor 신규 작성 트리거
+  - **사용자 confirm 필요 사안 (low priority, alpha 후 결정 가능)**:
+    1. 잔치국수 hero ingredient final lock (대파 송송 110 BPM·4 taps 권고 유지 vs 애호박 통썰기 70 BPM·3 taps — 정통 잔치국수 시그니처)
+    2. 불고기 multi-cut sub-sequence (양념재우기 단독 vs + 양파 채썰기 sequential)
+    3. 콘도그 Stage 2A dip substitute (칼 cut 메커닉 비적용 — 80 BPM × 3 taps batter dip lock 확인)
+    4. Stage 2C 보조 rhythm 메커닉 도입 시점 (cook BPM stir/grip/orbit)
+  - **M2 sprint kick-off ready**: godot-dev + ui-designer + game-designer alpha 검증 fan-out 가능.
+
+---
+
 ## [2026-05-31] M1 reaction 6컷 v3 코믹 amplification — v2 family IP LOCK 유지 + 표정 3축 강화
 - **무엇**: art-director가 사용자 v2 피드백 "reaction을 코믹하게 만드는게 어때? 지금 reaction 이미지는 너무 심심해" trigger로 reaction 6컷 v3 image edit driver 신설 + prompts-library v1.20 → v1.21 + art-anchor-rubric v1.20 → v1.21 갱신. v2 family IP consistency LOCK 유지 + 코믹 amplification 3축 (눈/입/body+icons) 강화.
 - **왜**: v2는 image edit API로 어머니/아버지 family IP consistency PASS 했으나, subtle smile / big smile / single-double thumb-up gradient가 점잖아서 player가 ★1/★2/★3 차이를 즉시 체감 못함. "Korean variety show / K-drama exaggerated reaction" 톤 부재.
