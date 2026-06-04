@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://d8a2al1yg49ta"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_g_002"
+name_ko = "밥"
+name_en = "Cooked Rice"
+store_type = &"grain"
+used_in_foods = Array[StringName]([&"t1_004", &"t1_005", &"t2_008"])
+is_distractor_friendly = true
+distractor_weight = 2
+is_basic_pantry = false
+cut_variations = Array[StringName]([])
+notes = "김밥/볶음밥/비빔밥 공용; cut 없음 (whole 밥)"

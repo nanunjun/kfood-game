@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://bspqy6gock4pb"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_m_002"
+name_ko = "햄"
+name_en = "Ham"
+store_type = &"meat"
+used_in_foods = Array[StringName]([&"t1_004", &"t1_005"])
+is_distractor_friendly = true
+distractor_weight = 2
+is_basic_pantry = false
+cut_variations = Array[StringName]([&"CUT-02", &"CUT-06"])
+notes = "김밥/볶음밥 공용; 소시지와 디스트랙터 페어; 채썰기 CUT-02 (김밥 strip) + 깍둑썰기 CUT-06 (볶음밥 cube)"

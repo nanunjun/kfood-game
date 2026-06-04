@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://wr8tpg5ckwnfd"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_s_001"
+name_ko = "김"
+name_en = "Dried Seaweed"
+store_type = &"seafood"
+used_in_foods = Array[StringName]([&"t1_004", &"t1_008"])
+is_distractor_friendly = true
+distractor_weight = 2
+is_basic_pantry = false
+cut_variations = Array[StringName]([])
+notes = "김밥 외피; 잔치국수 고명 (N-1 sync 2026-05-30); 어물전 SKU; cut 없음 (가위 자르기 post-launch 후보)"

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://x1uylrxya2qna"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_s_003"
+name_ko = "오징어"
+name_en = "Squid"
+store_type = &"seafood"
+used_in_foods = Array[StringName]([&"t1_006"])
+is_distractor_friendly = true
+distractor_weight = 2
+is_basic_pantry = false
+cut_variations = Array[StringName]([&"CUT-04"])
+notes = "해물파전 사용자 명시; 통썰기 CUT-04 (ring slice)"

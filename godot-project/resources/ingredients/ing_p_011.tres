@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://euekwxtn2udbc"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_p_011"
+name_ko = "호박"
+name_en = "Korean Zucchini"
+store_type = &"produce"
+used_in_foods = Array[StringName]([&"t2_013"])
+is_distractor_friendly = true
+distractor_weight = 2
+is_basic_pantry = false
+cut_variations = Array[StringName]([&"CUT-04", &"CUT-03"])
+notes = "순두부찌개 채소; 애호박; 호박색 변별; 통썰기 CUT-04 hero (M2-D2 lock 80 BPM·4 taps) + 어슷썰기 CUT-03 대안"

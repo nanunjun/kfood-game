@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FoodDefinition" load_steps=2 format=3 uid="uid://eya60o1cw2dka"]
+
+[ext_resource type="Script" uid="uid://tmwmc37kgdsy" path="res://scripts/resources/food_definition.gd" id="1_food"]
+
+[resource]
+script = ExtResource("1_food")
+food_id = &"t1_006"
+name_ko = "해물파전"
+name_en = "Haemul Pajeon"
+tier = 1
+servings = 1
+store_count = 4
+primary_cooking_method = &"panfry"
+secondary_method = &""
+cook_time_sec = 14.0
+perfect_window_ms = 950.0
+difficulty_score = 3
+visual_appeal_score = 5
+recognition_score = 4
+ad_trigger_priority = "high"
+prep_ingredient_id = &"ing_p_002"
+prep_cut_style = &"CUT-05"
+prep_bpm = 110
+prep_taps = 5
+correct_method_id = &"panfry"
+method_options = Array[StringName]([&"panfry", &"deepfry", &"stirfry"])
+notes = "어물전 3SKU 동시 등장; 단일 탭 부치기(MVP); flip mechanic: post-launch (C-3 lock 2026-05-24); Stage 2A 쪽파 송송썰기 CUT-05 110 BPM·5 taps (M2-D2 lock); Stage 2B method_options B1 lock 2026-05-31"

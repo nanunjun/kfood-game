@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://lsvpjxoq3r0yc"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_p_006"
+name_ko = "배"
+name_en = "Korean Pear"
+store_type = &"produce"
+used_in_foods = Array[StringName]([&"t2_012", &"t2_014"])
+is_distractor_friendly = false
+distractor_weight = 1
+is_basic_pantry = false
+cut_variations = Array[StringName]([&"CUT-02"])
+notes = "갈비 양념(연육) + 불고기 양념(연육·단맛) — 사용자 명시 재료; 채썰기 CUT-02 후보"

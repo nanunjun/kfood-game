@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FoodDefinition" load_steps=2 format=3 uid="uid://h2veaczd3w9da"]
+
+[ext_resource type="Script" uid="uid://tmwmc37kgdsy" path="res://scripts/resources/food_definition.gd" id="1_food"]
+
+[resource]
+script = ExtResource("1_food")
+food_id = &"t1_004"
+name_ko = "김밥"
+name_en = "Kimbap"
+tier = 1
+servings = 1
+store_count = 5
+primary_cooking_method = &"roll"
+secondary_method = &""
+cook_time_sec = 4.0
+perfect_window_ms = 1500.0
+difficulty_score = 2
+visual_appeal_score = 4
+recognition_score = 5
+ad_trigger_priority = "med"
+prep_ingredient_id = &"ing_x_008"
+prep_cut_style = &"CUT-04"
+prep_bpm = 70
+prep_taps = 3
+correct_method_id = &"roll"
+method_options = Array[StringName]([&"roll", &"mix", &"boil"])
+notes = "5가게 풀 순회 쇼케이스; no-cook 말기 타이밍; Stage 2A 단무지 통썰기 CUT-04 70 BPM·3 taps (M2-D2 lock, T1 가장 느린 BPM 입문 부드러움); Stage 2B method_options B1 lock 2026-05-31"

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://hz4ov9rjkd9eb"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_x_005"
+name_ko = "설탕"
+name_en = "Sugar"
+store_type = &"pantry"
+used_in_foods = Array[StringName]([&"t1_007", &"t2_012", &"t2_014"])
+is_distractor_friendly = false
+distractor_weight = 0
+is_basic_pantry = true
+cut_variations = Array[StringName]([])
+notes = "**basic_pantry LOCK 2026-05-30 (C-2)** — kitchen rack 자동 제공, Stage 1 진열대 미표시. 콘도그 코팅/갈비 양념/불고기 양념. accuracy_ingredients 분모 N에서 제외; cut 메커닉 X (양념재우기 시 marinade에 자동 흘러 들어감)"

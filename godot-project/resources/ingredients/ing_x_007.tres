@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://b61u24y5mj0hb"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_x_007"
+name_ko = "소금"
+name_en = "Salt"
+store_type = &"pantry"
+used_in_foods = Array[StringName]([&"implicit_all"])
+is_distractor_friendly = false
+distractor_weight = 0
+is_basic_pantry = true
+cut_variations = Array[StringName]([])
+notes = "**basic_pantry LOCK 2026-05-30 (C-2 신규 row)** — kitchen rack 자동 제공 기본 base seasoning. used_in_foods=implicit_all (모든 음식에 implicit base, foods CSV에 명시 X). accuracy_ingredients 분모 N에서 제외. ing_x_007 reassigned (이전 깨 row는 ing_x_019로 이동); cut 메커닉 X"

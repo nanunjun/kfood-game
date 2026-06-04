@@ -29,8 +29,15 @@ extends Resource
 ## 디스트랙터로 사용 가능한지 여부 (true면 다른 음식 Round에서 오답 후보로 등장).
 @export var is_distractor_friendly: bool = false
 
-## 디스트랙터 가중치 (1=가끔 ~ 3=자주). 1=레어, 3=한식 base.
-@export_range(1, 3, 1) var distractor_weight: int = 1
+## 디스트랙터 가중치 (0=비노출/basic_pantry ~ 3=자주). 0=basic_pantry(시장 미표시), 1=레어, 3=한식 base.
+@export_range(0, 3, 1) var distractor_weight: int = 1
+
+## 기본 양념 여부 (ADR-007). true면 Stage 1 시장 진열대 제외 + Scene 2 Kitchen rack 자동 표시 +
+## accuracy_ingredients 분모에서 차감. basic_pantry 5종: 간장/고추장/설탕/참기름/소금.
+@export var is_basic_pantry: bool = false
+
+## 손질 variation 토큰 목록 (예: [&"CUT-05", &"CUT-03"]). 빈 배열이면 cut 메커닉 비적용(whole 사용).
+@export var cut_variations: Array[StringName] = []
 
 ## 디자이너 메모 (페어, 디스트랙터 hint 등).
 @export_multiline var notes: String = ""

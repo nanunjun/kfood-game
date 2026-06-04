@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://sos8cw2l941ed"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_x_004"
+name_ko = "고추장"
+name_en = "Gochujang"
+store_type = &"pantry"
+used_in_foods = Array[StringName]([&"t1_003", &"t2_008"])
+is_distractor_friendly = false
+distractor_weight = 0
+is_basic_pantry = true
+cut_variations = Array[StringName]([])
+notes = "**basic_pantry LOCK 2026-05-30 (C-2)** — kitchen rack 자동 제공, Stage 1 진열대 미표시. 떡볶이/비빔밥; 간장과 옹기 디스트랙터 페어. accuracy_ingredients 분모 N에서 제외; cut 메커닉 X"

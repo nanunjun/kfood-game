@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FoodDefinition" load_steps=2 format=3 uid="uid://fzgmt66mo9byb"]
+
+[ext_resource type="Script" uid="uid://tmwmc37kgdsy" path="res://scripts/resources/food_definition.gd" id="1_food"]
+
+[resource]
+script = ExtResource("1_food")
+food_id = &"t2_012"
+name_ko = "갈비구이"
+name_en = "Galbi-gui"
+tier = 2
+servings = 2
+store_count = 3
+primary_cooking_method = &"grill"
+secondary_method = &""
+cook_time_sec = 18.0
+perfect_window_ms = 650.0
+difficulty_score = 5
+visual_appeal_score = 5
+recognition_score = 5
+ad_trigger_priority = "high"
+prep_ingredient_id = &"ing_p_005"
+prep_cut_style = &"CUT-01"
+prep_bpm = 140
+prep_taps = 6
+correct_method_id = &"grill"
+method_options = Array[StringName]([&"grill", &"panfry", &"deepfry", &"boil"])
+notes = "MVP 최고 난도; 사용자 명시 타이밍 핵심; PERFECT 좁음(4~7%); Korean BBQ iconic; Stage 2A 마늘 다지기 CUT-01 140 BPM·6 taps (M2-D2 lock, T2 최고 BPM = 타이밍 핵심 정합); Stage 2B method_options B1 lock 2026-05-31"

@@ -9,7 +9,6 @@
 ## 참조:
 ##   - docs/balance-config.md v0.2 §2 (Remote Config 키 catalog)
 ##   - docs/GDD.md (A/B 테스트 정책)
-class_name RemoteConfigManager
 extends Node
 
 ## Remote Config 키 상수 — balance-config.md v0.2 §2 sync.

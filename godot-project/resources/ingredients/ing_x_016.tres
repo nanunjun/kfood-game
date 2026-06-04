@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://btbqfhzoe7q9a"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_x_016"
+name_ko = "순두부"
+name_en = "Soft Tofu"
+store_type = &"sundry"
+used_in_foods = Array[StringName]([&"t2_013"])
+is_distractor_friendly = false
+distractor_weight = 3
+is_basic_pantry = false
+cut_variations = Array[StringName]([])
+notes = "순두부찌개 핵심; 두부(deprecated ing_x_009)와 시각 디스트랙터 페어 — but 두부 제거됨(N-2 김치찌개 supersede)으로 단독 SKU로 진화; 잡화 분류 (실 매장은 두부집/잡화 공용); cut 없음 (whole soft tofu, 끓일 때 자연 분쇄)"

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FoodDefinition" load_steps=2 format=3 uid="uid://v0tn4zaluvnnd"]
+
+[ext_resource type="Script" uid="uid://tmwmc37kgdsy" path="res://scripts/resources/food_definition.gd" id="1_food"]
+
+[resource]
+script = ExtResource("1_food")
+food_id = &"t1_005"
+name_ko = "김치볶음밥"
+name_en = "Kimchi Fried Rice"
+tier = 1
+servings = 1
+store_count = 4
+primary_cooking_method = &"stirfry"
+secondary_method = &""
+cook_time_sec = 10.0
+perfect_window_ms = 1000.0
+difficulty_score = 3
+visual_appeal_score = 3
+recognition_score = 4
+ad_trigger_priority = "med"
+prep_ingredient_id = &"ing_x_010"
+prep_cut_style = &"CUT-06"
+prep_bpm = 90
+prep_taps = 4
+correct_method_id = &"stirfry"
+method_options = Array[StringName]([&"stirfry", &"boil", &"panfry"])
+notes = "냉장고 털이 정서; 볶기 조리법 데뷔; Stage 2A 김치 깍둑썰기 CUT-06 90 BPM·4 taps (M2-D2 lock); Stage 2B method_options B1 lock 2026-05-31"

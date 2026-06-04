@@ -6,7 +6,6 @@
 ## 참조:
 ##   - docs/systems/cooking-mechanics.md (게임 루프 정의)
 ##   - project.godot [autoload] 등록 마지막 (의존 manager들이 먼저 init)
-class_name GameManager
 extends Node
 
 ## 현재 세션 시작 시각 (Unix ts, ms).

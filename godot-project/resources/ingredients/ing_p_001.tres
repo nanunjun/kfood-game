@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://w9t23f783ub9a"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_p_001"
+name_ko = "파"
+name_en = "Green Onion"
+store_type = &"produce"
+used_in_foods = Array[StringName]([&"t1_002", &"t1_003", &"t1_005", &"t1_006", &"t1_008", &"t2_013", &"t2_014"])
+is_distractor_friendly = true
+distractor_weight = 3
+is_basic_pantry = false
+cut_variations = Array[StringName]([&"CUT-05", &"CUT-03"])
+notes = "쪽파(t1_006 별도)와 시각 유사; 한식 base; 잔치국수 송송썰기 hero CUT-05 (N-1 sync 2026-05-30); 불고기 대파 (N-2 sync 2026-05-30); cut_variations=송송썰기 CUT-05 (라면·해물파전·잔치국수 primary) + 어슷썰기 CUT-03 (불고기 garnish)"

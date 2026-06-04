@@ -1,0 +1,14 @@
+menu_id,name_en,name_kr,intro_en,seasonings,dish_best,dish_2nd,dish_bad,guest_id,unlock_level,food_img,ready,phases
+t1_002,Ramyeon,라면,Korean instant noodle soup,soup:salty:5|gochugaru:spicy:5,pot_metal,bowl_ceramic,pot_stone,junho,1,res://art/sprites/food/t1_002.png,1,chop|boil|season
+t1_004,Gimbap,김밥,seaweed rice rolls,sogeum:salty:4|chamgireum:umami:4,board_wood,plate_wide,pot_clay,mrs_lee,1,res://art/sprites/food/t1_004.png,1,chop|roll
+t1_003,Tteokbokki,떡볶이,spicy rice cakes,gochujang:spicy:5|seoltang:sweet:5,plate_wide,pot_metal,bowl_brass,mina,2,res://art/sprites/food/t1_003.png,1,chop|stirfry|season
+t1_008,Janchi Guksu,잔치국수,warm anchovy noodle soup,gukganjang:salty:4|yuksu:umami:5,bowl_ceramic,pot_metal,pot_stone,mrs_lee,3,res://art/sprites/food/t1_008.png,1,chop|boil
+m_kimchi_jjigae,Kimchi Stew,김치찌개,kimchi simmered stew,gochugaru:spicy:6|seoltang:sweet:3,pot_clay,pot_metal,bowl_glass,junho,4,res://art/sprites/food/m_kimchi_jjigae.png,0,chop|boil|season
+t2_008,Bibimbap,비빔밥,mixed rice bowl,gochujang:spicy:5|chamgireum:umami:4,pot_stone,bowl_brass,bowl_glass,riley,4,res://art/sprites/food/t2_008.png,1,chop|boil|knead
+m_doenjang_jjigae,Doenjang Stew,된장찌개,soybean paste stew,doenjang:salty:5|gochugaru:spicy:3,pot_clay,bowl_ceramic,bowl_glass,seoyeon,5,res://art/sprites/food/m_doenjang_jjigae.png,0,chop|boil|season
+t2_010,Japchae,잡채,stir-fried glass noodles,ganjang:salty:5|seoltang:sweet:5,plate_wide,bowl_brass,pot_clay,mina,5,res://art/sprites/food/t2_010.png,1,chop|boil|stirfry|season
+t2_014,Bulgogi,불고기,marinated grilled beef,ganjang:salty:5|seoltang:sweet:5,bowl_brass,bowl_ceramic,bowl_glass,seoyeon,6,res://art/sprites/food/t2_014.png,1,chop|stirfry
+t1_006,Haemul Pajeon,해물파전,seafood scallion pancake,sogeum:salty:4|chojanga:sour:4,plate_wide,board_wood,pot_clay,riley,7,res://art/sprites/food/t1_006.png,1,chop|panfry
+m_maeuntang,Spicy Fish Stew,매운탕,spicy fish stew,gochugaru:spicy:6|gukganjang:salty:4,pot_clay,bowl_ceramic,bowl_glass,junho,7,res://art/sprites/food/m_maeuntang.png,0,chop|boil|season
+t2_013,Sundubu Jjigae,순두부찌개,soft tofu stew,gochugaru:spicy:6|saeujeot:salty:4,pot_clay,bowl_brass,bowl_glass,seoyeon,8,res://art/sprites/food/t2_013.png,1,chop|boil|season
+

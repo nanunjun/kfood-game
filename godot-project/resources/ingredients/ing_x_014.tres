@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://gs5aqmo326ipd"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_x_014"
+name_ko = "모짜렐라"
+name_en = "Mozzarella"
+store_type = &"sundry"
+used_in_foods = Array[StringName]([&"t1_007"])
+is_distractor_friendly = false
+distractor_weight = 2
+is_basic_pantry = false
+cut_variations = Array[StringName]([])
+notes = "한국식 콘도그 hybrid 시그니처; cut 없음 (whole stick or shredded, 콘도그 stage 2A는 batter dip substitute)"

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://czyxxjo799ybb"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_x_019"
+name_ko = "깨"
+name_en = "Sesame Seed"
+store_type = &"sundry"
+used_in_foods = Array[StringName]([&"t2_012"])
+is_distractor_friendly = true
+distractor_weight = 1
+is_basic_pantry = false
+cut_variations = Array[StringName]([])
+notes = "갈비 마무리 garnish (ID re-mapped from ing_x_007 → ing_x_019 on 2026-05-30 due to 소금 basic_pantry 신규 row가 ing_x_007 차지); cut 없음 (whole seed sprinkle)"

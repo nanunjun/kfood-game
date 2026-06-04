@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://b222rk688d58b"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_x_010"
+name_ko = "김치"
+name_en = "Kimchi"
+store_type = &"sundry"
+used_in_foods = Array[StringName]([&"t1_005", &"t2_013"])
+is_distractor_friendly = false
+distractor_weight = 3
+is_basic_pantry = false
+cut_variations = Array[StringName]([&"CUT-06"])
+notes = "한식 시그니처; 옹기 핵심; 순두부찌개 매운 베이스; 김치찌개 t2_009 used_in_foods 제거 (N-2 2026-05-30) — 김치볶음밥+순두부찌개 유지; 깍둑썰기 CUT-06 hero (M2-D2 lock 김치볶음밥 90 BPM·4 taps)"

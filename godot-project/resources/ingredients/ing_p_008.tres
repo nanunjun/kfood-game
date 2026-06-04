@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://wrvdznk42msac"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_p_008"
+name_ko = "콩나물"
+name_en = "Bean Sprout"
+store_type = &"produce"
+used_in_foods = Array[StringName]([&"t2_008"])
+is_distractor_friendly = true
+distractor_weight = 2
+is_basic_pantry = false
+cut_variations = Array[StringName]([])
+notes = "비빔밥 식감; cut 없음 (whole 그대로 무침)"

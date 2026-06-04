@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://wu5sfbx9wamac"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_p_005"
+name_ko = "마늘"
+name_en = "Garlic"
+store_type = &"produce"
+used_in_foods = Array[StringName]([&"t2_012"])
+is_distractor_friendly = true
+distractor_weight = 2
+is_basic_pantry = false
+cut_variations = Array[StringName]([&"CUT-01"])
+notes = "갈비 양념 통마늘; 다지기 CUT-01 hero (M2-D2 lock, 140 BPM × 6 taps)"

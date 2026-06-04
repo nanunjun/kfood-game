@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="StoreDefinition" load_steps=2 format=3 uid="uid://bmiweau0gqlma"]
+
+[ext_resource type="Script" uid="uid://pxco5klnk05r" path="res://scripts/resources/store_definition.gd" id="1_store"]
+
+[resource]
+script = ExtResource("1_store")
+store_id = &"seafood"
+name_ko = "어물전"
+signature_color = Color(0.250, 0.550, 0.800, 1.000)

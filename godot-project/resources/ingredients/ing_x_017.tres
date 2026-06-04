@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://btp6cyja0bcka"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_x_017"
+name_ko = "고춧가루"
+name_en = "Red Pepper Powder"
+store_type = &"sundry"
+used_in_foods = Array[StringName]([&"t2_013"])
+is_distractor_friendly = true
+distractor_weight = 2
+is_basic_pantry = false
+cut_variations = Array[StringName]([])
+notes = "순두부찌개 매운맛; 고추장과 색감 페어; 가루 클러스터 (부침가루 cross-store 페어); cut 없음 (가루)"

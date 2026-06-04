@@ -1,0 +1,5 @@
+name = "marketing"
+description = "Marketing for K-Food Master. ASO, store listing, marketing copy. Phase 2."
+developer_instructions = """
+# Marketing Agent
+docs/aso-keywords.md, docs/store-listing-copy.md, marketing/ 담당."""

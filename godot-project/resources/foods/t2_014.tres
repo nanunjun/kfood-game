@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FoodDefinition" load_steps=2 format=3 uid="uid://df3i53q9tpjva"]
+
+[ext_resource type="Script" uid="uid://tmwmc37kgdsy" path="res://scripts/resources/food_definition.gd" id="1_food"]
+
+[resource]
+script = ExtResource("1_food")
+food_id = &"t2_014"
+name_ko = "불고기"
+name_en = "Bulgogi"
+tier = 2
+servings = 2
+store_count = 3
+primary_cooking_method = &"marinate"
+secondary_method = &"stirfry"
+cook_time_sec = 16.0
+perfect_window_ms = 900.0
+difficulty_score = 4
+visual_appeal_score = 5
+recognition_score = 5
+ad_trigger_priority = "high"
+prep_ingredient_id = &"ing_m_007"
+prep_cut_style = &"MAR-00"
+prep_bpm = 60
+prep_taps = 3
+correct_method_id = &"stirfry"
+method_options = Array[StringName]([&"stirfry", &"grill", &"boil", &"panfry"])
+notes = "N-2 lock 2026-05-30 (김치찌개 t2_009 supersede); K-BBQ 시그니처; Stage 2A 양념재우기 MAR-00 marinade rhythm 60 BPM·3 taps (M2-D2 lock — ADR-005 §7 양념재우기 시그니처 음식); hero ingredient=얇은 소고기 + 양념 마사지 (손바닥 + marinade bowl motion-spec §3.3); 부 hero=양파 채썰기 CUT-02 115 BPM·4 taps multi-cut sub-sequence 후보 (alpha 후 결정); prep_cut_style=MAR-00 토큰 분리 2026-05-31; Stage 2B 정답=stirfry (marinate는 Stage 2A 소화); method_options B1 lock 2026-05-31"

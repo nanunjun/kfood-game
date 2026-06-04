@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://dv82nmhj120oi"]
+
+[ext_resource type="Script" path="res://scripts/gameplay/round_controller.gd" id="1_rc"]
+
+[node name="RoundDemo" type="Node2D"]
+script = ExtResource("1_rc")

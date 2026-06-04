@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://o9o2dljk7b5sc"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_x_008"
+name_ko = "단무지"
+name_en = "Pickled Radish"
+store_type = &"sundry"
+used_in_foods = Array[StringName]([&"t1_004"])
+is_distractor_friendly = true
+distractor_weight = 3
+is_basic_pantry = false
+cut_variations = Array[StringName]([&"CUT-04", &"CUT-02"])
+notes = "김밥 핵심; 어묵과 시각 디스트랙터 페어; 통썰기 CUT-04 hero (M2-D2 lock 70 BPM·3 taps, T1 가장 느린 BPM 입문 부드러움) + 채썰기 CUT-02 strip 대안"

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://tqiqb7fsgu74d"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_g_005"
+name_ko = "부침가루"
+name_en = "Pancake Mix"
+store_type = &"grain"
+used_in_foods = Array[StringName]([&"t1_006", &"t1_007"])
+is_distractor_friendly = true
+distractor_weight = 3
+is_basic_pantry = false
+cut_variations = Array[StringName]([])
+notes = "해물파전/콘도그 공용; (호떡 supersede로 밀가루 ing_g_004 제거 후 가루 클러스터 잔여); cut 없음 (가루); 콘도그 Stage 2A의 batter dip substitute (M2-D2 prep_ingredient_id 매핑)"

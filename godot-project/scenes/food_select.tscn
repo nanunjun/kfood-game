@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://cuf85qa0hgxv"]
+
+[ext_resource type="Script" path="res://scripts/ui/food_select.gd" id="1_fs"]
+
+[node name="FoodSelect" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+script = ExtResource("1_fs")

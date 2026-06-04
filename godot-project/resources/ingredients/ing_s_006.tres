@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://fw4jeg5oucs7c"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_s_006"
+name_ko = "멸치"
+name_en = "Anchovy"
+store_type = &"seafood"
+used_in_foods = Array[StringName]([&"t1_008", &"t2_013"])
+is_distractor_friendly = true
+distractor_weight = 3
+is_basic_pantry = false
+cut_variations = Array[StringName]([])
+notes = "순두부찌개 육수 + 잔치국수 육수 hero (N-1 신규 2026-05-30); 새우와 디스트랙터 페어; T2 어물전 floor +1 핵심 SKU + T1 어물전 floor 5 유지 핵심; cut 없음 (whole 마른 멸치)"

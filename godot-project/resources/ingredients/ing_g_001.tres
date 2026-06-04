@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://cxirb5kldvvrc"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_g_001"
+name_ko = "라면사리"
+name_en = "Ramyeon Noodle"
+store_type = &"grain"
+used_in_foods = Array[StringName]([&"t1_002"])
+is_distractor_friendly = false
+distractor_weight = 2
+is_basic_pantry = false
+cut_variations = Array[StringName]([])
+notes = "라면 핵심; cut 없음 (라면사리 그대로 끓이기, 파는 별도 ing_p_001 CUT-05 hero)"

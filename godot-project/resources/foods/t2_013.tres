@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FoodDefinition" load_steps=2 format=3 uid="uid://b40pd0gg7rbkb"]
+
+[ext_resource type="Script" uid="uid://tmwmc37kgdsy" path="res://scripts/resources/food_definition.gd" id="1_food"]
+
+[resource]
+script = ExtResource("1_food")
+food_id = &"t2_013"
+name_ko = "순두부찌개"
+name_en = "Sundubu Jjigae"
+tier = 2
+servings = 2
+store_count = 3
+primary_cooking_method = &"boil"
+secondary_method = &""
+cook_time_sec = 14.0
+perfect_window_ms = 950.0
+difficulty_score = 3
+visual_appeal_score = 4
+recognition_score = 5
+ad_trigger_priority = "med"
+prep_ingredient_id = &"ing_p_011"
+prep_cut_style = &"CUT-04"
+prep_bpm = 80
+prep_taps = 4
+correct_method_id = &"boil"
+method_options = Array[StringName]([&"boil", &"stirfry", &"panfry", &"grill"])
+notes = "C-2 lock 2026-05-24 (유지); T2 어물전 단독 책임(멸치 육수); 매운+담백 hybrid; N-2 sync 2026-05-30 (T2 끓이기 페어 김치찌개 supersede 후 T2 끓이기 단독); Stage 2A 호박 통썰기 CUT-04 80 BPM·4 taps (M2-D2 lock); Stage 2B method_options B1 lock 2026-05-31"

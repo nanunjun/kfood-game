@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://ss1f7el2da8ca"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_g_006"
+name_ko = "빵가루"
+name_en = "Bread Crumb"
+store_type = &"grain"
+used_in_foods = Array[StringName]([&"t1_007"])
+is_distractor_friendly = false
+distractor_weight = 1
+is_basic_pantry = false
+cut_variations = Array[StringName]([])
+notes = "콘도그 외피; cut 없음 (가루)"

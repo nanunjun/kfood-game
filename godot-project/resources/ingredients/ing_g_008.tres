@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://b2e0ifmbknrbb"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_g_008"
+name_ko = "소면"
+name_en = "Somen (White Wheat Noodle)"
+store_type = &"grain"
+used_in_foods = Array[StringName]([&"t1_008"])
+is_distractor_friendly = false
+distractor_weight = 3
+is_basic_pantry = false
+cut_variations = Array[StringName]([])
+notes = "잔치국수 hero ingredient (N-1 신규 2026-05-30); raw bundled or fresh-cooked thin white wheat noodle; 라면사리(ing_g_001) 및 당면(ing_g_007)과 곡물 면 디스트랙터 트리오 클러스터; art-director anchor 신규 작성 대상; cut 없음 (whole bundle, 파 ing_p_001 또는 애호박 ing_p_012가 cut hero)"

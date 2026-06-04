@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://onb56c60jvt8a"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_x_015"
+name_ko = "케첩"
+name_en = "Ketchup"
+store_type = &"sundry"
+used_in_foods = Array[StringName]([&"t1_007"])
+is_distractor_friendly = true
+distractor_weight = 1
+is_basic_pantry = false
+cut_variations = Array[StringName]([])
+notes = "콘도그 토핑 (선택); 디스트랙터로 자주 등장; cut 없음 (양념)"

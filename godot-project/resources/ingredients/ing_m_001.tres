@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://wbh00cwgahvqc"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_m_001"
+name_ko = "소시지"
+name_en = "Sausage"
+store_type = &"meat"
+used_in_foods = Array[StringName]([&"t1_007"])
+is_distractor_friendly = false
+distractor_weight = 2
+is_basic_pantry = false
+cut_variations = Array[StringName]([])
+notes = "콘도그 핵심; 한국식 콘도그는 소시지+모짜렐라 hybrid; 콘도그 Stage 2A는 cut 메커닉 X (반죽 dip substitute, motion-spec §3.10)"

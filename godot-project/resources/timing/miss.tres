@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="TimingDefinition" load_steps=2 format=3 uid="uid://z0o3o7hcc6y6c"]
+
+[ext_resource type="Script" uid="uid://cynrm1dfeq6bh" path="res://scripts/resources/timing_definition.gd" id="1_timing"]
+
+[resource]
+script = ExtResource("1_timing")
+band_id = &"miss"
+weight = 0.5
+accuracy_value = 0.2
+remote_config_key = "cooking.stage3.band_distribution"

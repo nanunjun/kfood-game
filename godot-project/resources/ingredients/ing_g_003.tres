@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://qcruo1kn716uc"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_g_003"
+name_ko = "떡"
+name_en = "Tteok (Rice Cake)"
+store_type = &"grain"
+used_in_foods = Array[StringName]([&"t1_003"])
+is_distractor_friendly = false
+distractor_weight = 3
+is_basic_pantry = false
+cut_variations = Array[StringName]([&"CUT-04"])
+notes = "떡볶이 핵심; 흰 윤기; 통썰기 CUT-04 (가래떡 단면 slice) — 디자인 대안 (어묵 ing_s_002가 primary cut hero)"

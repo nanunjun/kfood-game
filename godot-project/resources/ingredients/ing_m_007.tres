@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://p6d8cbstq2ywb"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_m_007"
+name_ko = "얇은 소고기"
+name_en = "Thin-Sliced Beef"
+store_type = &"meat"
+used_in_foods = Array[StringName]([&"t2_014"])
+is_distractor_friendly = false
+distractor_weight = 3
+is_basic_pantry = false
+cut_variations = Array[StringName]([&"CUT-00"])
+notes = "불고기 hero ingredient (N-2 신규 2026-05-30); thin-sliced marbled sirloin fanned arrangement; 소고기(ing_m_004)와 시각 디스트랙터 페어 — 다짐 vs 얇은 슬라이스 변별; art-director anchor 신규 작성 대상; CUT-00 양념재우기 marinade rhythm hero (M2-D2 lock 60 BPM·3 taps)"

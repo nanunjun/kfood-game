@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CookingMethodDefinition" load_steps=2 format=3 uid="uid://bsnp1ajnld0ud"]
+
+[ext_resource type="Script" uid="uid://c16ntsi703r1k" path="res://scripts/resources/cooking_method_definition.gd" id="1_method"]
+
+[resource]
+script = ExtResource("1_method")
+method_id = &"stirfry"
+name_ko = "볶기"
+name_en = "Stir-fry"
+default_perfect_window_ms = 1000.0
+default_cook_time_sec = 10.0

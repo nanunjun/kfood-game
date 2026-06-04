@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://fhwj8wcg6g95c"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_p_003"
+name_ko = "양파"
+name_en = "Onion"
+store_type = &"produce"
+used_in_foods = Array[StringName]([&"t1_003", &"t1_006", &"t2_010", &"t2_014"])
+is_distractor_friendly = true
+distractor_weight = 3
+is_basic_pantry = false
+cut_variations = Array[StringName]([&"CUT-02", &"CUT-06"])
+notes = "한식 base; 잡채/떡볶이/해물파전 공용; 불고기 채썰기 CUT-02 부 hero (N-2 신규 2026-05-30); 김치찌개 t2_009 used_in_foods 제거; cut_variations=채썰기 CUT-02 (잡채·불고기) + 깍둑썰기 CUT-06 (떡볶이·해물파전 비주얼 다양화)"

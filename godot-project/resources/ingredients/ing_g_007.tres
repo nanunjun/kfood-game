@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://b3m9dx45tvf4d"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_g_007"
+name_ko = "당면"
+name_en = "Glass Noodle"
+store_type = &"grain"
+used_in_foods = Array[StringName]([&"t2_010"])
+is_distractor_friendly = false
+distractor_weight = 3
+is_basic_pantry = false
+cut_variations = Array[StringName]([])
+notes = "잡채 핵심; 곡물 단독 SKU; cut 없음 (당면 그대로 불려 볶기, 당근 ing_p_009 CUT-02가 primary cut hero)"

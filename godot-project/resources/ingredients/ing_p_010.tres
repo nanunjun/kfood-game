@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://fs06og0101rza"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_p_010"
+name_ko = "표고버섯"
+name_en = "Shiitake"
+store_type = &"produce"
+used_in_foods = Array[StringName]([&"t2_010", &"t2_014"])
+is_distractor_friendly = false
+distractor_weight = 1
+is_basic_pantry = false
+cut_variations = Array[StringName]([&"CUT-02"])
+notes = "잡채/불고기 깊은 맛 (N-2 sync 2026-05-30); 채썰기 CUT-02"

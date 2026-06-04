@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://bjdjytgkpk1kd"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_x_001"
+name_ko = "계란"
+name_en = "Egg"
+store_type = &"sundry"
+used_in_foods = Array[StringName]([&"t1_002", &"t1_004", &"t1_005", &"t1_006", &"t1_008", &"t2_013"])
+is_distractor_friendly = true
+distractor_weight = 3
+is_basic_pantry = false
+cut_variations = Array[StringName]([])
+notes = "한식 base 다목적; 라면/김밥/볶음밥/해물파전/잔치국수(지단)/순두부찌개(풀기); N-1 sync 2026-05-30; cut 없음 (whole egg, 깨거나 풀기 행위 별도 메커닉 후보)"

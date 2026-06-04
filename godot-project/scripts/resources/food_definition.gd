@@ -55,5 +55,28 @@ extends Resource
 ## low = 후방 배치, high = 라운드 종료 후 우선 노출.
 @export_enum("low", "med", "high") var ad_trigger_priority: String = "med"
 
+## --- Stage 2A 재료 준비 (ADR-005 4-stage, foods-database.csv prep_* 컬럼) ---
+
+## Stage 2A hero 재료 ID (예: &"ing_p_001"). IngredientDefinition.ingredient_id와 매치.
+@export var prep_ingredient_id: StringName = &""
+
+## Stage 2A 손질 스타일 토큰 — CUT-01~06(칼질) / DIP-00(콘도그 반죽 담그기) / MAR-00(불고기 양념재우기).
+## DIP-00·MAR-00은 칼질이 아니므로 CUT-00(도마 base)과 토큰 분리 (2026-05-31 lock).
+@export var prep_cut_style: StringName = &""
+
+## Stage 2A rhythm BPM (60~140, foods-database.csv prep_bpm).
+@export_range(40, 200, 1) var prep_bpm: int = 100
+
+## Stage 2A tap 횟수 (foods-database.csv prep_taps).
+@export_range(1, 12, 1) var prep_taps: int = 3
+
+## --- Stage 2B 조리 방법 선택 (foods-database.csv correct_method_id / method_options) ---
+
+## Stage 2B 정답 조리법 ID (예: &"boil"). 불고기는 marinate가 Stage 2A 소화이므로 정답=stirfry.
+@export var correct_method_id: StringName = &""
+
+## Stage 2B 카드 후보군 (정답 포함, T1=3 / T2=4). UI에서 셔플 표시.
+@export var method_options: Array[StringName] = []
+
 ## 디자이너 메모 (CSV notes 컬럼).
 @export_multiline var notes: String = ""

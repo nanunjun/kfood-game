@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://b22nmrkb0kzua"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_s_002"
+name_ko = "어묵"
+name_en = "Fish Cake"
+store_type = &"seafood"
+used_in_foods = Array[StringName]([&"t1_003"])
+is_distractor_friendly = true
+distractor_weight = 3
+is_basic_pantry = false
+cut_variations = Array[StringName]([&"CUT-03", &"CUT-04"])
+notes = "떡볶이 핵심; 단무지와 디스트랙터 페어 가능; 어슷썰기 CUT-03 hero (M2-D2 lock 100 BPM·5 taps) + 통썰기 CUT-04 대안"

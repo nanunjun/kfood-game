@@ -1,0 +1,11 @@
+# slot_key  원본파일명(_dropbox 기준 상대경로). sting 2종은 합성 유지(보류).
+metro_strong  kenney_interface-sounds/Audio/tick_001.ogg
+metro_weak    kenney_interface-sounds/Audio/tick_002.ogg
+judge_perfect kenney_interface-sounds/Audio/confirmation_001.ogg
+judge_good    kenney_interface-sounds/Audio/confirmation_002.ogg
+judge_miss    kenney_interface-sounds/Audio/error_004.ogg
+ui_select     kenney_interface-sounds/Audio/select_001.ogg
+act_done      kenney_interface-sounds/Audio/bong_001.ogg
+act_chop      272220__spanrucker__cutting-peppers-chopping-board-knife (1).aiff
+act_stir      353124__benjaminnelan__frying-pan-sizzle.wav
+act_boil      456382__monsterthing__boiling-pot-of-water.mp3

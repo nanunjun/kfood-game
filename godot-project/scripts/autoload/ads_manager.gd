@@ -10,7 +10,6 @@
 ##   - docs/godot-setup-guide.md Step 6 (plugin 설치 절차)
 ##   - docs/GDD.md §5.2 (광고 정책: rewarded/interstitial/banner)
 ##   - docs/balance-config.md v0.2 §2.2 (ads.interstitial_round_interval, ads.ftue_block_minutes)
-class_name AdsManager
 extends Node
 
 ## SDK Key — AppLovin developer console에서 발급. NEVER commit 실 값. plugin 설정 또는 ENV로 주입.

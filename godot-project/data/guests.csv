@@ -1,0 +1,9 @@
+guest_id,name,vec,tol,line_enter,line_ok,line_bad,role
+junho,Junho,0.30|0.55|0.92|0.25|0.45,0.27,Make it nice and spicy today!,Now THAT'S a kick — love it!,Too mild for me honestly.,friend
+mina,Mina,0.90|0.45|0.35|0.40|0.45,0.31,I've got a serious sweet tooth!,Mmm sweet and perfect — love it!,Needs a little more sweetness.,friend
+riley,Riley,0.40|0.50|0.55|0.85|0.45,0.33,Give me something bright and tangy!,Whoa that zing is amazing!,Could use a sharper tang.,friend
+mrs_lee,Mrs. Lee,0.30|0.45|0.20|0.25|0.90,0.28,Keep it clean with deep savory flavor.,Just right — that deep savory touch.,It's missing that savory depth.,mentor
+seoyeon,Seoyeon,0.35|0.90|0.40|0.30|0.55,0.26,I want hearty home-style seasoning.,This is exactly the comfort I needed.,A bit underseasoned for me.,friend
+mystery_diner,Mystery Diner,0.50|0.50|0.50|0.45|0.55,0.22,A quiet guest takes a seat and watches closely.,They note something down and give a small nod.,They note something down and slip away.,evaluator
+blogger_daniel,Daniel Kim,0.40|0.55|0.55|0.40|0.60,0.26,Daniel Kim is here to review — smile for the photo!,Posting this right now — looks amazing!,Not sure I'd recommend this one honestly.,evaluator
+goldspoon,Golden Spoon Inspector,0.45|0.50|0.50|0.45|0.70,0.16,The Golden Spoon Inspector observes in silence.,A slow nod of approval. You have earned it.,Not yet at our standard. Keep refining.,evaluator

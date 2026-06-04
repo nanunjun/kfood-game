@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://ag4vdyzczgu7c"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_m_005"
+name_ko = "LA갈비"
+name_en = "LA Galbi"
+store_type = &"meat"
+used_in_foods = Array[StringName]([&"t2_012"])
+is_distractor_friendly = false
+distractor_weight = 3
+is_basic_pantry = false
+cut_variations = Array[StringName]([])
+notes = "사용자 명시; 갈비구이 핵심; bone-in cross-cut; Stage 2A cut 메커닉 X (마늘 다지기 hero — ing_p_005); LA갈비는 whole 그대로 굽기"

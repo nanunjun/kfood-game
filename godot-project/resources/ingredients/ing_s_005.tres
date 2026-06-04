@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://jh0r6qgmepqwa"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_s_005"
+name_ko = "조개"
+name_en = "Clam"
+store_type = &"seafood"
+used_in_foods = Array[StringName]([&"t1_006"])
+is_distractor_friendly = true
+distractor_weight = 2
+is_basic_pantry = false
+cut_variations = Array[StringName]([])
+notes = "해물파전 사용자 명시; 바지락 포함 표현; cut 없음 (whole)"

@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://bxovmtclf5bt7"
+
+[deps]
+
+files=["res://data/levels.perfect.translation", "res://data/levels.good.translation", "res://data/levels.tol.translation", "res://data/levels.w.translation", "res://data/levels.w.translation", "res://data/levels.w.translation", "res://data/levels.w.translation", "res://data/levels.theta.translation", "res://data/levels.star2.translation", "res://data/levels.star3.translation", "res://data/levels.star4.translation", "res://data/levels.star5.translation", "res://data/levels.reward.translation", "res://data/levels.market.translation", "res://data/levels.evaluator.translation"]
+
+source_file="res://data/levels.csv"
+dest_files=["res://data/levels.perfect.translation", "res://data/levels.good.translation", "res://data/levels.tol.translation", "res://data/levels.w.translation", "res://data/levels.w.translation", "res://data/levels.w.translation", "res://data/levels.w.translation", "res://data/levels.theta.translation", "res://data/levels.star2.translation", "res://data/levels.star3.translation", "res://data/levels.star4.translation", "res://data/levels.star5.translation", "res://data/levels.reward.translation", "res://data/levels.market.translation", "res://data/levels.evaluator.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

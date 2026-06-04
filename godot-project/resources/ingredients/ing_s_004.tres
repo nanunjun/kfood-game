@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://whlpmwz9se2aa"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_s_004"
+name_ko = "새우"
+name_en = "Shrimp"
+store_type = &"seafood"
+used_in_foods = Array[StringName]([&"t1_006"])
+is_distractor_friendly = true
+distractor_weight = 2
+is_basic_pantry = false
+cut_variations = Array[StringName]([])
+notes = "해물파전 사용자 명시; 멸치와 디스트랙터 페어; cut 없음 (whole)"

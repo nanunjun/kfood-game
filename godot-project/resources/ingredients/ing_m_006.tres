@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://u4e1euqxz8wgd"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_m_006"
+name_ko = "꽃갈비"
+name_en = "Premium Galbi"
+store_type = &"meat"
+used_in_foods = Array[StringName]([&"t2_012"])
+is_distractor_friendly = false
+distractor_weight = 3
+is_basic_pantry = false
+cut_variations = Array[StringName]([])
+notes = "사용자 명시; LA갈비와 시각 유사 디스트랙터 페어; cut 없음"

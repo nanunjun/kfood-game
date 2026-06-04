@@ -8,7 +8,6 @@
 ## 참조:
 ##   - docs/godot-setup-guide.md Step 6 (Google Play Console SKU 생성)
 ##   - docs/GDD.md §5.3 (IAP 정책)
-class_name IapManager
 extends Node
 
 ## SKU ID placeholders — Google Play Console에서 생성 후 실 ID로 교체.

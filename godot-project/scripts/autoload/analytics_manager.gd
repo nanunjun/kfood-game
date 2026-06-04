@@ -9,7 +9,6 @@
 ## 참조:
 ##   - docs/godot-setup-guide.md Step 6 (Firebase 설치)
 ##   - docs/GDD.md (analytics 이벤트 카탈로그는 data-analyst sprint에서 정의)
-class_name AnalyticsManager
 extends Node
 
 ## 이벤트 enum placeholder — data-analyst sprint에서 본격 정의.

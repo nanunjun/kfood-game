@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://zq0ava7jlnuib"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_p_012"
+name_ko = "애호박"
+name_en = "Young Korean Zucchini"
+store_type = &"produce"
+used_in_foods = Array[StringName]([&"t1_008"])
+is_distractor_friendly = true
+distractor_weight = 2
+is_basic_pantry = false
+cut_variations = Array[StringName]([&"CUT-04", &"CUT-03"])
+notes = "잔치국수 채썰기/통썰기 채소 (N-1 신규 2026-05-30); 호박(ing_p_011)과 시각 디스트랙터 페어 — 동일 채소 변종 (잔치국수=어린 애호박 fresh, 순두부찌개=호박 일반); 통썰기 CUT-04 대안 hero (잔치국수 사용자 confirm 시 70 BPM·3 taps 활성화 — 대파 110 BPM·4 와 swap)"

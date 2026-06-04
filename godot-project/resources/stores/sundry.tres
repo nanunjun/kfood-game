@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="StoreDefinition" load_steps=2 format=3 uid="uid://jyq2da81inzdb"]
+
+[ext_resource type="Script" uid="uid://pxco5klnk05r" path="res://scripts/resources/store_definition.gd" id="1_store"]
+
+[resource]
+script = ExtResource("1_store")
+store_id = &"sundry"
+name_ko = "잡화점"
+signature_color = Color(0.700, 0.450, 0.750, 1.000)

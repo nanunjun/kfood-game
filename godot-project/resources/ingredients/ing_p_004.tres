@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://b3os5xzowh9oa"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_p_004"
+name_ko = "부추"
+name_en = "Korean Chive"
+store_type = &"produce"
+used_in_foods = Array[StringName]([&"t1_006"])
+is_distractor_friendly = true
+distractor_weight = 2
+is_basic_pantry = false
+cut_variations = Array[StringName]([&"CUT-05"])
+notes = "쪽파와 시각 디스트랙터 페어; 송송썰기 CUT-05"

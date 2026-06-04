@@ -13,7 +13,7 @@ config_version=5
 config/name="K-Food Master"
 config/description="한식 cooking matching 캐주얼 모바일 게임 (떡볶이, 김밥, 김치, 비빔밥 등 12종)."
 config/version="0.1.0"
-run/main_scene="res://scenes/main.tscn"
+run/main_scene="res://scenes/menu_select.tscn"
 config/features=PackedStringArray("4.6", "Mobile")
 config/icon="res://icons/icon.svg"
 
@@ -24,7 +24,12 @@ SaveManager="*res://scripts/autoload/save_manager.gd"
 AdsManager="*res://scripts/autoload/ads_manager.gd"
 IapManager="*res://scripts/autoload/iap_manager.gd"
 AnalyticsManager="*res://scripts/autoload/analytics_manager.gd"
+AudioManager="*res://scripts/autoload/audio_manager.gd"
 GameManager="*res://scripts/autoload/game_manager.gd"
+BeatClock="*res://scripts/autoload/beat_clock.gd"
+Tuning="*res://scripts/autoload/tuning.gd"
+HapticManager="*res://scripts/autoload/haptic_manager.gd"
+FeedbackBus="*res://scripts/autoload/feedback_bus.gd"
 
 [display]
 
@@ -38,6 +43,10 @@ window/handheld/orientation=1
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/android_IAPP/plugin.cfg", "res://addons/godotx_firebase/plugin.cfg")
+
+[gui]
+
+theme/custom="res://ui/game_theme.tres"
 
 [input_devices]
 

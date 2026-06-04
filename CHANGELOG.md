@@ -16,6 +16,498 @@
 
 ---
 
+## [2026-06-03] 미니게임 재설계 시작: "음식이 곧 게이지" + 끓는 냄비 + Perfect 연출
+- **무엇**: "튜토리얼 설명서" 같던 미니게임을 음식 중심으로 전환. Boil = 막대 → **실제 끓는 냄비**, 모든 조리 페이즈에 "지금 만드는 음식" 상시 배너, **PERFECT! 버스트**.
+- **왜**: 크리에이티브 피드백 — 음식이 안 보임/막대 심심함/Perfect 약함/리듬게임 느낌 약함. Royal Match처럼 핵심 오브젝트(음식)가 항상 보여야.
+- **결과**:
+  - **Now-Cooking 배너**(`_build_now_cooking`): 상단에 음식 썸네일 + "Cooking · Ramyeon (라면)" 상시 표시(조리 중). plating/reveal에서 숨김. SPAWN_Y 120→250로 칼질 노트가 배너 아래에서 시작.
+  - **Boil 재설계**: `_build_boil_pot` + `_update_boil` — 냄비 국물 색이 깊어지고(연주황→진빨강), 거품이 heat↑에 따라 잦아지고, 둘레 **골든 히트 링**이 차오르며 적정구간(0.8~1.05)에서 금색·굵게 + 김. 적정 릴리스 = PERFECT.
+  - **`_perfect_burst`**: "PERFECT!" 큰 텍스트(스케일 인) + 10방향 스파클 + (boil)김. boil·panfry perfect에 연결.
+  - 검증: preflight 255 PASS, := 타입추론 안전.
+  - 문서: `docs/phase1/minigame-redesign-v1.md`("음식=게이지" 원칙 + 메뉴별 미니게임 매핑 + 끓는냄비 프롬프트). 남은 작업: roll/stir/mix/season도 음식상태 비주얼로 교체, 손님+음식 동시 노출, 페이즈 음식 PNG 스왑.
+
+## [2026-06-03] 피드백 3건: 그릇 중첩 수정 · 글자 오버플로우 · 게임 폰트
+- **무엇**: (1) reveal에서 "그릇 안의 그릇"(라면 PNG의 사기그릇 + 내가 그린 양은냄비) 제거, (2) 글자 화면 밖 튀어나감 수정, (3) PowerPoint 느낌 폰트 → 게임 느낌.
+- **결과**:
+  - **(1)** 원인: 음식 PNG에 이미 그릇이 포함됨 → 그 위에 그릇을 또 그려 중첩. `_build_vessel` 재작성: PNG가 있으면 그릇으로 감싸지 않고 **밑에 받치는 serving stand/tray**(`_draw_stand`, 금속=손잡이/나무=널결/유기=금테)로 그려 음식을 올림. placeholder(PNG 없는 찌개 3종)만 실제 그릇(`_draw_bowl`) + mound. → 중첩 해소, 그릇 선택은 받침 재질로 구분.
+  - **(2)** reveal 매칭 배지 autowrap + 좌우 여백(폭 1000) + 폰트 44. 레벨 배너를 **불투명 알약 패널**(차양 위에서도 읽힘, 짧은 "Lv N · 평가자")로 교체.
+  - **(3)** 프로젝트 기본 테마 `ui/game_theme.tres` 추가(`gui/theme/custom`): 전 Label/Button에 **외곽선 + 그림자 + 큰 기본 크기** → 기본 폰트도 도톰한 게임 UI 느낌. (전용 TTF는 폰트 파일 확보 후 교체 가능.)
+  - 검증: preflight 255 PASS, 타입추론 안전, 테마/씬 ref OK.
+  - 메모: 진짜 그릇 아트(서빙 식기 6~8종)는 `image_prompts_v2_assets.md §그릇`으로 생성→`cutout`→스왑하면 받침 도형 대체 가능.
+
+## [2026-06-03] 피드백 3건: 화폐 명시 · 손님 입맛 다양화 · 미니게임 직관화
+- **무엇**: (1) 화폐 = 인게임 **원(₩)** 확정/명시, (2) 친구 5명 입맛을 5축 전부로 분산, (3) 미니게임 UI를 "사각 박스" → 직관적 안내·타겟·패드로 개편.
+- **왜**: 플레이테스트 피드백 — 단위 불명확 / 친구 다수가 savory로 쏠림 / 미니게임이 뭔지·어떻게 하는지 모름.
+- **결과**:
+  - **(2 입맛)** `guests.csv` 재설계: Junho=매운맛 / Mina=단맛 / Riley=신맛(상큼) / Mrs.Lee=감칠 / Seoyeon=짠맛 — **5축 dominant 전부 distinct**(검증). 기본 손님↔메뉴 매핑도 손님 dominant축이 그 메뉴 양념 슬롯과 맞게 재배치(예: Mina→떡볶이/잡채(단), Riley→해물파전(신), Seoyeon→불고기/된장(짠)).
+  - **(3 직관화)** 라운드 전 페이즈에 **큰 제목 + 한 줄 how-to 배너**(`_phase_header`/`_howto`). Chop=판정선에 **펄싱 글로우 타겟 링** + 재료를 **둥근 슬라이스**(상자 X). Stir-fry=**큰 LEFT/RIGHT 패드** + 화살표 도착 시 해당 패드 **하이라이트**(탭 위치 명확). Pan-fry=**FLIP 패드**가 타이밍에 금색 "FLIP!"으로 점등. Mix=**TAP 패드 + 실시간 카운터**(n/12). Boil/Roll="PRESS & HOLD / let go here" 캡션. 입력도 패드 버튼 기반으로 명확화.
+  - **(1 화폐)** 그리드 머니/보상 모두 ₩ 유지(인게임 원). "Coins"로 전환은 라벨 한 줄.
+  - 검증: preflight 255 PASS, 타입추론 안전, 손님 5/5 축 분산 확인.
+
+## [2026-06-03] 한국 전통시장 배경 + 게임다운 UI (market_bg)
+- **무엇**: 밋밋한 베이지 슬라이드 → 절차적 한국 전통시장 배경(`market_bg.gd`): 노을 그라데이션·기와 한옥 지붕·줄무늬 차양·청사초롱·시장 보케·나무 좌판. 메뉴=나무 간판 헤더+알약 배지, 게임플레이=`light` 모드(가독성 유지).
+
+## [2026-06-03] 경제·세이브 + 손님 선택 UI + SFX 인제스트 + 아트 가이드 (5청크)
+- **무엇**: 레벨업이 실제로 이어지는 **세이브·경제 레이어**, **손님 선택 UI**, **SFX 인제스트 파이프라인 확장**, 완성샷·페이즈 **아트 인제스트 가이드** 5묶음.
+- **왜**: 게임으로서의 진전(progression이 저장·누적) + 내러티브 깊이(손님 선택) + 사운드/아트 외부 자산 흐름 가동.
+- **결과/다음 단계**:
+  - **[1 경제·세이브]** `save_manager.gd` 전면 개편 → JSON(`user://kfood_save.json` v1): level·money·per-menu stock·unlocks·stats·reputation·intimacy·player_char·settings. 얕은 머지로 버전 호환, 구 A2 API 보존. 라운드 통과 시 보상 입금(`Level.reward`×우수1.3), 진입 시 재고 1 소비(0이면 그리드 "Out of stock"+Restock ₩2,000), 누적 클리어로 레벨업(토스트 "Level Up! ▲ … market unlocked"). `rhythm_proto._finish`·`menu_select` 배선. **sim: perfect 플레이 41라운드에 L8(목표 30~50 부합), 최종 ₩798,800.**
+  - **[2 손님 선택]** `guest_select.gd`+씬. 메뉴 선택 후 손님 카드 그리드(친구5+멘토, evaluator 제외) — 아바타(placeholder)·동적 미각 힌트·친밀도 ★·Auto Select·Back. evaluator 레벨은 스킵. 결과 후 친밀도 ±(만족+1/보통0/불만−0.5). `pending_guest_id` 라운드 연동.
+  - **[3 SFX 인제스트]** `ingest_sfx.py` 슬롯 24종으로 확장(act_panfry/roll/mix·season_*5·sting_mystery/daniel/goldspoon·ui_menu). 신규 `audio_qc.py`(메트로놈 클릭 그리드 위 어택 정렬 QC). `_incoming/README.md` 슬롯 규칙 + `SOURCES.md §3D` CC0 검색 가이드. 다운로드는 사용자(집).
+  - **[4 완성샷]** `image_prompts_phase1.md §D` 3종(김치/된장/매운탕) 풀스펙 확인 OK. `menu_db.ready`를 **실제 파일 존재(`ResourceLoader.exists`)로 자동 판정** → PNG 드롭만으로 placeholder→실물 auto-swap(CSV 수정 불요). `asset-ingest-guide.md`(파일명·폴더 규칙).
+  - **[5 페이즈 아트]** `image_prompts_phase1.md §H` 신규(stir-fry/pan-fry/roll/mix + 양념 아이콘 5). `phase-art-v1.md`(슬롯·placeholder 폴리시·`art/phases/` 매핑).
+  - 검증: preflight 255 PASS, 코드 := 안전, 씬 ref OK, 레벨업 pacing sim OK. 신규 문서: economy-save-v1·guest-select-ui·audio-ingest-v2·asset-ingest-guide·phase-art-v1.
+  - 남은 작업: 신규 SFX 슬롯 코드 배선(FeedbackBus/페이즈), 페이즈 아트 스왑 코드 분기, L8 엔딩 컷씬, 캐릭터 풀바디 아트 스왑, 친밀도 특수효과(Phase 2).
+
+## [2026-06-03] 페이즈 변주 4종 + 레벨 8단계 데이터화 + Evaluator
+- **무엇**: 12메뉴가 똑같던 페이즈를 **음식별 조리 동작**으로 다양화(신규 4종) + 난이도·점수·보상을 **`levels.csv`로 외부화** + 평가자 3종 등장.
+- **왜**: 손맛 1순위(메뉴별 차별화) + 디자이너 튜닝 가능한 레벨 데이터 + "초반 관대 → 후반 Golden Spoon급 엄격" 곡선.
+- **결과/다음 단계**:
+  - 신규 페이즈 4종(`rhythm_proto.gd`): **Stir-fry**(좌/우 화살표 탭), **Pan-fry**(FLIP 타이밍 + raw→golden 진행), **Roll**(말기 홀드), **Mix/Knead**(연타). 전부 `FeedbackBus.hit` 경유 5중 자극(팝업·플래시·SFX·햅틱) 풀 적용.
+  - 라운드를 **phase-queue 상태기계**로 리팩터: `menus.csv`의 `phases` 컬럼(`chop|stirfry|season`)대로 순서 실행. 카테고리 버킷(prep/cook/season)으로 채점.
+  - 신규 데이터: `data/levels.csv`(L1~8: 윈도우 90→36ms, tol 0.40→0.10, 가중 w_prep/cook/season/dish, θ 0.55→0.88, 별점·보상·시장·evaluator). guests.csv에 평가자 3명(Mystery Diner L3 / Daniel Kim L5 / Golden Spoon L8).
+  - MenuDB: phases 파싱 + levels 로드(`get_level`, 범위 clamp) + `dish_bonus_scaled`/`dish_tier`.
+  - 레벨 적용: 라운드 level=메뉴 unlock_level → 윈도우·tol·가중·별·보상 자동. 결과 화면에 별점·통과여부·"Earned N coins".
+  - evaluator: 해당 레벨 메뉴는 일반 손님 대신 평가자 등장(보라 배너 "… is watching"). 메뉴 그리드에 레벨 배지·"★ Evaluator"·잠금(회색) 표시.
+  - 검증: preflight 254 PASS. 로직 sim(정답 데이터) — 7페이즈 토큰 전부 사용, 12메뉴 perfect S=1.00 ≥ θ, worst=0 fail, 중급 L1~6 통과·L7~8 탈락(의도된 마스터리 곡선), evaluator 트리거 L3/5/8 정상. ⚠ bash 마운트가 menus.csv를 일시 truncate 표시했으나 실제 Windows 파일은 13행 정상(Read 확인) — Godot 로드 영향 없음.
+  - 문서: `docs/phase1/phase-variations-v1.md`(페이즈 4종·메뉴 매핑·SFX/모션), `docs/phase1/levels-v1.md`(8레벨 곡선·evaluator). 남은 작업: 경제·세이브로 레벨업 연결, 손님 선택 UI, 전용 SFX 루프 ingest, 완성샷 3종, 페이즈 전용 아트 스왑.
+
+## [2026-06-03] 데이터 주도 라운드 일반화 (12메뉴) + English-first 언어 정책
+- **무엇**: 라면 하드코딩 라운드를 **12메뉴 데이터 주도** 시스템으로 리팩터. + 게임 내 텍스트 **영어 1차** 전환(한국어는 문화 부제).
+- **왜**: (c) 코드 일반화 directive — F5 누르면 메뉴 그리드에서 12메뉴 중 아무거나 골라 라운드가 돌아야. 타깃 외국인 → 영어 정책.
+- **결과/다음 단계**:
+  - 신규 데이터: `godot-project/data/menus.csv`(12메뉴: 양념·그릇 best/2nd/bad·손님·unlock·완성샷·ready), `data/guests.csv`(친구 5명, 영어 대사·미각벡터·tol).
+  - 신규 코드: `scripts/gameplay/menu_db.gd`(CSV 파서 레지스트리, class_name 없이 preload — 전역클래스 desync 회피; VESSELS 8종 색·kind; dish_bonus), `scripts/ui/menu_select.gd`+`scenes/menu_select.tscn`(unlocked 카드 그리드 → 라운드).
+  - 리팩터: `scripts/gameplay/rhythm_proto.gd`(`RhythmRound`) — 라면 상수 제거, MenuDB에서 양념·그릇·손님·완성샷 로드. 양념 버튼 동적 생성, vessel kind별 reveal 형태(metal 손잡이/glass 반투명/plate 얕음), placeholder food mound + "Final art coming soon".
+  - `seasoning_gauge.gd`: 양념 색 7종 추가(gochujang·chamgireum·gukganjang·doenjang·chojanga·saeujeot), `display_name`/`summary_en` 영어화.
+  - `project.godot` main_scene → `menu_select.tscn`. 라운드 종료 탭 → 메뉴 그리드 복귀.
+  - placeholder 정책: 완성샷 없는 3종(김치/된장/매운탕 `m_*`)은 `ready=0`으로 플레이 정상.
+  - 검증: preflight 254 ALL PASS. Python sanity — 12메뉴 전부 guest/vessel/axis 유효 + ready 플래그 파일 일치 + perfect play S=1.00 ≥ θ_pass(레벨별) → 깨지는 메뉴 없음. 코드 `.text` 한글 잔재 0(남은 한글은 주석·`name_kr` 부제뿐).
+  - 문서: `docs/phase1/round-system-v3.md`(일반화 구조·데이터 트리·메뉴 추가법). 남은 작업: Level 차등 데이터화, 손님 선택 UI, 페이즈 변주, 완성샷 3종 생성, 평가자 데이터.
+
+## [2026-06-02] 프로토타입 현실화(그릇 담김·라면 양념) + 레시피/밸런스 표
+
+- **그릇 담김**: 프로토타입 reveal에서 선택 그릇에 **라면이 실제 담긴 모습**(양은냄비/사기/돌솥 — Polygon2D로 그릇+국물+면+계란+파 묘사). 라면 그릇 궁합 = **양은냄비 정답(+0.12) / 사기 2번(+0.05) / 돌솥 안어울림(−0.08)**, 글로우·배지·별 차등.
+- **양념 현실화**: 라면에 간장 X → **라면스프(간·감칠) + 고춧가루(매 추가)**. SeasoningGauge에 `soup` 추가.
+- **신규 `docs/phase1/recipes-balance-phase1.md`**: (a) 12메뉴 현실적 양념 슬롯 + 그릇 궁합(정답/2번/안어울림), (b) 밸런스 튜닝값(윈도우·tol·점수가중·θ·그릇보너스·보상), (c) M1 데이터 주도 통합 매핑(MenuRecipe·Guest·Level). `scoring-v2 §1.1`에 현실성 원칙 명문화.
+- preflight 253 ALL PASS. (c) M1 정식 통합(12메뉴·5손님·그릇/조리 연출 일반화)은 본 표를 데이터 소스로 다음 빌드 청크에서 진행.
+
+## [2026-06-02] M0+ 새 라운드 구조 프로토타입 (한 판 전체 통합)
+
+- **무엇**: `rhythm_proto.gd`를 새 구조 한 판 전체로 확장 — **손님 요구(자연어) → 칼질(탭) → 끓이기(Hold) → 양념 게이지 → 플레이팅(그릇 선택+매칭) → 음식 reveal(줌+글로우+sting) → 손님 자연어 반응+별**. 미각 벡터는 백엔드, 화면엔 자연어/별만(정체성). 라면 1메뉴·손님 1명(준호) 샘플. project.godot main_scene = rhythm_proto.tscn(임시), 결과 화면 탭 시 재시작.
+- **검증**: preflight 253 ALL PASS, `:=` Variant 함정 스캔 0, 만족도 로직 Python 실행(완벽 매칭 5★ / 너무 순함 3★+"좀 더 매콤했으면" 귀띔 / 미스매치 1★ — 합리적·단조).
+- **남은 것(엔진=사용자 머신)**: 실제 손맛·연출 체감은 F5 실행. 그래픽은 프로토타입(노트=원, 칼=폴리곤, 그릇=버튼). 손맛/밸런스 확정 후 M1에서 정식 라운드·12메뉴·시장으로 일반화.
+
+## [2026-06-02] M0 손맛 프로토타입 스캐폴드 빌드 + 로직 검증
+
+- **무엇**: rhythm-prototype-spec 기반 **M0 코어를 실제 GDScript로 구현**. autoload 4종(`beat_clock`·`tuning`·`haptic_manager`·`feedback_bus`) + `rhythm_judge.gd`(class_name RhythmJudge, 판정·윈도우·hold_score) + `seasoning_gauge.gd`(class_name SeasoningGauge) + `rhythm_proto.gd`(절차적 칼질 4탭→양념 게이지→결과·메트릭 로깅) + `scenes/rhythm_proto.tscn`. project.godot에 autoload 4종 등록.
+- **검증(이 환경=Godot 바이너리 없음·다운로드 차단)**: ① `preflight_check.py` **253건 ALL PASS**. ② 위험 패턴(`:=`+round/clamp/lerp 류 타입추론 실패, autoload↔class_name 충돌) 스캔 0. ③ **핵심 판정·점수 로직을 Python으로 동일 포팅해 실제 실행** — 윈도우 단조감소 OK, 난이도 곡선(숙련 L1 Perfect95%→L8 58%·Miss7.6%), Pro칼 ×1.3 효과(L4 Miss 10.4%→3.4%), Hold 부분점수(엄격 tol에서 오차10%→0.31) 전부 설계대로.
+- **발견(튜닝 플래그)**: L1 윈도우가 매우 관대(숙련 Perfect 95%, 캐주얼 77%) → spec QA의 "Perfect 30~40%"는 L1엔 부적용(의도적 온보딩 관대). 30~40% Perfect 목표는 중반(L4~6)에 부합. L1 타깃 재정의 또는 의도 확정 필요.
+- **남은 것(엔진 필요, 사용자 머신)**: 실제 60fps·입력 레이턴시·햅틱·시청각 5중 자극은 Godot 4.x 실행에서 검증(F6 `rhythm_proto.tscn`). 끓이기 Hold·플레이팅·reveal 연결은 후속.
+
+## [2026-06-02] Phase 1 플레이팅·음식 reveal 연출 스펙 (3대 폴리시 스펙 완성)
+
+- **무엇**: `docs/phase1/reveal-plating-spec.md` — ③플레이팅(그릇 캐러셀 스와이프·snap·담기 애니·"+15% Match!" reward·garnish 1슬롯, 5초 타임라인) + ②음식 reveal(카메라 줌인+기울기·황금 글로우·메뉴 12 입자 프로파일 개별·완성 sting 3등급 보통/잘함/명품·한 박자 멈춤, ~2.0s 타임라인). 플레이팅→reveal→결과 무컷 연결. Godot 노드·튜닝 다이얼·QA·A/B 4건.
+- **결과**: 리듬(①)·reveal(②)·플레이팅(③) **3대 폴리시 스펙 세트 완성** → M3 폴리시 패스 즉시 구현 가능. 코드 변경 0.
+- **A/B(디폴트)**: reveal 줌인+미세기울기 / garnish 1슬롯 연출+미세보정 / 매칭 "+15%" 표기 허용 / 플레이팅 5초.
+
+## [2026-06-02] Phase 1 데이터 스키마 확정 + 빌드 스프린트 계획
+
+- **무엇**: `docs/phase1/data-schema-phase1.md`(기존 리소스 스크립트 위 필드 추가 계약 — FoodDefinition seasoning_slots·dishware·market_id 등, CharacterDefinition taste_vector·tolerance·dialogue, IngredientDefinition tier·uses·price, 신규 Tool/Dishware/Seasoning/Level 리소스, SaveManager 필드, levels_phase1.csv 8행) + `docs/phase1/build-plan-phase1.md`(M0 손맛 프로토타입→M1 시스템→M2 콘텐츠→M3 폴리시→M4 출시, 의존성·DoD·리스크·즉시 착수 항목).
+- **근거**: 기존 `scripts/resources/`(Food·Character·Ingredient·Store·CookingMethod·Timing) 위에 비파괴 추가로 정합. 아트·사운드는 병행 트랙. Godot 바이너리 없는 환경이라 빌드는 사용자 머신, 본 저장소는 preflight 정적검사.
+- **다음**: M0(손맛 프로토타입) 착수 — autoload 4종 + JudgmentZone + 노트풀 + 5중 피드백 + 게이지, 스키마 필드 추가 병행, CC0 박자 정렬 1차.
+
+## [2026-06-02] Phase 1 리듬 손맛 프로토타입 스펙 (구현 수준)
+
+- **무엇**: `docs/phase1/rhythm-prototype-spec.md` 신규(14절). 노트 타입(Single/Double/Hold/Slide)·**판정 윈도우 ms 매트릭스**(L1 Perfect±90/Good±200 → L8 ±36/±80, Pro칼 ×1.3)·**5중 히트 피드백** 판정별 정밀값(파티클 색·수·수명 / 글로우 / 팝업 모션 / SFX 믹스 / 햅틱)·양념 게이지 UI(색·증분·MAX·자연어)·등속 강하·레이턴시 ≤16ms·오디오클럭 BeatClock·SFX layering·햅틱 iOS/Android 매핑·1주 빌드 범위·튜닝 다이얼·레퍼런스 5종·QA 체크리스트·Godot 노드구조/스니펫·A/B 4건.
+- **결과**: 다음 sprint Godot 프로토타입 즉시 착수 가능(self-check 통과). 코드 변경 0(스펙).
+- **A/B(디폴트)**: 노트 위→아래 / 게이지 하단 고정 / 햅틱 ON / 모바일 우선.
+
+## [2026-06-02] Phase 1 MVP 스코프 확정 + 프로덕션 우선순위
+
+- **무엇**: 풀 v2 설계를 `docs/phase2_archive/`(24개 문서)로 보존하고, **Phase 1 cut 문서 세트 8종**을 `docs/phase1/`에 신규 작성. 시장 2(동네·노량진)·메뉴 12(L1~8, 해산물 2)·친구 5(Mina·Junho·Riley·Mrs.Lee·Sora)·평가자 3(Mystery Diner·Food Blogger=Daniel Kim 흡수·Golden Spoon Inspector L8 보스)·레벨 L1~8(엔딩)·난이도 ±0.40→±0.10·재료/도구/그릇 2티어·다인/명품/DLC 제외(Phase 2).
+- **프로덕션 우선순위(사용자 못박음)**: 공수 대부분을 **3대 폴리시**(① 리듬 입력 손맛 5중 피드백·판정 차등·60fps·양념 게이지·SFX layering·햅틱 ② 음식 완성 reveal 1.5~2.5초·김/글로우/줌·sting 3등급·메뉴별 개별 ③ 플레이팅 snap·그릇 캐러셀·매칭 보너스 reward)에. 인벤토리·시장 UX·입퇴장·알림·BG는 functional만. 배분 60/30/10.
+- **산출**: `phase1/` README·GDD-phase1(우선순위 절 포함)·production-priorities·menu-roster-phase1·characters-phase1·markets-phase1·unlock-tree-phase1·image_prompts_phase1. `sound-guide §0.5`·`audio-pipeline §1.5` SFX layering 추가. 메뉴 신규 3(김치찌개·된장찌개·매운탕) reveal 키프레임 프롬프트 포함.
+- **정합**: 외국인 타깃·Golden Spoon·자연어 UI·플레이어 5종 등 v2 결정 모두 유지. 코드/데이터 변경 0 — Phase 1 빌드는 다음 sprint에서 본 세트 기준.
+
+## [2026-06-02] v2.4 외부 리뷰 보완 — 양념 입력 UX · 다인 안전장치 · 오디오 박자 정렬
+
+- **무엇(3건)**: (1) **양념 양 입력 직관성** — 색깔별 양념 게이지 + 양념통 노트(일반 노트와 색·아이콘 구분) + 탭카운트/홀드 두 방식 + 탭마다 즉시 피드백 + 결과 자연어("고춧가루 4단위"). (2) **다인 디너 밸런싱 안전장치 2단계** — 콤보는 미각 코사인 유사도 ≥0.85만(상충 차단) + 플레이팅 개인 양념·고명 3슬롯으로 베이스+개인 가중(캐주얼 70:30, 미식가 50:50) → All-pass 구조적 항상 가능. (3) **오디오 정밀 박자 보정** — transient 0ms 정렬 + BPM×SFX 적합성 매트릭스 + 메트로놈 QC(`tools/audio_qc.py` 명세).
+- **결과/산출물**: 신규 `docs/audio-pipeline-v1.md`. 갱신 `scoring-v2`(§1.5 입력 UX·§6.0 다인 안전장치), `rhythm-variation-v1`(§2.5 노트 종류), `characters-v2`(§3 콤보 호환 임계), `GDD-v2`(다인 플레이팅 분기), `sound-guide`(§0 BPM·SFX 매트릭스), `image_prompts_v2_ui`(UI-12 양념 게이지·UI-13 다인 분할 플레이팅), `art-needs`(§5.6.1).
+- **정합**: v2.1~2.3과 충돌 없음. 코드 변경 0(설계·명세). librosa/audio_qc는 후속 구현.
+
+## [2026-06-02] v2.3 메뉴확장 · 브랜딩(Golden Spoon) · 글로벌 캐릭터 · 플레이어 선택
+
+- **무엇(우선 3건 + α)**: (1) **메뉴 12→41종**(`menu-roster-v1.md`, `data/menus-v2.csv`) — 단계별 분포(입문11·가정식10·입소문10·명인10), DLC 별도. (2) **미쉐린→Golden Spoon Guide 전수 치환**(11개 문서, 잔여 0, 황금 숟가락 모티프, `branding-v1.md`). (3) **캐릭터 글로벌 보편 아키타입 전면 재작성**(`characters-v2.md` v2.3: 옆집 어르신 멘토·룸메·동료·트레이너·집주인 등, 한·영 병기, 대사 EN 우선, 평가자 Golden Spoon 라인, 상인 보편 톤, 구버전 `archive/`). (4) **플레이어 프리셋 5종 선택**(`player-characters-v1.md`: Mia·Alex·Jin·Sora·Pat, 20~30대, 메커닉 동일·서사/톤만 분기, 오프닝 컷씬). (5) **포지셔닝**(`positioning-v1.md`, 글로벌 타깃·USP는 한국).
+- **결과/산출물**: 신규 `branding-v1`, `positioning-v1`, `menu-roster-v1`, `player-characters-v1`, `data/menus-v2.csv`, `image_prompts_v2_menus.md`. 재작성 `characters-v2`, `image_prompts_v2_characters`(+플레이어 5종). 갱신 `GDD-v2`(글로벌·플레이어선택·메뉴·시스템표), `onboarding-pace-v1`(R0 캐릭터 선택), `art-needs-v2`(§5.6), `image_prompts_v2_all`(인덱스), 전 문서 브랜딩 치환.
+- **정합**: v2.1(미각 백엔드·평가자·온보딩·리듬·수익화)·v2.2(시장 허브) 유지. 친구 'Sora'는 플레이어 프리셋 Sora와 충돌 회피 위해 'Seoyeon'으로 개명. 인테이크 폴더 `premium_v2_players/menus` 생성.
+- **A/B**: 브랜드명(Golden Spoon 디폴트/Starfork·Crown 대안), 본편 메뉴 수(41/35), 프리셋 수(5/4), 플레이어 분기 깊이(톤만) — 전부 디폴트 선택, 확인 대기.
+
+## [2026-06-02] v2.2 월드빌딩 — 한식 명인 여정 + 전통시장 허브
+
+- **무엇**: 컨셉/세계관 정식화. (A) 정체성 = "평범한 일반인이 **한식 장인**이 되는 영웅 서사"(무명→동네→시장 단골→지역 명인→한식 명인). (B) 세계 = **한국 전통시장**이 허브 — 추상 "재료 구매"를 실제 시장(동네·가락동·노량진·경동·광장·남대문 도매 + 지역 전주·부산·안동·통인)으로 대체. (C) 시장별 분위기·BGM·재료·**단골 상인 NPC 10명**·**평판 시스템**·**이벤트**(새벽 경매·도매 특가). (D) 12레벨 ↔ 서사 비트(레벨별 컷씬).
+- **결과/산출물**: 신규 `docs/worldbuilding-v1.md`, `docs/markets-v1.md`, `docs/image_prompts_v2_markets.md`(시장 BG10·상인10·소품/간판3·이벤트컷씬2). 갱신 `GDD-v2`(정체성·포지셔닝·세계관·시스템표), `characters-v2`(§7 상인 NPC 10, 부산/전주 방언), `unlock-tree`(§2.6 시장 개방 곡선+평판표), `economy-balance`(§8 시장 가격차등·평판할인·이벤트보너스), `monetization`(시장 정보 미리보기 광고), `art-needs`(§5.5 시장 아트), `image_prompts_v2_all`(인덱스).
+- **톤**: 진짜 한국 시장 디테일(빨간 차양·플라스틱 박스·LED 가격표) + 양식화, 미화 없이 따뜻하게.
+- **정합**: v2.1(미각 백엔드·평가자 떡밥·캐릭터 개성·온보딩·리듬·수익화)과 충돌 없음. 인테이크 폴더 `premium_v2_markets/npc/market_props` 생성.
+
+## [2026-06-02] v2.1 리프레이밍 — 정체성·UX·페이싱 보완 (외부 리뷰 반영)
+
+- **무엇**: 백엔드 결정은 유지하되 **얼굴(정체성·캐릭터·페이싱·표현)**을 재정렬. (A) 정체성 = "한식 문화 컬렉션 게임"으로 GDD 서두 정렬. (B) 미각 벡터·편차 = **백엔드 전용, UI 숫자 노출 0** → 자연어 대사·표정·별 매핑. (C) 캐릭터 인격 골격(별명·3줄 백스토리·시그니처 대사3·등장 narrative) 전원 적용. (D) **평가자 떡밥 곡선** 신설(L3 수상한 평가단 → L5 동네 블로거 미나 → L7 푸드유튜버 도연 → L10 골든스푼 평가관 reveal). (E) 첫 15라운드 온보딩(시스템 한 겹씩). (F) 리듬 변주 곡선. (G) 수익화(광고 보상 + 고정 DLC, 가챠X).
+- **결과/산출물**: 신규 `docs/monetization-v1.md`, `docs/onboarding-pace-v1.md`, `docs/rhythm-variation-v1.md`. 갱신 `GDD-v2`(정체성·포지셔닝·온보딩 §5.5·평가자 §7.6·리듬 §9.5·수익화 §11), `characters-v2`(인격 골격+평가자 4종, 가족 인격화), `scoring-v2`(§0 UI 자연어/표정 매핑·숫자 비노출), `unlock-tree`(§2.5 평가자 곡선), `image_prompts_v2_characters`(평가자 EV1·EV2 신규+EV3/EV4 매핑).
+- **근거**: 골든스푼이 L10에야 나오면 대다수 미노출 → 떡밥 조기 배치. 숫자 노출은 캐주얼·컬렉션 정체성과 상충 → 사람으로 표현.
+
+## [2026-06-02] v2.0 메타 구조 개편 (문서·데이터 스키마, 코드 변경 0) — PM 위임 셋팅
+
+- **무엇**: 게임 메타를 "캐릭터 미각 만족 + 경제 + 12단계 사회 진행 + 다인 디너 + 도구·그릇 어워드"로 전면 개편하는 GDD v2 + 5개 시스템 문서 + 데이터 스키마 델타 + 아트 니즈를 신규 작성. **코어 리듬·조리 라운드와 기존 12음식 데이터·아트는 보존**, 그 위에 새 레이어.
+- **왜**: 사용자 위임 — 양념 양 기반 연속 점수, 시드머니 경제, 친구별 미각 프로파일, 풀 메뉴 마스터→까다로운 미식가 만족 엔드게임. 추가 원칙(우선): 관대→골든스푼 곡선, 12단계 레벨, 다인 디너, 재료 횟수제 소모, 도구 3티어(구매/어워드), 그릇 플레이팅+어워드.
+- **핵심 결정(디폴트)**: 미각 5축[단·짠·매·신·감칠]; 편차 ±0.40(L1)→±0.05(L12) 단조 감소; 캐릭터 15명(가족2+친구13); 양념=리듬 탭 횟수, 점수 = `raw + qualityBonus(재료) + dishwareBonus(그릇)`, τ_eff=편차+도구흡수; 시드 50,000원·재료 횟수제 소모(무환급); 도구·그릇 마스터=레벨 어워드(구매불가)→트로피 룸→"한식 명인"; **엔드게임 = 마스터 도구+명품 재료+매칭 그릇 3박자**; 다인 채점 = All-pass(디폴트).
+- **결과/산출물**: `docs/GDD-v2.md`, `docs/characters-v2.md`, `docs/scoring-v2.md`, `docs/economy-balance-v1.md`, `docs/unlock-tree-v1.md`, `data/schema-delta-v2.md`, `docs/art-needs-v2.md` (+ 본 CHANGELOG). 결정마다 1줄 근거 + A/B 미결 7건 `[사용자 확인 필요]` 태그.
+- **A/B 미결(요약)**: 미각 노출(정성힌트), 편차 음식의존(고정), 다인채점(All-pass), 보너스 결합(가산), 파산(엄마찬스), 실패보상(0원), 한정식 신규음식(기존 명품화) — 전부 디폴트 선택, 확인 대기.
+- **다음**: 사용자 A/B 확정 → 구현 sprint(스키마 .tres/CSV 반영 → 점수·경제·해제 로직 → 신규 아트 ~110슬롯 단계 생성).
+
+## [2026-06-02] 요리 소개 화면 (외국 플레이어 인지 보조) + 프리미엄 프롬프트 음식별 정합 (godot-dev / art-director)
+
+- **무엇**: (1) 라운드 시작 전 **요리 소개 스테이지** 신설 — 만들 음식을 큰 이미지로 보여주고 영어/한국어 이름 + tagline + 1~2문장 설명 + "Start Cooking ▶". (2) **DishInfoRegistry**(12종 영어 소개 텍스트, 레지스트리 패턴). (3) 프리미엄 음식 프롬프트(`art-prompts-premium-foods.md`) 배경=단색 검정·김 제거(인게임 VFX)로 컷아웃 정합 + 음식별 정확도 수정(콘도그=소시지 노출, 잔치국수=면 소량·맑은 국물, 비빔밥=고추장 그릇 안에 없음 별도, 순두부찌개=네모 두부 아닌 몽글 순두부). 라면 레퍼런스 = G_premium LOCK.
+- **왜**: 외국인이 한식을 몰라 게임 진입 장벽 → 무엇을 만드는지 확실히 인지시키기. + 사용자 어닝(음식별 디테일 오류 + 컷아웃 위해 배경/김 제거 필요) 반영.
+- **결과/다음**: `round_controller._run_stages()` 맨 앞에 StageIntro await 배선. preflight 248건 ALL PASS. 외부 생성본은 `assets-raw/premium_v2/`에 `food_id.png`로 드롭 → strip_bg(검정 단색 luma-key 가능)→import.
+- **패치**: `scripts/gameplay/dish_info_registry.gd`(신설), `scripts/gameplay/stage_intro.gd`(신설), `scripts/gameplay/round_controller.gd`(intro 배선), `docs/art-prompts-premium-foods.md`, `docs/art-style-guide-v2-premium.md`.
+
+## [2026-06-02] 프리미엄 음식 12종 컷아웃 + 게임 반영 (godot-dev)
+
+- **무엇**: 외부 생성한 프리미엄 음식 12종(검정 단색 배경, `assets-raw/premium_v2/`)을 투명 PNG로 컷아웃 → `art/sprites/food/{food_id}.png` 교체. `tools/cutout_black_bg.py` 신설(테두리-연결 flood/propagation 방식 = 음식 내부 검정 보존, 검정 합성 unmultiply로 가장자리 번짐 제거, 내용 bbox 크롭).
+- **왜**: rembg 미설치 환경 + 검정 단색 배경 특성 활용. 음식 아트 프리미엄 업그레이드(#2) 실물 반영.
+- **이슈/수정**: 김밥(t1_004) 김(나포)이 배경 검정과 동일 명도라 첫 패스에서 가장자리 김이 같이 제거됨 → BLACK_THRESH 36→14 + binary_opening(김↔배경 얇은 연결 끊기)으로 재처리해 김 보존. 도구 기본값을 이 방식으로 업데이트.
+- **결과/다음**: 기존 스프라이트 `art/sprites/food/_backup_pre_premium_v2/` 백업. preflight 248건 ALL PASS. Godot이 소스 변경 감지 → 다음 실행 시 자동 재임포트. 후속: 재료/도구/캐릭터 아트도 동일 파이프라인으로 업그레이드 가능.
+- **패치**: `tools/cutout_black_bg.py`(신설), `art/sprites/food/*.png`(12종 교체).
+
+## [2026-06-01] #2 프리미엄 아트 스타일 v2.0 spec + 재생성 프롬프트 (art-director)
+
+- **무엇**: `docs/art-style-guide-v2-premium.md` 신설. 진단(현 flat single-fill → 아마추어) → north star(Royal Match/Cooking Madness급 폴리시드 캐주얼) → **렌더링 10규칙**(좌상단 키라이트·소프트 그라데이션 음영·림라이트·글로시 하이라이트·접지 그림자·깊이·머티리얼·소프트 아웃라인) → v2.0 팔레트 → **카테고리별 재생성 프롬프트 템플릿**(STYLE_PREMIUM 접두+NEG_PREMIUM, 음식/재료/도구/캐릭터/배경/UI + 라면 예시) → 일관성 규칙 → Premium Gate(G_p1~5) → 재생성 파이프라인.
+- **왜**: "고급스러운 모바일게임 느낌"(#2). 차이는 디테일이 아니라 빛·면·재질·일관성이라 진단.
+- **결과/다음**: Claude는 이미지 생성 불가 → **실 그림은 외부(ChatGPT gpt-image-1, ADR-006)에서 템플릿으로 재생성** → `strip_bg.py` → `import_art_to_godot.py`(파일명 규칙 유지=코드 변경 0). 권장 순서: 음식 12 → 도구 → 캐릭터/리액션 → 재료 → 가게. 다음 사용자 순서 = **#4 추가 UI 폴리시**.
+- **패치**: `docs/art-style-guide-v2-premium.md`(신설).
+
+---
+
+## [2026-06-01] #1 재래시장 가게 방문 쇼핑 + #3 진행도 패널 (사용자 순서 1→3)
+
+- **무엇**:
+  - **(#1) 가게 방문 쇼핑**: 단일 다중선택 → **재래시장 방문 흐름**. 시장 화면(필요 가게 목록=청과/정육/어물/곡물/잡화) → 가게 진입(그 가게 재료 토글 선택, 정답+디스트랙터) → 시장 복귀(방문 표시) → 전 가게 방문 후 **Checkout** → 정확도 채점. `shopping_registry.gd`에 **CORRECT_BY_STORE / POOL_BY_STORE** 추가(used_in_foods×store_type 역산). StageShop 전면 재작성, round_controller는 `shop.setup(name, food_id)`.
+  - **(#3) 진행도 패널**: food_select에 **누적 별 바(★ N/36) + Dishes N/12 + 3★ N/12** 표시. SaveManager `cleared_count()/three_star_count()` 추가. A2 백본 위 가시화.
+- **왜**: "가게 방문 없음/단순 선택 재미없음"(#1) + "누적 성과 시스템"(#3) 대응. 사용자 우선순위 1→3.
+- **결과/다음**: preflight 248 PASS. 다음 순서 = **#2 프리미엄 아트 스타일 spec**(외부 생성용) → **#4 추가 UI 폴리시**. 패치: `tools/gen_shopping_from_csv.py`·`shopping_registry.gd`(가게별)·`stage_shop.gd`(시장)·`save_manager.gd`(통계)·`food_select.gd`(진행도)·`round_controller.gd`(shop 시그니처).
+- **참고**: 재료별 개별 스프라이트 부재로 가게 화면은 텍스트 토글(아트 후속). 시장 맵 비주얼·가게 일러스트는 #2 아트 트랙.
+
+---
+
+## [2026-06-01] UI 디자인 시스템 도입 (#4 배경·버튼·글자 통일) + 폴리시 방향 정리
+
+- **무엇** (사용자 "아마추어 느낌 / 디자인 필요"):
+  - **`scripts/ui/ui_theme.gd` (UITheme) 신설** — 공용 디자인 시스템: 따뜻한 K-food 팔레트(크림 그라데이션 배경 + 테라코타 라운드 버튼 + 다크 글자 + 골드 강조), StyleBoxFlat(둥근 모서리·소프트 섀도·상태별 normal/hover/pressed/disabled), Label/Panel 기본값. `make_theme()`(캐시) + `add_background()` + `make_card()`.
+  - **전 화면 적용**: food_select·round_controller(배경 그라데이션) + 모든 스테이지(shop/prep/method/timing) + result에 `theme = UITheme.make_theme()`. 평면 크림 ColorRect → 세로 그라데이션, 밋밋한 버튼 → 라운드+섀도 테라코타.
+- **왜**: "배경·글자·버튼 디자인 필요"(#4) 직접 대응 — 코드로 가능한 최대 시각 향상.
+- **결과/다음 (사용자 결정 대기)**:
+  - **#2 일러스트 고급화**: 현 AI 하이퍼캐주얼 그림이 아마추어 인상 → art-director **프리미엄 스타일 재정의 + 재생성**(외부 이미지 생성, ADR-006). Claude는 이미지 생성 불가 → 스타일 spec/prompt는 제작 가능.
+  - **#1 가게 방문 쇼핑**: 단순 선택 → 재래시장 맵·가게 방문 Scene 1 정식 제작(디자인+씬+아트).
+  - **#3 누적 성과**: A2 백본(별·해금·도감) 완료 — 확장 여지(보상·업적 화면).
+- **패치**: `scripts/ui/ui_theme.gd`(신설)·`food_select.gd`·`round_controller.gd`(+모든 스테이지 theme). preflight 248 PASS.
+
+---
+
+## [2026-06-01] alpha 6차 튜닝 — 결과 겹침/채점 엄격화/난이도 스프레드 + 큰 건 백로그화
+
+- **무엇** (실플레이 피드백 8건 트리아지):
+  - **(#1 완료) 결과 New Best↔리액션 겹침**: 리액션 축소(280)·위로 + New Best/별점/점수 간격 재배치 + 라벨 박스 컴팩트(세로중앙).
+  - **(#4 완료) 채점 너무 관대**: 별점 기준 3★ 0.85→**0.92**, 2★ 0.55→**0.72**. (75%=2★, all-GOOD≈1★ 수준)
+  - **(#6 완료) 난이도 차이 미미**: prep 판정창 **난이도별** 적용(쉬움 ±120ms ~ 어려움 ±55ms), timing sweep **2.4→0.7s**·PERFECT 폭 **0.14→0.035**로 스프레드 확대.
+  - **(#8 권고) 타이밍 바 방향**: **가로 유지** 권고(portrait+한손 엄지 ergonomics). 사용자 확인 대기.
+  - **(#2/#3/#5/#7 백로그)** `docs/design/progression-and-variety-v0.1.md` §9:
+    - #2 칼/도구가 조잡 → **art-director에 전용 칼·도구 + board-less 재료 스프라이트** 위임(현 절차적 칼=placeholder; 재료 anchor의 baked 도마가 prep 구도 근본 제약).
+    - #5 새 미니게임 "실행 안됨" = **아직 미구현**(이전엔 계획만). #7 다중재료와 합쳐 **다음 집중 빌드 = 드래그 썰기 prep(여러 재료 차례)**.
+    - #3 김밥 roll = 스와이프 말기 미니게임(후속).
+- **왜**: 안전한 튜닝은 즉시, 아트·신메커닉 대형 건은 런타임 테스트 필요 → 한 묶음씩 별도 빌드.
+- **결과/다음**: preflight 248 PASS. **다음 = 드래그 썰기 + 다중재료 prep**(#5+#7) 집중 구현. 패치: `round_controller.gd`(별점)·`stage_prep.gd`(판정창 난이도)·`stage_timing.gd`(스프레드)·`result_screen.gd`(레이아웃).
+
+---
+
+## [2026-06-01] 픽스 — "Tap anywhere" 입력 차단 해소 (배경·장식 Control mouse_filter)
+
+- **무엇**: Stage 2A/2C에서 "Tap anywhere"인데 일부 영역만 탭 인식 → 배경 ColorRect·라벨·스프라이트(Control)가 기본 `MOUSE_FILTER_STOP`으로 클릭을 가로채 `_unhandled_input` 미도달이 원인. round_controller `_bg` + StagePrep(라벨/재료) + StageTiming(라벨/표면/완성/스팀/타이밍바) 장식 Control 전부 **MOUSE_FILTER_IGNORE**로 → 탭이 어디서나 판정에 도달.
+- **왜**: 입력 사각지대 제거(리듬탭·타이밍탭 신뢰성).
+- **결과/다음**: preflight 248 PASS. F5 재실행. 패치: `round_controller.gd`·`stage_prep.gd`·`stage_timing.gd`.
+
+---
+
+## [2026-06-01] 구조 재설계 착수 — A2 메타 progression(누적 별·해금·도감) 백본 구현
+
+- **무엇** (사용자 "선형 난이도 단조로움 / 누적 보상 / 다른 게임 필요" → 방향 결정 후):
+  - **설계 문서** `docs/design/progression-and-variety-v0.1.md` 신설 — 메타 progression 3안 + 미니게임 다양성 제안. **사용자 결정: A2(재료·도감 해금) + 신규 미니게임 3종(드래그 썰기·붓기·휘젓기)**.
+  - **SaveManager 실구현**(skeleton→실제): `total_stars` 누적 + 음식별 `best` 최고 별점, user:// ConfigFile write-through. `record_result/best_of/is_cleared`.
+  - **해금 룰**: 정렬(tier→difficulty)에서 **이전 음식 클리어(별 1+) 시 다음 해금**(sequential) → "다음 단계 음식/재료 제공" 실현.
+  - **food_select 진행도 UI**: 상단 누적 별(★ N/36) + 음식별 최고 별점(★★☆=도감) + 잠금 음식 비활성("clear previous"). Play in Order = 첫 미클리어 해금 음식부터.
+  - **결과 화면**: 라운드 종료 시 SaveManager 기록 + 최고 갱신 시 "★ New Best!".
+- **왜**: 그 판에서 끝나던 별점을 **누적→해금**으로 전환 → 플레이 동기·진행감. 게임 뼈대 1차 변경.
+- **결과/다음**: preflight 248 PASS. **다음 sprint = 신규 미니게임 3종**(드래그 썰기/누르면 붓기/휘젓기 — 조리법별 매핑)으로 "선택+타이밍" 단조로움 해소. 각 미니게임은 런타임 테스트 필요 → 한 묶음씩. 패치: `save_manager.gd`·`food_select.gd`·`round_controller.gd`·`result_screen.gd`, `docs/design/progression-and-variety-v0.1.md`.
+
+---
+
+## [2026-06-01] alpha 피드백 5차 — 조리 중 도마 제거(추상 칩) + 결과화면 구도 재정렬
+
+- **무엇**:
+  - **(조리 중 도마 제거)** 투입 재료·내용물에 `prep_cut`(도마 baked-in anchor)을 써서 조리 화면에 도마가 나오던 문제 → 투입물을 **추상 재료 칩(색 도형 5색)** 으로, 조리 표면을 **조리도구(냄비/팬/그릴/김발/그릇, 도마 아님)** 로 변경. 칩이 도구에 쌓였다가 탭 판정 시 **완성 요리로 cross-fade**. (무-조리도 method_tool 사용 → cutting_board 참조 0)
+  - **(결과화면 구도)** 엄마 리액션이 "Ramyeon" 글자와 중첩 → **세로 구도 재정렬**: 음식 이름(상단) → 완성 요리(중앙) → **시식 리액션 → 별점 → 점수**(하단에 인접 배치). 리액션과 점수가 붙어 "점수=리액션" 관계가 읽힘. 겹침 제거.
+- **왜**: 조리 단계 시각 정합(도마 부재) + 결과 가독성/구도. 점수 100%↔엄마 만족 표정 인접 요청.
+- **결과/다음**: preflight 248 PASS. F5 재실행. 남은 트랙(art/디자인): 재료별 개별 스프라이트(칩=추상), 정식 5가게 쇼핑. 패치: `stage_timing.gd`(칩 투입·도구표면·완성 cross-fade) / `result_screen.gd`(세로 구도).
+
+---
+
+## [2026-06-01] alpha 피드백 4차 — 조리과정 시퀀스 + 조리화면 스택 정리 + 글자 대비 + 리액션 동적화
+
+- **무엇** (실플레이 피드백):
+  - **(조리 과정 동적화)** Stage 2C에 **재료 투입 시퀀스** 신설 — 준비된 재료가 조리도구로 차례로 떨어지며(낙하+squash+사운드) 내용물이 점점 차오르고(alpha·scale 증가), 투입 끝나면 타이밍 바 등장, 탭 판정 후 **손질재료→완성요리 cross-fade**. round_controller가 ShoppingRegistry 재료 수 전달(최대 4). `StageTiming._run_assembly/_drop_ingredient`.
+  - **(#1 조리화면 스택 정리)** 가스레인지+도구+그릇+접시 다층 중첩 → **단일 조리 표면(가열=도구 / 무조리=도마) + 내용물 1개**로 단순화. "그릴 위 팬 위 그릇" 이상함 해소.
+  - **(#4 글자 대비)** 베이지 배경에 흰 글자 안 보임 → 전 화면 라벨 **다크(#2D1D14)** 색 적용(food_select/stage_prep/method/timing/shop/result).
+  - **(#3 리액션 동적·표정 변화)** "너무 동적"→차분 과교정→"너무 정적" 재피드백 반영. **평온한 얼굴(★1) → 별점 표정으로 변화**(텍스처 swap + 부드러운 scale) + 접시·리액션 **idle 호흡 loop**(연속). 싸구려 바운스 대신 매끄러운 SINE/연속 모션.
+- **왜**: 조리 과정 가시화(원 디자인 "재료 차례 투입") + 가독성 + 동영상 같은 생동감.
+- **결과/다음**: preflight 248 PASS. F5 재실행. 남은 큰 트랙(사용자 확인): **#2 재료별 개별 스프라이트**(현재 투입 토큰=손질재료 1종 재사용) / **#5 정식 5가게 방문 쇼핑**(현재 단일화면 다중선택) — art/디자인 sprint 필요. 패치: `stage_timing.gd`(투입 시퀀스·스택 정리·라벨색) / `result_screen.gd`(리액션 변화·idle) / `stage_prep/method/shop·food_select`(라벨색) / `round_controller.gd`(재료수 전달).
+
+---
+
+## [2026-06-01] 픽스 — Stage 2A 칼 중복/도마 중첩 제거 + stray char(f) 수정
+
+- **무엇**: 실플레이 스크린샷에서 Stage 2A "그림 이상" = **칼 2개**(절차적 칼 + `cutting_board.png` 아트에 그려진 누운 칼) + **도마 중첩**(배경 도마 + 재료 anchor 자체 도마). 
+  - 배경 `cutting_board.png` 제거 — 재료 whole/cut anchor가 이미 도마 위 구성이라 별도 배경 도마 불필요(칼 중복 주원인 해소). 칼질 충격은 도마 대신 **재료 흔들림**으로 변경. 절차적 칼 1개만 애니메이션.
+  - `stage_prep.gd` 61행 stray `f` 제거(syntax error).
+- **왜**: 칼/도마 중복으로 prep 화면이 어수선. anchor에 도마가 baked-in인 점 반영.
+- **결과/다음**: preflight 248 PASS. F5 재실행 시 prep 화면 = 재료(도마 포함 anchor) + 단일 애니 칼. 남은 가능성: 일부 재료 anchor에 좌측 static 칼이 baked되어 있으면 여전히 미세 중복 → 그 경우 board-less 재료 아트(art sprint) 필요. 패치: `stage_prep.gd`.
+
+---
+
+## [2026-06-01] alpha 피드백 3차 — 난이도 progression + 조리/서빙/시식 연출 + 칼질 개선
+
+- **무엇** (실플레이 피드백 4건, 절차적 연출 — 전용 아트는 후속):
+  - **(#1) 난이도 progression**: food_select를 tier·difficulty_score **오름차순(쉬움→어려움) 정렬** + 난이도 배지(●●●○○). "Play in Order(Easy→Hard)" 버튼 + 결과 화면 **Next ▶**로 다음(더 어려운) 음식 진행. RoundController.sequence(정렬된 경로) + `_next_food_path()`.
+  - **(#2) 조리되는 모습**: Stage 2C에서 도구/도마 위에 음식이 **raw(cut)→cooked(plated) cross-fade**(천천히 익음). round_controller가 prep_cut(raw) 전달.
+  - **(#3) 서빙 + 시식 리액션**: 결과에서 완성요리 **서빙 scale-in(bounce)** + 먹는 사람 리액션이 별점 맞춰 **pop-in(표정 reveal)** + sting_finish 동기. (중복 sting 제거)
+  - **(#4) 칼질 연출 개선**: 칼을 **날+날끝 하이라이트+손잡이** 폴리곤으로 형태화 + 찹 모션에 약간의 회전, 탭마다 **도마 흔들림 + 칼 스케일 팝 + 칩 파티클 5개 + 재료 점진 절단(whole→cut 단계 reveal)**. (전용 칼 스프라이트는 art 후속)
+- **왜**: alpha 3차 피드백. "맛" 살리는 연출 + 난이도 곡선.
+- **결과/다음**: preflight 248 PASS. **F5 재실행**. 라면(쉬움)→갈비(어려움) 순서, 조리 중 음식이 익고, 서빙·표정 연출, 칼질이 덜 단편적. 남은 placeholder: 전용 칼/조리단계/리액션 표정 프레임 아트, raw→cooked는 plated 1장 cross-fade(중간 단계 art 후속). 패치: `food_select.gd`·`round_controller.gd`(progression/sequence) / `stage_timing.gd`(raw→cooked) / `result_screen.gd`(서빙·리액션·Next) / `stage_prep.gd`(칼질).
+
+---
+
+## [2026-06-01] alpha 피드백 2차 — 장보기 다중선택 재설계 + 무-조리 가스레인지 제거 + 제목 센터
+
+- **무엇** (실플레이 피드백 5건):
+  - **(#1) 장보기 다중선택 재설계**: 1택 → **여러 재료 골라담기**(학습형). `tools/gen_shopping_from_csv.py`로 ingredients `used_in_foods` 역산 → `scripts/gameplay/shopping_registry.gd`(food_id→정답 재료 name_en, basic_pantry 제외 / POOL 40). StageShop = 토글 그리드(정답 최대5+디스트랙터, 총 8) + Confirm, 정답 초록/오답 빨강/놓친정답 노랑 피드백.
+  - **(#2,#5) 재료 이미지 mismatch 제거**: 기존 distractor가 타 음식 prep 스프라이트를 빌려 이름↔이미지 어긋남(Tofu→호박, Pancake Mix→단무지). 장보기를 **텍스트 기반**으로 전환해 근본 해소(재료별 전용 스프라이트는 art 후속).
+  - **(#3) 무-조리 음식 가스레인지 제거**: Stage 2C가 모든 음식에 가스레인지 표시 → 김밥(roll)·비빔밥(mix)·잡채 toss 등 NO_COOK은 **도마 base + 완성요리**로, 가열식만 가스레인지+스팀. round_controller가 correct_method_id 전달.
+  - **(#4) 메뉴 제목 센터 이탈**: `PRESET_TOP_WIDE`+size를 _ready 시점 부모 크기 확정 전 적용해 offset 오산 → 앵커 프리셋 제거하고 **절대 박스(0~1080)** 로 중앙 정렬.
+- **왜**: 첫 실플레이 alpha 2차 피드백. 장보기를 "들어가는 재료 학습" 본래 의도대로 강화 + 시각 오결(가스레인지/이미지) 정리.
+- **결과/다음**: preflight 248 PASS. **Godot 재실행(F5)**. 장보기 = 음식별 실제 재료 다중선택. 남은 placeholder: 재료별 개별 스프라이트(현재 텍스트) / 장보기 정식 5가게 순회 / 장보기 점수 별점 미반영(게이트). 패치: `tools/gen_shopping_from_csv.py`·`shopping_registry.gd`(신설) / `stage_shop.gd`(다중선택) / `stage_timing.gd`(NO_COOK 분기) / `round_controller.gd`(shop·method 전달) / `food_select.gd`(제목).
+
+---
+
+## [2026-06-01] 폴리시 픽스 — 조리법 4카드 레이아웃 + 타이밍 난도(왕복·존) + 장보기/제목 stale 확인
+
+- **무엇** (실플레이 피드백 4건):
+  - **(실버그) 조리법 카드 화면 넘침**: stage_method 4카드(T2) 시 total 1136px > 1080 → **반응형 카드 폭**(`min(280, avail/n)`, margin/gap 반영)으로 항상 화면 안. font 44→40.
+  - **(실버그) 타이밍 너무 느림/쉬움**: 인디케이터가 cook_time(5~18s) 1회 통과라 중앙 맞추기 쉬움 → **난도(difficulty_score) 기반 좌↔우 왕복(ping-pong)**으로 변경. sweep 편도 2.0s(쉬움)~0.85s(어려움), PERFECT 폭 0.12~0.05로 좁아짐. round_controller가 `difficulty_score` 전달. 무탭 timeout = 4왕복.
+  - **(stale 확인) 비빔밥/잡채 당근 2회**: 현재 코드는 hero=Carrot이면 DISTRACTOR_POOL의 Carrot을 name으로 dedup → 중복 없음(검증). 직전(무-dedup) 빌드 잔상.
+  - **(stale 확인) 조리법 제목이 "끓는 타이밍…"**: 현재 method 제목 = "How do you cook it?"(영어), timing = "Catch the right moment!"로 분리 확인. 재import 전 옛 빌드.
+- **왜**: 첫 실플레이 alpha 피드백. 실버그 2건 즉시 수정, stale 2건은 재실행으로 해소.
+- **결과/다음**: preflight 248 PASS. **Godot에서 완전 재실행 필요**(스크립트 reload — 실행 중이었다면 정지 후 F5, 또는 Project→Reload Current Project). 난도별 체감: 라면(d1) 느긋, 갈비(d5) 빠르고 좁음. 패치: `stage_method.gd`(레이아웃) / `stage_timing.gd`(왕복·난도) / `round_controller.gd`(difficulty 전달).
+
+---
+
+## [2026-06-01] W2 폴리시 — UI 전체 영어화 + 장보기/요리/시식 비주얼 (실플레이 피드백 반영)
+
+- **무엇** (사용자 실플레이 피드백: "영어로, 구매·요리·시식 모습 없음"):
+  - **UI 전체 영어화**: stage_shop/prep/method/timing + result_screen + food_select 표시 문자열 영어 전환. 음식/재료/조리법 = `name_en`(FoodDefinition/IngredientDefinition) + METHOD_LABEL(Boil/Stir-fry…). round_controller가 shop·result에 name_en 전달. UI 표시 문자열 한글 0 검증.
+  - **장보기 비주얼**: StageShop 선택지를 텍스트→**재료 이미지 버튼**(Button.icon = whole 스프라이트). 정답=hero whole, 오답=타 음식 whole(DISTRACTOR_POOL: Carrot/Tofu/Garlic/Fish Cake/Green Onion) → 정답 재료와 중복 회피. "물건 구매" 느낌.
+  - **요리 비주얼**: StageTiming에 **가스레인지 base(TOOL-01) + 조리도구 vessel + 스팀 VFX**(steam_swirl, Tween 무한 펄스) 추가. "요리하는 모습".
+  - **시식 비주얼**: 가족 리액션 anchor(어머니 star1/2/3 v3) import → ArtRegistry.REACTION + reaction(stars), result_screen에 **별점별 리액션 스프라이트** 표시. "시식/반응".
+- **왜**: 글로벌 K-food 타깃(영어) + 3-scene 정서(구매→요리→시식) 시각 표현 부재 해소.
+- **결과/다음 단계**:
+  - **검증**: preflight 248건 PASS(리액션 3경로 포함), 리액션 3장 import, UI 한글 0. (실행 확인은 사용자 F5.)
+  - **남은 placeholder**: 장보기는 여전히 1택 게이트(정식 5가게 순회는 Scene 1 트랙) / 리액션은 어머니만(아버지 anchor 보유, 후속 다양화) / 스팀은 전 조리법 공통(볶기·튀기기별 VFX 분기는 후속) / 음식 한글명은 데이터엔 유지(name_ko), 표시만 영어.
+- **패치 파일**: `scripts/gameplay/{stage_shop,stage_method,stage_prep,stage_timing,result_screen,round_controller}.gd` + `scripts/ui/food_select.gd` + `tools/import_art_to_godot.py`(REACTION) + `scripts/gameplay/art_registry.gd`(REACTION) + `art/sprites/reaction/star{1,2,3}.png` + `CHANGELOG.md`
+
+---
+
+## [2026-06-01] 버그픽스 — 오토로드 6종 class_name 충돌 제거 (에디터 첫 실행 parse error)
+
+- **무엇**: Godot 4.6 에디터 첫 실행 시 `Parser Error: Class "RemoteConfigManager" hides an autoload singleton.` (remote_config_manager.gd:12). 부트스트랩 때 만든 6개 매니저(remote_config/save/ads/iap/analytics/game_manager)가 **오토로드 이름과 동일한 `class_name`**을 선언해 충돌. Godot 4는 autoload 이름 == global class_name을 금지.
+- **수정**: 6개 autoload 스크립트에서 `class_name XxxManager` 줄 제거 (오토로드는 이름으로 접근하므로 불필요). audio_manager.gd는 처음부터 class_name 없어 무관. 잔존 class_name(RoundController/ArtRegistry/SfxRegistry/*Definition/Stage* 등) = 오토로드와 비충돌 확인.
+- **왜**: 잠복 버그(원 부트스트랩, AAB smoke 빌드에선 미검출) → 실플레이(사용자 1번 선택) 첫 실행에서 노출. 정적 프리플라이트로는 못 잡는 런타임/parse 류.
+- **결과/다음**: 재실행(F5) → 다음 에러 있으면 보고. 패치: `scripts/autoload/{remote_config,save,ads,iap,analytics,game}_manager.gd`.
+- **2차 픽스 (동일 실행)**: `stage_prep.gd` `var nearest := round(...)` / `var phase := fmod(...)` → Godot 4에서 `round()`/`fmod()` 등은 Variant 반환이라 `:=` 추론 실패("Cannot infer type") → 명시적 `: float`로 수정. 에러 8건은 `nearest` 추론 실패의 연쇄. 전 스크립트 `:=` 전수 점검 = 나머지 안전(`.new()`/typed 반환).
+
+---
+
+## [2026-06-01] Sound — 외부 CC0 음원 인제스트 완료 (10/12 슬롯 교체, sting 2 합성 유지)
+
+- **무엇** (art-director): 사용자가 `_dropbox/`에 CC0 음원 투입 → Claude가 파일명 보고 슬롯 매핑 → `ingest_sfx.py --dropbox`로 변환·배치.
+  - **Kenney Interface Sounds (CC0) 7슬롯**: tick_001/002→metro_strong/weak, confirmation_001/002→judge_perfect/good, error_004→judge_miss, select_001→ui_select, bong_001→act_done.
+  - **freesound CC0 3슬롯**: spanrucker/272220→act_chop, BenjaminNelan/353124→act_stir, monsterthing/456382→act_boil (각 30/25/14s → 0.8s 트림).
+  - **sting_start/finish 2슬롯**: CC0 koto 미확보 → **합성(Karplus-Strong 가야금) 유지**(보류).
+  - 전 슬롯 16-bit/44.1kHz mono 검증 PASS(12/12). `_dropbox/mapping.txt`로 재현 가능. SOURCES.md §4 매니페스트 기록(출처·작성자·CC0).
+- **왜**: 합성 톤("전자음") 대체. 외부 다운로드는 사용자, 분류·변환·배치·검증은 Claude 분업.
+- **결과/다음 단계**: 레지스트리·AudioManager·배선 무변경(파일만 교체) → 즉시 게임 반영. 미리듣기 `kfood_sfx_preview.wav` 재생성(20.4s). 청감 확인 후 개별 슬롯 교체 가능(예: act_done=bong_001 0.12s 짧음 → glass 계열 대안 / act_chop 0.8s가 단일 타격 아닐 수 있음 → 구간 재트림). sting CC0 확보 시 교체.
+- **패치 파일**: `godot-project/audio/sfx/{metro_strong,metro_weak,judge_perfect,judge_good,judge_miss,act_chop,act_stir,act_boil,act_done,ui_select}.wav` 교체 / `_dropbox/mapping.txt` 신설 / `SOURCES.md` §4 / `tools/ingest_sfx.py` 드롭박스 모드 / `CHANGELOG.md`
+
+---
+
+## [2026-06-01] Sound — 외부 CC0 전환 착수 (합성본 아카이브 + ingest 파이프라인 + SOURCES 큐레이션)
+
+- **무엇** (art-director + godot-dev):
+  - **방향 전환**: 코드 합성(synth v1 사인 → v2 물리모델)이 여전히 "전자음" 피드백 → **외부 무료 CC0 음원으로 전면 교체** 결정. 합성 12종을 `godot-project/audio/sfx/synth_v2_archive/`로 보관(레지스트리·배선·키 유지).
+  - **인제스트 파이프라인** `tools/ingest_sfx.py` — `_incoming/<slot_key>.*`(임의 포맷) → ffmpeg 트림(≤0.8s)·-14 LUFS 정규화·페이드·**16-bit PCM 44.1kHz mono** → 슬롯 wav 덮어쓰기. 누락 슬롯은 "보류"(합성본 유지)로 자동 처리. `tools/make_sfx_preview.py` 분리(미리듣기 재생성).
+  - **`godot-project/audio/sfx/SOURCES.md`** — CC0 정책 + 소스 우선순위(Kenney CC0 > freesound CC0필터 > OGA CC0 > Pixabay⚠️) + 12슬롯 후보 검색 링크 + 다운로드 매니페스트 표 + 검증 체크리스트.
+  - **라이선스 nuance 확인**: Pixabay = "Pixabay Content License"(무귀속·상업 OK)로 **엄밀히 CC0 라벨 아님** → 정책상 Kenney(명시 CC0)·freesound CC0필터·OpenGameArt CC0 우선.
+- **왜**: 합성 톤으로는 따뜻·전통 주방 질감 한계. 무료 CC0 실음원이 현실적 해법. 사용자 정책(CC0만/무료만) 명시.
+- **결과/다음 단계**:
+  - **환경 제약**: Claude는 외부 바이너리 오디오를 작업공간에 직접 다운로드 불가(웹툴=텍스트만, curl/wget 정책 금지) → **다운로드는 사용자 단계**로 분업.
+  - **사용자 액션**: SOURCES.md §3 링크에서 CC0 음원 받아 `_incoming/`에 슬롯 key 이름으로 저장 → Claude가 ingest + preview 재생성.
+  - sting(가야금) 슬롯이 CC0에서 가장 희소 가능 → 막히면 해당 슬롯만 합성본 유지.
+- **패치 파일**: `tools/ingest_sfx.py` + `tools/make_sfx_preview.py` — **신설** / `godot-project/audio/sfx/SOURCES.md` — **신설** / `synth_v2_archive/` 12 wav 보관 / `CHANGELOG.md` — 본 entry
+- **참고**: 직전 합성 entry(아래)의 배선·레지스트리·AudioManager는 그대로 유효 — 파일만 교체.
+
+---
+
+## [2026-06-01] Sound sprint #1 — 핵심 SFX 12종 코드 합성 + AudioManager + 라운드 루프 배선
+
+- **무엇** (art-director sound 겸직 + godot-dev):
+  - **톤 명세 선행** (사용자 "톤이 컨셉과 맞아야" 제약): art-style-guide v1.2 + GDD에서 톤 키워드 추출 → north star "따뜻한 한식 주방·시장 양식화 추상 톤(나무 박·놋종·옹기·보글·평조)". 사용자 "더 따뜻게/전통적으로" 선택 반영. `docs/sound-guide.md` v0.1 신설(의도↔실측 centroid 검증표 + 트리거 매핑).
+  - **`tools/gen_sfx.py` 신설** — numpy 파형 합성(결정적). 12 WAV(16-bit/44.1kHz mono, 0.07~0.65s): 메트로놈2(metro_strong/weak) + 판정3(judge_perfect/good/miss) + 액션4(act_chop/stir/boil/done) + UI3(ui_select/sting_start/sting_finish). raised-cosine soft attack(공격 transient 금지) + lowpass 고역 roll-off + tanh warm sat + 평조 5음계 sting. **`scripts/audio/sfx_registry.gd` 자동 생성**(key→res 경로).
+  - **AudioManager 오토로드** `scripts/autoload/audio_manager.gd` — AudioStreamPlayer 풀(8) round-robin + 스트림 캐시 + `muted` 토글. SfxRegistry 기반 `play(key)`. project.godot autoload 등록.
+  - **라운드 루프 배선** — 시작/종료 sting, Stage 2A 메트로놈(4박 1마디)+칼질+판정, Stage 2B 조리법 정답/오답, Stage 2C 조리 ambient(보글/쓱)+판정, 완성 종, 메뉴/버튼 ui_select. **레지스트리 방식 유지(하드코딩 경로 0)**.
+- **왜**: 리듬 타이밍 게임의 핵심 피드백(박자감·판정감) 부재 해소. "재미 검증"을 사운드 포함 상태로 가능하게. 사용자 sound sprint #1(코드 합성) 지시.
+- **결과/다음 단계**:
+  - **검증 완료**: 12 WAV 실파일 + 헤더(ch1/2B/44100) 정합 / centroid 따뜻 톤(대부분 ≤2kHz, act_boil 314Hz) / play 호출 키 12종 전부 레지스트리 존재(누락 0) + 12종 전부 사용(orphan 0) / 오토로드 등록 확인.
+  - **사용자 검증**: Godot 4.6 에디터 열기 → WAV import 자동 → F5 플레이로 청감 확인.
+  - **후속(sprint #2)**: BGM(시장/키친 loop) / 별점 차등 jingle / act_chop transient 추가 완화 / DIP·MAR 전용 prep 사운드 / 옵션 음소거 토글 UI.
+- **패치 파일**:
+  - `tools/gen_sfx.py` — **신설** / `godot-project/audio/sfx/*.wav` — **신규 12** / `scripts/audio/sfx_registry.gd` — **자동 생성**
+  - `scripts/autoload/audio_manager.gd` — **신설**, `project.godot` autoload 등록
+  - `scripts/gameplay/{round_controller,stage_prep,stage_method,stage_timing,result_screen}.gd` + `scripts/ui/food_select.gd` — play 배선
+  - `docs/sound-guide.md` — **신설 v0.1**
+  - `CHANGELOG.md` — 본 entry
+
+---
+
+## [2026-05-31] M2 W2 — 12음식 전체 플레이어블 일반화 + 음식 선택 메뉴 + 아트 레지스트리
+
+- **무엇** (godot-dev):
+  - **아트 반입 파이프라인 완성** `tools/import_art_to_godot.py` — M1 LOCK anchor를 food_id 기준 clean name으로 godot-project/art/에 복사(45파일) + **`scripts/gameplay/art_registry.gd` 자동 생성**(food_id/method → res:// 경로 dict + static helper). 음식 완성샷(최신/최선 버전 picker) + Stage 2A prep whole/cut(**CSV prep_ingredient 기준**, F번호 불일치 케이스 명시 매핑: 잔치국수=대파, 순두부=애호박, 콘도그=치즈 placeholder) + method→조리도구 vessel.
+  - **round_controller 일반화** — 라면 하드코딩 dict(INGREDIENT_SPRITES/FOOD_SPRITES) 제거 → ArtRegistry 사용. `class_name RoundController` + `static var pending_food_path`로 메뉴→라운드 음식 주입. **12음식 모두 동일 루프로 플레이 가능**.
+  - **stage_timing 일반화** — 하드코딩 냄비 제거 → method별 조리도구 vessel 스프라이트(setup 3번째 인자).
+  - **음식 선택 메뉴** `scripts/ui/food_select.gd` + `scenes/food_select.tscn` — 12 FoodDefinition 로드해 2열 그리드 버튼(이름·Tier·인분), 탭 → 해당 음식 라운드 진입. **main_scene = food_select.tscn**. 결과 화면에 "메뉴로" 버튼 추가.
+- **왜**: W1 라면 단일 → MVP 12음식 전체 콘텐츠 플레이 가능 상태로 확장. "재미 검증"을 전 음식에서 가능하게. 사용자 W2 진행 선택.
+- **결과/다음 단계**:
+  - **검증 완료**: art_registry 45 경로 전수 실파일 존재 + 하드코딩 잔존 0 + 12음식 .tres↔아트 정합. (Godot 에디터 실행 검증은 사용자 환경 필요 — main_scene=food_select.)
+  - **사용자 검증**: Godot 4.6 에디터 열기 → F5 → 음식 12종 중 선택 플레이.
+  - **알려진 placeholder/한계**: 일부 완성샷 미LOCK(라면 v3/galbi v8 등 reroll 후보) / 칼·timing bar 도형 placeholder / **사운드 없음**(BPM 메트로놈·SFX = art-director sound sprint, 리듬게임 핵심 → 우선순위 ↑) / Scene 1 다점포 미구현(1택 게이트) / DIP·MAR special 모션 미구현(generic rhythm tap 대체) / W1 임시 아트 일부 중복 잔존(미참조, 무해).
+  - **W3 후보**: 사운드(BPM 메트로놈+SFX) / Scene 1 정식 다점포 / 아트 anchor LOCK 확정 swap / 매니저(Save·Analytics) 실구현 + 라운드 결과 영속화.
+- **패치 파일**:
+  - `tools/import_art_to_godot.py` — **신설**
+  - `godot-project/scripts/gameplay/art_registry.gd` — **자동 생성**
+  - `godot-project/scripts/gameplay/round_controller.gd` — 일반화 + class_name + static 주입
+  - `godot-project/scripts/gameplay/stage_timing.gd` — 조리도구 vessel 인자
+  - `godot-project/scripts/ui/food_select.gd` + `scenes/food_select.tscn` — **신설**
+  - `godot-project/scripts/gameplay/result_screen.gd` — 메뉴 버튼
+  - `godot-project/art/sprites/{food,ingredient,tool}/*.png` — 12음식 아트 45파일
+  - `project.godot` — main_scene = food_select
+  - `CHANGELOG.md` — 본 entry
+
+---
+
+## [2026-05-31] M2 W1 — 라면 수직 슬라이스 구현 (장보기→2A→2B→2C→결과 end-to-end, 절차적 GDScript)
+
+- **무엇** (godot-dev):
+  - **라면 round end-to-end 플레이어블 슬라이스** — `.tres`(t1_002)를 실제 소비하는 첫 게임 루프. Scene 1 장보기(간이) → Stage 2A 재료준비(rhythm tap) → Stage 2B 조리방법 선택 → Stage 2C 타이밍 → 결과(별점) 순차 실행.
+  - **신규 스크립트 6종** (`scripts/gameplay/`): `round_controller.gd`(오케스트레이터, 가중평균 prep0.20/method0.30/timing0.50 → 1~3별) + `stage_shop.gd`(StageShop) + `stage_prep.gd`(StagePrep, 칼 BPM oscillation + perfect±80ms/good±200ms 판정 + whole→cut cross-fade) + `stage_method.gd`(StageMethod, method_options 셔플 + 오답 시 정답 highlight=decisions A3 C안) + `stage_timing.gd`(StageTiming, 좌→우 sweep + PERFECT 중앙10%/good30%) + `result_screen.gd`(ResultScreen, 별점+점수분해+재시작).
+  - **신규 씬** `scenes/round_demo.tscn` + `project.godot run/main_scene` → round_demo로 변경(테스트용; 정식 진입점은 후속 교체).
+  - **Resource 스키마 확장** (W1 prerequisite): `food_definition.gd`에 prep_*(4) + correct_method_id + method_options 6필드, `ingredient_definition.gd`에 is_basic_pantry + cut_variations + distractor_weight range 0~3.
+  - **UI 절차적 생성**: Godot Editor 없이도 구조 검증 가능하도록 각 Stage가 _ready에서 노드 구성. 1080×1920 좌표.
+- **왜**: 설계→코드 최대 공백 해소의 핵심 단계. "재미 검증"이 가능한 최소 플레이어블 루프 확보. 사용자 "파이프라인 → 수직 슬라이스" 방향.
+- **결과/다음 단계**:
+  - **사용자 검증 필요 (제 환경엔 Godot 바이너리 없음)**: Godot 4.6 에디터로 godot-project 열기 → 텍스처 import 자동 생성 → F5 실행. 라면 1라운드 플레이 후 "재미/난도/템포" 피드백.
+  - **정적 검증 완료**: 탭 입력 단일화(_unhandled_input + mouse_filter IGNORE, 중복판정 제거), %d-float 캐스팅, await 시그널 반환, class_name 5종, .tres/script 참조 정합.
+  - **알려진 단순화/placeholder**: Scene 1 다점포 순회 미구현(1택 게이트, 별점 미반영) / 칼·timing bar는 도형 placeholder(아트 anchor swap 후속) / 라면 완성샷 v3 미LOCK(R3 reroll pending) / 사운드 없음(BPM 메트로놈·SFX = art-director sound sprint) / 양념재우기·콘도그 dip 등 special prep 모션 미구현.
+  - **W1 후속 → W2**: cut style 11종 확장 + 음식별 round + 아트 anchor 정식 swap + Scene 1 정식 다점포 + 사운드.
+- **패치 파일**:
+  - `scripts/gameplay/{round_controller,stage_shop,stage_prep,stage_method,stage_timing,result_screen}.gd` — **신설 6종**
+  - `scenes/round_demo.tscn` — **신설**, `project.godot` main_scene 변경
+  - `godot-project/art/{sprites,ui,vfx}/*.png` — 라면 범위 스프라이트 17장 반입
+  - `CHANGELOG.md` — 본 entry
+
+---
+
+## [2026-05-31] M2 파이프라인 #1 — CSV→.tres 임포터 신설 + Resource 스키마 확장 (76 resource 생성)
+
+- **무엇** (godot-dev, M2 prerequisite 파이프라인):
+  - **`tools/gen_resources_from_csv.py` 신설** — docs/*.csv를 읽어 godot-project/resources/ 하위에 Godot 4.x `.tres` 텍스트 resource를 결정적(deterministic)으로 생성하는 재현 가능한 임포터. notes 컬럼 쉼표 보존(split maxsplit), 다중값은 세미콜론, id 기반 결정적 uid 생성. `--check` dry-run 지원.
+  - **생성물 76개**: foods 12 + ingredients 45 + cooking_methods 9(boil/grill/stirfry/panfry/deepfry/roll/mix/toss/marinate) + stores 6(produce/meat/seafood/grain/sundry/**pantry**) + timing 4(perfect/good/miss/no_tap, C-4 lock 0.10/0.45/0.45/0.0).
+  - **Resource 스키마 확장 (godot-dev)**:
+    - `food_definition.gd` — Stage 2A `prep_ingredient_id`/`prep_cut_style`/`prep_bpm`/`prep_taps` + Stage 2B `correct_method_id`/`method_options: Array[StringName]` 6 필드 신설 (scene-2 §7.2 정합, B1 컬럼 import).
+    - `ingredient_definition.gd` — `is_basic_pantry: bool`(ADR-007) + `cut_variations: Array[StringName]` 신설. `distractor_weight` range 1→0 시작(basic_pantry=0 정합).
+  - **CSV 위생 개선**: foods-database.csv notes 내 쉼표 제거(세미콜론 통일) — 임포터/파서 안정성 확보 (이전 entry의 데이터 위생 follow-up 해소).
+- **왜**: 설계가 코드로 옮겨지지 못한 최대 공백(에셋·데이터 파이프라인 단절) 중 데이터 절반을 해소. 12음식·45재료가 CSV로만 존재 → Godot Resource 인스턴스화 완료로 W1(라면 수직 슬라이스) 진입 unblock. 사용자 "파이프라인 먼저 → 수직 슬라이스" 방향 채택.
+- **결과/다음 단계**:
+  - **검증 완료**: 디스크 76 .tres 형식·타입배열(Array[StringName])·ext_resource 참조·basic_pantry/토큰(DIP-00·MAR-00) 전수 스폿체크 + 무결성 스캔 clean. (Godot 에디터 import 최종 확인은 사용자 환경에서 1회 필요.)
+  - **남은 파이프라인 절반 (아트 import)**: assets-raw/transparent_m1 → godot-project/art/sprites/ 배치 + 버전 선택(LOCK 판정). art-director sprint와 함께 진행 권고.
+  - **cut_style/cooking_tool 토큰 registry**: 현재 prep params는 FoodDefinition에 보유. CUT-01~06/DIP-00/MAR-00 → cut 스프라이트 매핑 registry는 W1~W2 시 godot-dev 필요 시 신설(현재 토큰→anchor 직접 매핑 가능).
+  - **godot-dev W1 착수 가능**: 라면 Scene 1→2A→2B→2C→3.
+- **패치 파일**:
+  - `tools/gen_resources_from_csv.py` — **신설**
+  - `godot-project/scripts/resources/food_definition.gd` — prep_* + method 6 필드
+  - `godot-project/scripts/resources/ingredient_definition.gd` — is_basic_pantry + cut_variations + range
+  - `godot-project/resources/{foods,ingredients,cooking_methods,stores,timing}/*.tres` — **신규 76개**
+  - `docs/foods-database.csv` — notes 쉼표 정리
+  - `CHANGELOG.md` — 본 entry
+
+---
+
+## [2026-05-31] 미결 12건 중 핵심 3건 사용자 결정·적용 — B1 method_options 컬럼 + B2 DIP-00/MAR-00 토큰 분리 + C3 CH-01 OFF
+
+- **무엇** (사용자 결정 → game-designer/pm 적용):
+  - **B1 승인 → foods-database.csv 적용 완료**: 헤더에 `correct_method_id` + `method_options` 2 컬럼 신설 + 12음식 전부 값 lock. T1=3 후보 / T2=4 후보. 정답(`correct_method_id`)과 후보군(`method_options`, 세미콜론 구분) 분리 — godot Resource 스키마(scene-2 §7.2) 정합. 불고기는 `primary_cooking_method=marinate`(Stage 2A 소화)이나 Stage 2B `correct_method_id=stirfry`로 명시.
+  - **B2 승인 (원안 확장) → 토큰 분리 적용 완료**: 사용자 질문("그럼 불고기는?") 반영하여 콘도그·불고기 **둘 다** 칼질이 아님을 명확화. 콘도그 `prep_cut_style` `CUT-00`→**`DIP-00`** (반죽 담그기), 불고기 `CUT-00`→**`MAR-00`** (양념 주무르기). `CUT-00`은 실제 칼질(도마) 전용으로 정리. 메커닉/BPM/tap 수치 변경 없음 (라벨만 분리).
+  - **C3 승인 → CH-01 주인공 chibi default OFF 확정**: 조리 화면 VFX(불꽃·김) 시각 집중 + 성능 여유. 토글이라 alpha 후 ON 전환 가능. godot는 `CharacterArea` `visible=false` placeholder.
+  - **사실 정정**: 사용자가 "콘도그 빠지고 불고기로 대체된 것 같다"고 했으나, 실제로는 불고기(t2_014)가 **김치찌개(t2_009)를 대체**(2026-05-30 N-2 lock)한 것이고 **콘도그(t1_007)·불고기 둘 다 12종에 존속**. CSV grep으로 확인.
+  - 나머지 9건(A1~A6 현행 확정 / C1 손 sprite / C2 옹기 placeholder)은 권고대로 M2 비차단 — 별도 액션 불요.
+- **왜**: M2(라면 수직 슬라이스 W1) 착수 unblock. 진성 blocker였던 method_options 데이터 부재 해소 + CUT-00 토큰 충돌(콘도그 dip ↔ 불고기 marinade) 정리로 godot 런타임 분기 명확화.
+- **결과/다음 단계**:
+  - **데이터 위생 follow-up (godot-dev)**: foods CSV `notes` 필드에 쉼표 포함 주석 존재(예: 불고기 "...marinade bowl, motion-spec §3.3"). CSV→.tres 임포터는 20번째 쉼표 이후 전체를 notes로 처리하거나 notes를 따옴표 처리할 것.
+  - **balance-config 명문화 (game-designer)**: Stage 2B 카드 수 규칙(T1=3/T2=4) + DIP-00/MAR-00 토큰을 balance-config/motion-spec에 sync (후속).
+  - **남은 의사결정**: B3(Scene2→3 0.5s overlap, godot-dev sync 시 확인) — alpha 비차단.
+  - **godot-dev W1 착수 가능**: 라면 Scene 1→2A→2B→2C→3 end-to-end.
+- **패치 파일**:
+  - `docs/foods-database.csv` — `correct_method_id` + `method_options` 컬럼 신설, 콘도그 `DIP-00` / 불고기 `MAR-00` 토큰, 12음식 notes sync
+  - `docs/specs/decisions-pending-m2.md` — B1/B2/C3 결정 결과 반영
+  - `CHANGELOG.md` — 본 entry
+
+---
+
+## [2026-05-31] M2 착수 전 미결 확인 12건 통합 — docs/specs/decisions-pending-m2.md 신설 (진성 blocker 1건 식별)
+
+- **무엇** (pm 주도, game-designer + ui-designer sub-agent 권고 통합):
+  - **신규 문서 `docs/specs/decisions-pending-m2.md` v0.1** — 누적된 사용자 확인 대기 항목 12건(scene-2-kitchen-layout §6 8건 + 2026-05-31 design sprint CHANGELOG confirm 4건)을 한 문서로 수집·권고·통합. owner·긴급도(🔴 진성 blocker / 🟡 soft / 🟢 unblocked·alpha 후)별 그룹화 + 항목별 맥락/선택지/권고/영향/결정자 + TL;DR 결정 체크리스트.
+  - **핵심 발견 (진성 M2 blocker 1건)**: foods-database.csv에 scene-2 §2.2가 전제하는 **`method_options` 컬럼이 실제로 부재** (현재 `primary_cooking_method` + `secondary_method`만 존재, secondary는 2음식만 채워짐). godot Resource 스키마(scene-2 §7.2)가 `method_options`/`correct_method_id`를 요구 → W1 라면 end-to-end 구현 전 컬럼 신설 + 12음식 lock 필요.
+  - **나머지 분류**: 🟡 soft blocker 2건 (B2 콘도그 dip `CUT-00`↔불고기 marinade 토큰 충돌 → `DIP-00` 분리 권고 / B3 Scene2→3 transition 0.5s overlap SSOT lock) + 🟢 9건 (placeholder unblock 또는 현행 확정·alpha 후). cook_time_sec(구 #4)은 §3.2에 이미 lock 완료로 확인 — §6 #4 cross-ref 문구만 정정 대상.
+- **왜**: 사용자가 "PM + sub-agent 체제로 진행" 지시 + "미결 확인 12건 정리" 선택. M2(게임플레이 코드) sprint 착수 전 의사결정을 한 곳에 모아 blocker를 명확히 분리하기 위함. 12건이 scene-2 §6과 design CHANGELOG에 흩어져 있어 사용자 결정이 지연되던 상태.
+- **결과/다음 단계**:
+  - **사용자 결정 필요 3건**: B1(method_options 컬럼+12행 승인) / B2(콘도그 `DIP-00` 토큰 분리 승인) / C3(CH-01 chibi default OFF 동의). 나머지 9건은 "현행 확정" 일괄 동의로 닫힘.
+  - **game-designer 후속**: foods CSV `method_options` 컬럼+12행 lock, 콘도그 `DIP-00` 토큰, 카드 수 규칙(T1=3/T2=4) balance-config 명문화.
+  - **ui-designer/pm 후속**: scene-2 §6 각 항목 결정 결과 반영 + §6 #4 cross-ref 정정.
+  - **art-director 미니 sprint**: hand_marinade.png + corndog_batter_bowl.png ($0.08).
+  - 이후 **godot-dev W1**(라면 end-to-end) 착수 unblock.
+- **패치 파일**:
+  - `docs/specs/decisions-pending-m2.md` — **신설 v0.1**
+  - `CHANGELOG.md` — 본 entry
+
+---
+
 ## [2026-05-31] M2 prerequisite UI sprint — Scene 2 (Kitchen) layout 신설 + components CP-18~22 + screen-flow v0.3 (ADR-005 4-stage)
 
 - **무엇** (ui-designer 3 트랙 sprint):
@@ -359,453 +851,4 @@
 - **무엇**:
   - **사용자 결정 (2026-05-27)**: art-style reference = **하이퍼캐주얼 flat** (단색 fill, geometric, bold outline, 최소 detail). 직전 mascot baseline(Cookie Run / 라인프렌즈) supersede.
   - **art-director 5종 scratch v1.0 재작성**:
-    - `docs/art-style-guide.md` v0.2 → **v1.0** (flat 톤 baseline, MJ 약점 flat 특화 10항, ADR-005 cut anim 가이드, Week 1 게이트 7항 flat 기준)
-    - `docs/prompts-library.md` v0.3 → **v1.0** (v6.1 단일 모델 — niji 6 anime 톤 제거, 캐릭터 5 + 환경 5 prompts, M1 placeholder)
-    - `docs/art-anchor-rubric.md` v0.1 → **v1.0** (G5 단순성 / G7 모바일 가독성 재정의, G6 flat 특화 10항)
-    - `docs/mj-session-kit.md` v0.1 → **v1.0** (v6.1 단일, Step 0 sref 후보 2장, 예상 1.5~2.5h)
-    - `docs/art-workload-estimate.md` v3.1 → **v4.0** 재산정
-  - **art-workload v4.0 산정** (mascot 대비 큰 감소):
-    - MVP M1 ~67~73h + M0 사전 ~8~12h = **~75~85h total**
-    - mascot v3.1 baseline 대비 **-37~46% 감소** (M1 80h→55h, ADR-005 25~35h→12~18h)
-    - 일정 4~7주 → **3~5주**, MJ 비용 ~$120 → ~$60~90 (reroll 빈도 ↓)
-  - **모델 선택**: v6.1 **단일** 모델 (캐릭터 + 환경 통일). niji 6 anime 톤은 flat과 상극, v6.1은 `flat design` 안정적 + sref cross-호환.
-  - **ADR-005 cut anim 영향**: frame 수 mascot 18~24 → flat **12~18** (-25~33%), 단위 시간 0.5~0.7h → **0.3~0.4h** (-40~50%). ADR-005 합계 ~12~18h (mascot pm reality check 25~35h 대비 -48~52%).
-- **왜**: 사용자가 2026-05-24 mascot baseline reject ("너무 복잡함, 모바일게임스타일 필요"). 4시간+ 환경 셋업 + ADR-005 진행 동안 art-director BLOCKED. 2026-05-27 reference lock으로 art track 재개 + ADR-005 art 작업 재산정.
-- **결과/다음 단계**:
-  - **사용자 confirm 필요 3건**:
-    - **AR-1 ADR-002 §Decision #5 정합성** — art-director 판정 **(B) 카테고리 벗어남, ADR amendment 필요**. ADR-002 #5는 "Cookie Run / Chibi 마스코트"로 detail 톤 명시. Subway Surfers Jake도 mascot이나 detail/shading/outline 규약 본질적으로 다른 카테고리. pm 위임하여 ADR-006 신규 또는 ADR-002 #5 amendment record. **art 작업은 amendment 없이 진행 가능** (문서 정리 작업이라 비차단).
-    - **AR-2 주인공 성별 split 재추가** — 직전 사용자 directive (2026-05-24) "남/여 split"이 art-style reset과 함께 park됨. v1.0이 CH-01 단일로 회귀. 재추가 요청 시 M1 sprint +2~3h. **사용자 결정 필요**.
-    - **AR-3 MJ 세션 진입 타이밍** — art-director 판정 "즉시 ready". ADR amendment 없이도 art 생성 진행 가능 (문서 정리는 병행). **사용자 결정**: 즉시 vs amendment 후.
-  - **art-director BLOCKED 해소** — Week 1 anchor 게이트 진입 ready. 사용자 MJ Standard로 1.5~2.5h 세션 후 schema 인계 → art-director rubric 평가.
-  - **art-director 후속 sprint** (anchor lock 후): M1 본격 (음식 12 anchor + reaction variants ★1/2/3 어머니/아버지 6컷 + 재료 cut variation + cut style 6종 anim 12~18 frames + UI/VFX).
-  - **ADR-005 후속 sprint 우선순위 무변경**: game-designer (foods CSV prep_*) / ui-designer (도마 화면) / godot-dev (M2 진입 시).
-
----
-
-## [2026-05-26] ADR-005 confirm 3건 lock — 번호 005 유지, Perfect ±80ms, Skip 0.9
-- **무엇**:
-  - **ADR 번호 = 005 유지** (사용자 confirm, typo 수용. 006 rename X). 구조적 인덱스 일관 — hole 없음.
-  - **Perfect window = ±80ms LOCKED** (사용자 confirm, pm 권고 채택, 사용자 원안 ±100ms override). alpha fail rate 검증 후 필요 시 Remote Config로 ±100ms 완화 옵션.
-  - **Skip `accuracy_prep` = 0.9 LOCKED** (사용자 confirm, pm 권고 채택, 사용자 원안 1.0 auto-perfect override). skill bonus 명분 유지 (engage 시 +10% 추가 점수 상승 여지) + cut style anim art workload(+25~35h) 대비 engage ROI 확보.
-  - **갱신 파일 3종**:
-    - `docs/balance-config.md` v0.3 → **v0.3.1** (§6 dual-column 단일화 ±80ms LOCKED / §8 Skip default 1.0→0.9 LOCKED / §11 open question #10·#11 resolved / §2 컨텍스트 표 ADR-005-B / ADR-005-D LOCKED 라벨)
-    - `docs/decisions.md` ADR-005 — Context §Perfect window 수치 충돌 → LOCKED + Skip 항목 신규 LOCKED 추가 / Scoring 룰 §Perfect 라벨 / Mobile Latency Handling sync
-    - `CHANGELOG.md` — 본 항목
-- **왜**: ADR-005 채택 직후 pm raise한 3건 confirm을 한 라운드에 lock. alpha 데이터 기다리기 전 디자인 의도 명확히 → 후속 game-designer / godot-dev sprint가 placeholder 양자 병기 X 단일 값으로 진행.
-- **결과/다음 단계**:
-  - **개방 confirm 0건** (ADR-005 관련). 다음 잔여 confirm: 직전 sprint (Tier 2 카피 톤 / 튜토리얼 다시 보기 / 양념치킨 부활 / 잡채 ramp 보강) — 모두 alpha 이후 검토 또는 low-priority.
-  - **alpha 후 재검토 hook**: Perfect window fail rate 분포(±80ms로 30%+ Miss면 ±100ms 완화 검토) / Skip rate (>60%면 0.9→0.85 또는 +ad freq 강화) — data-analyst Phase 2 모니터링 항목.
-  - **잔여 ADR-005 후속 sprint**: game-designer (foods CSV prep_* lock + cooking-mechanics §X 본격) / ui-designer (도마 + Knife indicator + FTUE 6-step) / godot-dev M2 진입 시 / art-director (art-style lock 후).
-
----
-
-## [2026-05-26] ADR-005: 4-stage 메커닉 추가 — 재료 준비 (rhythm tap, knife indicator). Option C (optional skill bonus). +1~3주 일정 영향.
-- **무엇**:
-  - **ADR-005 Accepted** — 3-stage → 4-stage 확장. Stage 2 sub-stage 분할 (2A 재료 준비 / 2B 조리 방법 / 2C 조리 시간). Scene 변경 없음 (Scene 2 키친 내 sub-flow).
-  - **Option C — optional skill bonus rhythm tap** 채택. Skip 가능 (📺 Rewarded Video → auto-perfect, Stream A 자연 트리거).
-  - **Knife indicator visual cue** — 칼이 자동 위아래 움직임, 도마 닿기 직전 = perfect tap. 별도 rhythm UI 없이 게임 비주얼 통합.
-  - **Cut Styles 6종 (한식)**: 다지기 / 채썰기 / 어슷썰기 / 통썰기 / 송송썰기 / 깍둑썰기.
-  - **Total Score 가중 평균 공식** (cooking-mechanics §3 곱셈 모델 supersede): 재료 25% × 준비 20% × 방법 20% × 시간 35%. ★1 30%+, ★2 60%+, ★3 90%+.
-  - **Per-Food BPM Design**: Tier 1 BPM 70~110 (3~6 taps) / Tier 2 BPM 90~140 (5~8 taps). 다지기 가장 빠름(140), 통썰기 가장 느림(70), 양념 재우기 60 BPM (마사지 식).
-  - **Perfect window**: Perfect ±80ms (pm 권고) vs ±100ms (사용자 명시) — balance-config v0.3 placeholder, alpha 후 lock.
-  - **Tutorial 확장**: FTUE 5-step → 6-step (Round 1 BPM 60 + 2 taps + 시각 가이드 full → Round 4+ 정상 BPM).
-  - **갱신 파일 7종**:
-    - `docs/decisions.md` — ADR-005 본문 신설, 인덱스 ADR-005 행 추가, ADR-003 §Decision 옆 한 줄 註
-    - `CHANGELOG.md` — 본 항목
-    - `docs/systems/cooking-mechanics.md` v0.4 → **v0.5** (헤더 + §2 4-stage + §3 가중 평균 supersede + §X 재료 준비 placeholder)
-    - `docs/balance-config.md` v0.2 → **v0.3** (§5 4-factor weights / §6 Prep Rhythm window / §7 BPM by Tier / §8 Skip Bonus 신규)
-    - `docs/art-workload-estimate.md` v3.0 → **v3.1** (+25~35h pm reality check placeholder)
-    - `docs/GDD.md` v2.1 → **v2.2** (§2 Core Loop 4-stage sync / §6.3 prep_* + cut_variations / §13 R-A13~R-A16 4건)
-    - `docs/agent-roster.md` — sound-designer 신설 X, art-director sound 겸직 결정 명시
-- **왜**:
-  - 사용자 메이저 decision (2026-05-26) — 기존 Stage 2 단일 카드 선택의 메커닉 빈약함 재평가, 한식 cutting 기법(다지기/채썰기 등)이 게임 표현 기회로 미활용.
-  - rhythm tap + Knife indicator visual cue로 메커닉 깊이 추가 + K-stylistic touch 강화.
-  - Skip 옵션이 Rewarded Video 자연 트리거 → Stream A CTR ↑.
-  - Optional 설계로 캐주얼 진입장벽 유지 (어려우면 Skip → auto-perfect).
-- **결과/다음 단계**:
-  - **ADR 번호 확인 필요 (사용자 confirm)**: 사용자가 "ADR-006" 지정했으나 ADR-005가 비어있어 **ADR-005로 작성**. 의도가 다르면 알려주세요.
-  - **일정 reality check (둘 다 명시)**:
-    - 사용자 추정: +1주
-    - **pm 평가: +2~3주** — 근거 = audio engine (BPM 메트로놈 + latency calibration) + UI (Knife indicator + 도마 화면 + FTUE 확장) + art (칼/도마 1 set + cut style anim 3~4 frames × 6 + hero ingredient cut variation) + balance (4-factor 가중치 검증 + BPM/tap 음식별 매핑) + tutorial 확장. 5개 영역 cross-cutting.
-    - 결과: ADR-003 일정 3~4개월 → **3.5~4.5개월** (buffer 초과 가능성). M0 reality check 게이트에서 재평가.
-  - **신규 Risk 4건**:
-    - **R-A13** Mobile audio latency (기기별 ±100ms 차이) — 영향 중 / 가능성 중. 완화: visual cue 우선 + post-launch calibration UI.
-    - **R-A14** Art-style reset 의존 (현재 보류 상태) — 영향 중 / 가능성 고. 완화: art-director 작업 BLOCKED on art-style lock.
-    - **R-A15** Sound deferral 충돌 (ADR-003 M2~M3 deferred ↔ ADR-005 BPM 메트로놈 강의존) — 영향 중 / 가능성 중. 완화: M2 minimum 1~2주 sound 작업만 추가, 전체 사운드 deferred는 유지.
-    - **R-A16** 일정 +1~3주 out-of-bound — 영향 고 / 가능성 중. 완화: M0 reality check 게이트.
-  - **art-director BLOCKED**: 직전(2026-05-24) art-style reset 선언 + 새 reference 결정 보류. ADR-005 art 작업(칼/도마 + cut anim) 진입 불가, art-style lock 후로 격리.
-  - **Sound-designer 결정**: 신규 agent 신설 X. **art-director가 sound 겸직** (Phase 2 통합). 근거: 1~2주 sound 작업량, 별도 agent 오버헤드 불필요. agent-roster.md art-director 행에 "+ Phase 2 sound (BGM/SFX/rhythm) 겸직" 추가.
-  - **후속 sub-agent 우선순위**:
-    1. **game-designer**: foods-database.csv prep_* 4 컬럼 + ingredients-database.csv cut_variations 컬럼 + balance-config v0.3 정확 수치(BPM 음식별 / perfect window lock) + cooking-mechanics v0.5 본격 sprint (§X 재료 준비 룰 상세)
-    2. **ui-designer**: screen-flow v0.3 (도마 화면 + Knife indicator) + components.md CP-18/CP-19 신설 + ftue.md 6-step
-    3. **godot-dev** (M2 진입 시): Stage 2A rhythm tap 구현 + Knife indicator AnimationPlayer + Skip → Rewarded Video wire + 4-factor 가중 평균 채점
-    4. **art-director** (art-style lock 후): 칼/도마 art + cut style 애니메이션 + hero 재료 cut variation
-  - **사용자 confirm 필요**:
-    - ADR 번호 (006 vs 005) 의도 확인
-    - Perfect window 80ms vs 100ms 최종 lock 시점 (alpha 후 가능)
-
----
-
-## [2026-05-25] Godot env install — AAB smoke PASS, GitHub repo push, AppLovin signup gated
-- **무엇**:
-  - **Godot 4.6.3 stable 설치 + 프로젝트 import** (사용자가 4.5.2 LTS 대신 4.6.3 stable 선택, ADR-004 범위 안). `project.godot` 4.5 → 4.6 feature 갱신, deprecated `[physics] enable_pause_aware_picking` 제거, header 주석 sync.
-  - **JDK 17 (Temurin) + Android Studio + SDK API 34 + Build-Tools 34.0.0 + NDK 25.2.9519653 설치 완료** (사용자).
-  - **Godot Editor**: Editor Settings에 Android SDK Path 등록, Export Templates 4.6.3 다운로드(수동/Online 모드), Install Android Build Template 완료, Debug keystore 생성 + 등록.
-  - **첫 AAB smoke build PASS**: `build/kfoodmaster-0.1.0.aab` 생성. Godot 4.6.3 + custom gradle build 파이프라인 검증 완료.
-  - **scenes/main.tscn** placeholder 신설 (Editor가 missing scene 에러 raise → 빈 Node2D placeholder, M2에서 실 main 화면으로 교체).
-  - **`.gitignore` Godot 섹션 추가** (.godot/, .import/, *.translation, gradle 캐시, google-services.json).
-  - **Git init + 첫 commit (root-commit f5b05a1, 83 파일, 7148+ lines)**. 사용자 정보 globally configured (JS Park / fwlooking@gmail.com).
-  - **GitHub repo public 생성**: https://github.com/nanunjun/kfood-game (gh CLI 통한 한 줄 create+push).
-- **왜**: ADR-004 follow-up. M2 sprint gameplay 진입 prerequisite로 engine 환경 검증.
-- **결과/다음 단계**:
-  - **AppLovin MAX signup gated** — AppLovin이 dev signup 단계에서도 Play Store published app 요구. account-approval@applovin.com 이메일 회신: "publish 후 link 재신청". **결정: Option A (defer)** — AppLovin은 M2~M3 sprint(Play Console Internal Testing 트랙 등록 시점)로 이월. Stream A 수익 ADR 변경 없음, 단순 일정 슬립.
-  - **다음 plugin 작업** (이번 세션): Google Play Billing + Godotx Firebase. 둘 다 Play Console gate 없음 (Billing은 IAP **테스트**만 Play Console 필요, install/wire는 가능).
-  - **Play Console 셋업**은 M2 후반 또는 M3 초반 task. $25 일회 + Internal Testing 트랙 + AppLovin 재신청 (1~3 영업일 검토).
-  - **godot-setup-guide.md** 갱신 권고: 4.5.2 LTS → 4.6.x stable 라벨 sync (low priority, next sprint).
-
----
-
-## [2026-05-24] godot-dev sprint — Godot 4.5.2 LTS 환경 구축 + 프로젝트 bootstrap + 설치 가이드
-- **무엇**:
-  - **godot-project/ bootstrap (31 파일)**:
-    - `project.godot` (4.5.2 LTS, 1080×1920 mobile, portrait, etc2_astc 텍스처, 6 autoload 등록)
-    - `export_presets.cfg` (Android AAB preset, gradle build, min_sdk=24 / target_sdk=34, version_code/name placeholder, secret 분리)
-    - `.gitignore` (Godot 표준 + secret 격리)
-    - `icons/icon.svg` placeholder
-    - `README.md` (직전 ADR-004 sprint 산출 유지)
-    - 폴더 트리: `addons/ / scenes/ / resources/ / art/{sprites,ui,animations}/ / audio/{sfx,bgm}/ / scripts/{ads,iap,save,analytics,ui,gameplay}/` (.gitkeep)
-  - **Resource 스키마 6종** (`godot-project/scripts/resources/*.gd`):
-    - `food_definition.gd` (foods-database.csv 15 컬럼 1:1)
-    - `ingredient_definition.gd` (ingredients-database.csv 8 컬럼, `used_in_foods: Array[StringName]`)
-    - `store_definition.gd` (5가게 id/color/icon/ambient_sound)
-    - `character_definition.gd` (주인공/양친 공통, role enum, reaction_anchor_paths Dict)
-    - `cooking_method_definition.gd` (7+ 조리법, default cook_time / perfect_window)
-    - `timing_definition.gd` (Stage 3 band, C-4 lock 45/45/10 default)
-  - **autoload skeleton 6종** (`godot-project/scripts/autoload/*.gd`, 등록 순서):
-    - RemoteConfigManager (balance-config v0.2 §2 20+ 키 상수 catalog)
-    - SaveManager (ConfigFile 기반, mid-game 캐릭터 swap 데이터 보존 hook 주석)
-    - AdsManager (AppLovin MAX wrapper placeholder)
-    - IapManager (Google Play Billing wrapper placeholder)
-    - AnalyticsManager (Godotx Firebase Analytics, 이벤트 5종 enum placeholder)
-    - GameManager (세션 lifecycle hook)
-    - 각 `func _ready()` 빈 + `# TODO: M2 sprint 구현` 주석
-  - **`docs/godot-setup-guide.md` v1.0 신설** (302줄, Step 0~10):
-    - Step 1 Godot 4.5.2 LTS install / Step 2 JDK17 (Temurin/MS OpenJDK) / Step 3 Android SDK (commandlinetools 권장, `sdkmanager` 명령) / Step 4 Android export template / Step 5 Debug keystore / Step 6 공식 plugin 3종 (AppLovin MAX v1.2.0 + Google Play Billing + Godotx Firebase) / Step 7 첫 AAB smoke test / Step 8 검증 체크리스트 / Step 9 알려진 함정 (JDK 버전 mismatch / NDK 미설치 / AppLovin SDK Key silent fail / Gradle 메모리 / Firebase google-services.json) / Step 10 Mac/Linux 노트
-- **왜**: ADR-004 (Godot 채택) 후속 사전 작업. Art-direction이 reset 중이지만 engine env는 art와 독립이라 병행 진행 가능. M2 gameplay sprint 진입 prerequisite 확보.
-- **결과/다음 단계**:
-  - **사용자 다음 액션**: `docs/godot-setup-guide.md` Step 1부터 순차 수행 (Godot 4.5.2 install → import `godot-project/project.godot`). 예상 소요 **~3~5시간** (Godot 20분 + JDK 20분 + Android SDK ~1.5h NDK dominant + plugin 3종 ~1h + AAB smoke ~30분).
-  - **알려진 함정 우선순위**: ① JDK 17 강제(11/21 비호환) ② Android NDK `ndk;25.2.9519653` 필수 ③ AppLovin SDK Key 미발급 시 silent fail.
-  - **M2 sprint 이월**:
-    - gameplay 코드 (Stage 1/2/3 메커닉, scoring, distractor)
-    - main 씬 → main menu 교체
-    - .tres 인스턴스 일괄 생성 (12 음식 + 42 재료 + 5가게)
-    - AppLovin MAX / Billing / Firebase 실 wiring (autoload TODO 해제)
-    - U-2 양친 0.6s 시차 unlock 컷씬 AnimationPlayer 구현
-    - Firebase Remote Config Console 키 등록 (balance-config v0.2 §2)
-    - Hint 버튼 → Rewarded Ad 연결
-  - **art-direction reset**은 별도 트랙 — godot-dev에 영향 없음 (asset path는 모두 placeholder).
-
----
-
-## [2026-05-24] art-director Week 1 anchor 실행 키트 + 평가 rubric — 사용자 MJ 세션 핸드오프
-- **무엇**:
-  - `docs/mj-session-kit.md` v0.1 **신설** — 사용자 MJ Discord/web copy-paste용. Step 0(sref anchor 후보) / Step 1(캐릭터 5) / Step 2(환경 5) / Step 3(결과 인계) 순서. 10 anchor 각각 모델/파라미터/sref placeholder/reroll 트리거 매핑 ready.
-  - `docs/art-anchor-rubric.md` v0.1 **신설** — 10 anchor × G1~G7 평가 표. G6 MJ 약점 6항 세분화 (손가락/정면 얼굴 대칭/텍스트 누수/일본·중국 인상 누수/3D 누수). 종합 LOCK 조건 = **10 중 8 LOCK + 캐릭터 sref 1 PASS + 환경 sref 1 PASS**.
-  - `docs/prompts-library.md` v0.1 → **v0.2** — §0.1 sref 매핑 표(`--sw` 권장값 포함) + §0.2 사용자 결과 schema 신설.
-  - `docs/art-style-guide.md` v0.1 → **v0.2** — §10.1 rubric 참조 한 줄 + §3.5 U-2 sync (양친 reaction 6컷 sleeping 회피 원칙).
-- **왜**: MJ Standard 결제 완료 + 직전 sprint 산출(prompts-library v0.1, style-guide v0.1)이 anchor 게이트 prerequisite. 사용자가 1회 세션으로 MJ 실행할 수 있도록 copy-paste·평가 rubric·인계 schema 일체 packaging. Week 1 anchor lock = M1 art sprint kick-off prerequisite.
-- **결과/다음 단계**:
-  - **Step 0 sref 후보**:
-    - 캐릭터 sref = **CH-01 주인공** (Tier 1 L1부터 항상 등장, 모든 캐릭터 anchor base).
-    - 환경 sref = **BG-01 청과상** (한식 시각 요소 풍부, Cabbage Green 베이스 팔레트 자연스러움).
-  - **사전 경고 (까다로울 3건)**:
-    - CH-03 아버지 — niji 6가 "50대"를 "20대 anime boy"로 그릴 확률 ≥ 50%. salt-and-pepper 머리·눈가 주름 강조 필수.
-    - CH-02 어머니 — 한복이 일본 기모노로 빠질 확률 ≥ 40%. 옷섶 방향·오비 두께 즉시 체크.
-    - BG-05 잡화점 — v6.1이 옹기를 중국 청화백자로 그릴 확률 ≥ 35%. `NOT Chinese vase` 강제.
-  - **예상 소요 시간**: 1차 시도 1.5~2시간, reroll 3~4장 포함 현실 **2~3시간**. MJ Standard fast 15h/월 대비 충분.
-  - **사용자 인계 형식**: `mj-session-kit.md` §5.1 schema (Anchor ID / URL / sref / seed / 4-grid 선택 칸 / Round / 메모) 12세트.
-  - **사용자 액션**: MJ 세션 실행 → 결과 schema로 정리 → 다음 turn에 art-director가 G1~G7 rubric으로 PASS/FAIL 판정 → 8/10 LOCK + sref 2 PASS이면 M1 art sprint kick-off.
-  - **M1 sprint 이월 (anchor LOCK 후)**: reaction 6컷(어머니/아버지 ★1/2/3), 음식 12개 anchor, 재료/UI/VFX prompt.
-
----
-
-## [2026-05-24] C-1~C-4 결정 적용 — 양념치킨 → 순두부 회귀, flip 미도입, Stage 3 45/45/10 lock + UI 후속 sync
-- **무엇**: 직전 sprint에서 game-designer/ui-designer가 raise한 confirm 항목 6건(C-1~C-4 + U-1 + U-2) 일괄 결정 및 적용. 두 agent 병렬 실행.
-  - **사용자 결정 (2026-05-24)**: C-1 콘도그 **유지** (no-op) / **C-2 양념치킨 → 순두부찌개 회귀** (구조적, T2 어물전 floor 보강) / **C-3 해물파전 flip 미도입** (MVP-first) / **C-4 Stage 3 good/miss/perfect = 45/45/10** (마스코트+가족 정서 부드러움) / **U-1 FTUE 첫 음식 호떡 lock** / **U-2 어머니/아버지 L11 동시 unlock**.
-  - **game-designer 갱신 6종**:
-    - `docs/systems/mvp-food-selection.md` v2.0 → **v2.1** (C-2 lock, Tier 2: 비빔밥/갈비구이/김치찌개/잡채/순두부찌개)
-    - `docs/foods-database.csv` (양념치킨 t2_011 삭제 → 순두부찌개 t2_013 추가, ID gap 의도적)
-    - `docs/ingredients-database.csv` 40 → 42행 (닭·감자전분 제거, 호박/멸치/순두부/고춧가루 신규, used_in_foods sync)
-    - `docs/store-distribution.md` v1.0 → **v1.1** — **어물전 floor 4 → 5** (T2 어물전 음식 1개 확보, T2 다점포 메커니즘 회복). 5×12 합계: 청과 10 / 정육 7 / 어물 **5** / 곡물 9 / 잡화 12.
-    - `docs/balance-config.md` v0.1 → **v0.2** — §3.1 C-4 lock(Remote Config `cooking.stage3.band_distribution = {perfect:0.10, good:0.45, miss:0.45}`), §4 C-3 lock(해물파전 flip 미도입 + post-launch 사양 §4.2 격리), 순두부찌개 cook_time 14s / perfect_window 950ms / perfect_width 0.07.
-    - `docs/friends-system.md` v0.1 → **v0.2** — 호불호 axis 양념치킨(spicy+sweet+oily) → 순두부찌개(spicy+salty+mild) 치환. 어머니 net 0, 아버지 net +2, 합산 +2 가족 최고 선호 그룹.
-  - **ui-designer 갱신 3종**:
-    - `docs/ui/ftue.md` v0.1 → **v0.2** — U-1 호떡 LOCK. Step 1 곡물상 단독 + Step 2 곡물+잡화 풀 활성 (호떡이 2가게 SKU와 fit, 음식 swap 불필요).
-    - `docs/ui/tier-1-2-flow.md` v0.1 → **v0.2** — U-2 적용. 어머니/아버지 0.6s 시차 fade-in 단일 컷씬, reaction anchor 6컷 즉시 active(sleeping 회피), §3.3.1 L11~15 reaction 단계 흐름 신설(L11~12 Subtle / L13~14 어머니 우선 / L15+ 양친 동시).
-    - `docs/ui/components.md` v0.1 → **v0.2** — Godot 전환 sync (ADR-004). 15종 컴포넌트 모두 "Godot 매핑" 행 신규, §0 컨벤션 블록(.tscn/.tres/.gd + godot-project/ 경로), AppLovin MAX Godot plugin 참조 1건(§10 Hint).
-- **왜**: 직전 sprint 후속 confirm 누적 6건이 의사결정 적체 위험 → 한 라운드에 일괄 처리. C-2는 구조적(T2 어물전 0회 → 다점포 메커니즘 가치 약화) 이유로 사용자가 game-designer 권고 채택. C-3/C-4는 ADR-003 MVP-first + 마스코트 톤 정합. U-1/U-2는 음식 reshuffle/정서 임팩트로 자연 도출.
-- **결과/다음 단계**:
-  - **사용자 추가 confirm 필요 신규** (낮은 우선순위):
-    - Tier 2 카피 톤 placeholder 검토 cadence (pm)
-    - 튜토리얼 다시 보기 옵션 노출 여부 (pm)
-  - **다음 sprint 이월 (game-designer 또는 godot-dev)**:
-    - `cooking-mechanics.md` §4.4 outdated reconciliation — v0.4 본문 30/60 → balance-config v0.2의 45/45/10으로 sync (game-designer #7)
-    - **잡채 단독 T2 중반 리스크** — 난이도 ramp L15~L19 공백, ui-designer Tier 1~2 flow 재검토 권고 (game-designer #4)
-    - 양념치킨 post-launch M1 1순위 부활 후보 — soft launch alpha 데이터로 검증 (pm)
-    - food_id gap (t2_011 결번 + t2_013) — Resource(.tres) 매핑 시 무영향, 디자이너 가독성만 영향 (godot-dev noted)
-    - balance-config sync 항목 — 호떡 부분집합 재료 분배 / L11~15 reaction 정확 레벨 / FTUE Stage 3 PERFECT 20% 확대 수치 (game-designer)
-    - Godot Resource(.tres) 6종 스키마 lock — Ingredient/Store/Food/Character/Timing/CookingMethod (godot-dev)
-    - 양친 unlock 컷씬 0.6s 시차 AnimationPlayer 구현 (godot-dev)
-    - AppLovin MAX Godot plugin Hint 버튼 wiring (godot-dev)
-
----
-
-## [2026-05-23] ADR-004: PM 우려 사항 fact check 후 Godot 채택 확정 (AppLovin 공식 plugin, Foundation mobile 인프라 성숙)
-- **무엇**:
-  - **ADR-004 Accepted** — Engine = Godot 4.6 (또는 4.5.2 LTS), Language = **GDScript only** (C#/.NET 미사용), Ads = AppLovin MAX 공식 Godot plugin, IAP = Godot Foundation Google Play Billing plugin, Analytics/Crashlytics = Godotx Firebase. ADR-002/003 supersede 하지 않음 — 엔진/언어만 lock.
-  - `docs/decisions.md` 갱신 (인덱스 + ADR-004 본문 + ADR-002 §Decision #2 옆 註: "Asset Store 의미 재정의 — paid marketplace 아닌 engine-agnostic 무료 소스(Kenney/OpenGameArt/Itch/Freesound) + Godot Asset Library 무료 항목").
-  - `CLAUDE.md` 갱신 (엔진/언어/네이밍/빌드/폴더구조/Claude 작업 가이드/Sub-Agent Team `unity-dev` → `godot-dev`).
-  - `docs/GDD.md` §8 Tech Stack / §6.3 데이터 형식(SO → Resource[.tres]) / §12.3 / §13 R10 갱신, 버전 v2.1.
-  - `docs/agent-roster.md` `unity-dev` 행 → `godot-dev`, 위임 가이드 코드 권한 재라벨.
-  - `.claude/agents/godot-dev.md` 신설 (unity-dev.md 동일 frontmatter/tool 권한 패턴).
-  - `docs/art-workload-estimate.md` Asset Store 표현 3건만 engine-agnostic 소스로 재라벨, **워크로드 ~80h 무변경 / v3.0 유지**.
-  - **Main thread Bash 처리**: `.claude/agents/unity-dev.md` 삭제, `unity-project/` → `godot-project/` rename (내부 README.md 1개), 새 `godot-project/README.md` 작성 (Godot 4.6 셋업 체크리스트 + 공식 plugin 3종 + 폴더 구조 + `.tscn`/`.tres` 편집 가이드).
-- **왜**: 사용자 "Unity → Godot 교체" 1줄 요청 → main thread가 3가지 우려(AppLovin/Asset Store/컨벤션) raise → 사용자가 fact pack으로 우려 반박 (AppLovin 공식 Godot plugin 존재 + Asset Store 영향 overstated + 컨벤션 변경 trivial). Main thread `AppLovin/AppLovin-MAX-Godot` v1.2.0 (2025-04-24, AppLovin org 소유) 검증 → fact 확정. pm이 ADR-004 작성 및 follow-up 일괄.
-- **결과/다음 단계**:
-  - **사용자 confirm 필요 없음** — fact pack 기반 모든 결정 처리 완료.
-  - **후속 sprint 이월**:
-    - **ui-designer**: `docs/ui/components.md` "Unity prefab" 표현 → Godot "Scene/Node(.tscn)" 일괄 갱신.
-    - **game-designer**: `docs/balance-config.md` Remote Config 구현 전략 — Firebase Remote Config로 통일 권고(Godotx Firebase Remote Config 모듈 검증 포함).
-    - **godot-dev**: Godot 4.x export 환경 셋업 (Android export template / JDK17 / Android SDK / AAB 빌드 검증).
-    - **godot-dev**: Godotx Firebase plugin 의존 추가 + Analytics/Crashlytics 부트스트랩.
-    - **godot-dev**: AppLovin MAX Godot plugin Asset Library 설치 절차 검증 + Android API 24+ 요구사항 v1.2.0 기준 재확인.
-    - **pm**: GDD §12.3 Godot 4.5.2 LTS / 4.6 라이프사이클 추적 (분기별 release note 모니터링).
-  - **ADR 추론 흐름**: 사용자 1줄 → 우려 raise → fact pack → URL 검증 → ADR-004 Accept. ADR-002/003 reversal 같은 same-day 패턴이지만 검증 단계가 들어가서 정당화됨.
-
----
-
-## [2026-05-23] MVP 음식 Final 12 lock + DB/balance/friends spec 일괄 신설 (mvp-food-selection v2.0)
-- **무엇**: 사용자 지정 Final 12를 canonical로 lock. `mvp-food-selection.md` v1.0 → **v2.0 supersede**. 변경 표면적으로 "두 가지 조정"(김치전→해물파전 / 불고기→갈비구이)으로 라벨됐으나 **실제 5건** 변경 (계란말이→콘도그 / 떡국→호떡 / 김치전→해물파전 / 제육볶음→잡채 / 갈비찜→갈비구이 / 순두부→양념치킨 — 사용자 표기 "불고기"는 v1.0 미존재, 실 대체 대상은 갈비찜). game-designer가 5건 모두 재검증.
-  - **신설 5종**: `docs/foods-database.csv` (12행), `docs/ingredients-database.csv` (40행), `docs/store-distribution.md`, `docs/balance-config.md` v0.1, `docs/friends-system.md` v0.1.
-  - **갱신 1종**: `docs/systems/mvp-food-selection.md` v2.0 — v1.0 supersede, D-1/D-2 자연 해소, 제거 음식 5종(계란말이/떡국/김치전/제육/갈비찜/순두부)은 post-launch M1~M2 후보로 격리.
-- **왜**: ADR-003 MVP scope 안에서 사용자가 인지도·글로벌 어필·다점포 메커닉 활용도 기준으로 reshuffle. 어물전 floor(해물파전), 시각 임팩트(갈비구이), 글로벌 viral(콘도그·양념치킨) 우선.
-- **결과/다음 단계**:
-  - **5건 재검증 결과** (game-designer): 3건 STRONG ACCEPT (호떡 / 해물파전 / 갈비구이), 1건 ACCEPT (잡채), **2건 ACCEPT WITH CONCERN**:
-    - **C-1 콘도그**: viral 강함, 단 분식·길거리 비중 4/7로 전통 한식 톤 약화. Alt = 계란찜(잡화 중심).
-    - **C-2 양념치킨**: 글로벌 KFC 강점, 단 T2 어물전 부재(T2 음식 5개 모두 어물전 0). Alt = 순두부찌개 회귀.
-  - **가게별 등장 분포 최종**: 청과 10 / 정육 8 / **어물 4 (floor 마지노선)** / 곡물 10 / 잡화 12. 해물파전 단독이 어물전 SKU 다양성의 50% 책임 → post-launch M1 어물 음식(된장찌개·순두부) 1순위.
-  - **5가게 풀 순회 음식 축소** (떡국 제거로 김밥 단독) → post-launch M1 떡국 부활 권고.
-  - **U-1 재권고 (FTUE 첫 음식)**: 계란말이 삭제로 **호떡** 1순위 (곡물+잡화 2가게 / 굽기 단순 / 시각 5/5). 라면 2순위. → ui-designer `ftue.md` 갱신 필요.
-  - **U-2 결정 (가족 unlock)**: **어머니/아버지 L11 동시 unlock** 권고 (정서 임팩트 + reaction anchor 6컷 sleeping 회피). → ui-designer `tier-1-2-flow.md` 양친 동시 컷씬으로 갱신 필요.
-  - **사용자 confirm 필요 신규 4건**: C-1 콘도그 vs 계란찜 / C-2 양념치킨 vs 순두부찌개 회귀 / C-3 해물파전 flip mechanic 도입 여부 / C-4 Stage 3 good/miss 30/60 vs 45/45.
-  - **다음 sprint 이월**: 갈비구이 PERFECT window alpha 튜닝(0.04→0.05~0.08), 친구 호불호 ±5% 가중치 alpha 튜닝, ui-designer FTUE/Tier flow 갱신, unity-dev `FriendDefinition` SO schema 구현, pm ADR-004 후보(양친 가족 단위 + 호불호 5 axis lock).
-
----
-
-## [2026-05-23] M0 ui-designer sprint — screen-flow / Tier 1~2 flow / FTUE / components
-- **무엇**: `docs/ui/` 4종 신설.
-  - `screen-flow.md` — 부트 → Round 3-Scene(시장→키친→식탁) 전이도, Scene 1 다점포 sub-flow(2×3 부채꼴 그리드), Scene 2 키친, Scene 3 식탁(T1 혼밥 / T2 가족), 광고·사운드 hook overlay, Decisions 6항.
-  - `tier-1-2-flow.md` — Tier 1 vs Tier 2 비교 매트릭스(인분·식탁·광고 빈도·카피 톤), 어머니/아버지 unlock 타이밍 권고.
-  - `ftue.md` — 4-step (단일 가게 → 2가게 → 키친 → 식탁), 다점포 안내 반복 정책(FTUE Step 2 강제 1회 + Round 2 미세 hint 1회 + 5가게 풀 순회 음식 첫 등장 시 ⓘ), Skip 정책, 친구 unlock과 FTUE 분리.
-  - `components.md` — 15종 컴포넌트 카탈로그(재료카드·가게선반·시장입구·키친도구슬롯·식탁캐릭터영역·★rating·타이머·HUD·Hint 등), 상태별 spec + art-style 톤 매핑 + sound hook 위치.
-- **왜**: ADR-003 M0 작업 3건(screen-flow + Tier 1~2 + FTUE)을 한 sprint로 묶어 art/음식 trace와 독립 진행. `components.md`는 screen-flow/tier/ftue가 참조하는 SSOT + Unity prefab 1:1 매핑 의도로 분리.
-- **결과/다음 단계**:
-  - **사용자/pm/game-designer confirm 필요** (ui-designer flag):
-    - **U-1 (game-designer)**: **FTUE 첫 음식 계란말이 vs 라면** — 권고 계란말이(2가게 최소 + 시각 매력 + 굽기 단일 메타포). 라면은 3가게라 Step 2/Round 2 후순위.
-    - **U-2 (game-designer)**: **아버지 unlock 시점 L11 동시 vs L15 분리** — 권고 L15 분리(Tier 2 중반 신선도 갱신).
-    - **U-3 (pm)**: **라이프 시스템 사용 여부** — HUD 컴포넌트 영향. 결정 시 components.md 갱신.
-    - U-4 (사용자, 보조): Tier 2 식탁 카피 톤 placeholder 검토.
-  - **다음 sprint 이월**: 정확한 px/dp 수치(unity-dev sync), balance-config.md 수치(타이머/PERFECT 폭) 후 컴포넌트 재검토, sound hook 정식 ID 명명(sound-guide.md M2~M3), Tier 2 카피 톤 lock, FTUE Round 2 미세 hint 횟수 확정, Settings "튜토리얼 다시 보기" 옵션 노출 여부.
-
----
-
-## [2026-05-23] M0 sprint 착수 — MJ Standard 결제 완료 + art-director / game-designer 병렬 1차 산출
-- **무엇**:
-  - **MJ Standard Plan 결제 완료** (사용자 확인). Suno Pro 보류 유지(M2~M3).
-  - **art-director** v0.1 산출 2종 신설:
-    - `docs/art-style-guide.md` — 마스코트 톤 정의("라인프렌즈 친근함 + Cookie Run 식감 + 재래시장 손맛"), 비율 1:1.5~2 / mitten 손 / 점 눈 / 분홍 볼터치, 늦오후 골든아워 단일 조명 lock, 가게 5종 시그니처 컬러, MJ 약점 회피 규칙, **Week 1 anchor lock 게이트 체크리스트(7항)** 포함.
-    - `docs/prompts-library.md` — **캐릭터 5 + 환경 5 anchor 프롬프트 세트**. **캐릭터=niji 6** (chibi 안전구역), **환경=v6.1** (한국 재래시장 텍스처), 공유 `--sref` 운영 규칙. 음식·재료·UI·VFX 프롬프트는 §5~6에 placeholder만(다음 sprint).
-  - **game-designer** v1.0 산출 신설:
-    - `docs/systems/mvp-food-selection.md` — **MVP 음식 12개 권고**: Tier 1 7개(라면/계란말이/김밥/떡볶이/떡국/김치볶음밥/김치전), Tier 2 5개(비빔밥/김치찌개/제육볶음/갈비찜/순두부찌개). 5가게 등장 매트릭스(청과 12 / 정육 7 / 어물 4 floor / 곡물 7 / 잡화 11), 난이도 4-step 곡선, post-launch 대안 후보(잡채·불고기·된장찌개·잔치국수→M1~M2 / 닭볶음탕·삼겹살→M3~M4).
-- **왜**: ADR-003 즉시 액션 2종(art anchor + 음식 권고)을 병렬 실행. 두 작업이 독립적이고 M0 게이트의 prerequisite.
-- **결과/다음 단계**:
-  - **사용자 결정 필요 2건** (game-designer flag):
-    - **D-1**: Tier 1에서 **김치전 유지 vs 된장찌개 교체** — 권고 유지, 단 된장찌개로 가면 어물전 floor 4→5로 메커닉 안정도 ↑.
-    - **D-2**: Tier 2 **순두부찌개 유지 vs 부대찌개 교체** — 권고 유지. 부대찌개는 어물전 0회라 다점포 메커닉 깨짐 → 부대찌개는 Tier 3 친구 초대(post-launch)로 자연 이동 권고.
-  - **Week 1 anchor lock 게이트 운영 필요** — art-director가 정의한 7항 체크리스트로 anchor 후보 평가. 게이트 통과 전까지 파생 자산 작업 금지.
-  - **다음 sprint 이월**: 음식 12개 anchor 프롬프트(art, food 확정 후), 재료/UI/VFX 프롬프트, `balance-config.md`(수치), `foods-database.csv` + `ingredients-database.csv` 실데이터, 친구 1~2명 personality(가족 단위), FTUE 첫 음식(ui-designer 협업), `screen-flow.md`(ui-designer M0).
-
----
-
-## [2026-05-23] ADR-003: MVP-first 전환 (supersedes ADR-002). 음식 10~15개, Tier 1~2, 친구 1~2명. 3~4개월 출시 후 점진 확대.
-- **무엇**:
-  - `docs/decisions.md` — ADR-002 상태 → **Superseded by ADR-003**. ADR-003 (Accepted) 신규 기록. ADR-002의 결정 #1·2·3·5(외주 X / Asset Store / AI / 마스코트)는 유지, #4(full feature 8~12개월)만 반전.
-  - `docs/GDD.md` §4 — Tier 표에 "MVP 포함?" 열 추가 (Tier 1·2 MVP, 3~5 post-launch M3~M6). §9 — full feature → MVP scope(음식 10~15, Tier 1~2, 친구 1~2, 식탁 2종, 다점포 5가게 유지, 광고 Affiliate만, IAP Remove+Coin). §10 — Roadmap을 3~4개월 pre-launch + 12개월 LiveOps로 재작성.
-  - `docs/art-workload-estimate.md` v2.0 → **v3.0**: ~228h → **~80h M1 sprint** (3~4주). 카테고리별 재계산 (Scene 1 33h / Scene 2 9h / Scene 3 4h / 캐릭터 12h / 음식 6h / 재료 8h / UI·VFX 6h). 사운드 M2~M3 deferred. §7 Post-Launch Backlog 신설(Month 1~12 누적 ~310h).
-  - `docs/systems/cooking-mechanics.md` v0.3 → **v0.4**: §0에 MVP Scope callout. 5-tier 디자인 비전·다점포 5가게 메커닉 정의는 변경 없음, 콘텐츠 양만 축소.
-- **왜**: ADR-002 채택 직후 사용자 재평가 — 8~12개월 1인 sprint의 burnout 리스크 + 시장 검증 없는 장기 투자 회피. MVP-first로 실데이터 기반 점진 확대. 같은 날 reversal이지만 flip-flop이 아닌 reality check.
-- **결과/다음 단계**:
-  - **즉시 액션 변경분**: Suno Pro 결제 **보류**(M2~M3로 이동), game-designer 1순위 **MVP 음식 12개 선정 권고**(balance-config.md 아님), art-director는 변경 없음(anchor 작업 그대로).
-  - **신규 리스크 R-A11**: post-launch 콘텐츠 production 지속력 → **dual-track 권장** (M2~M3 동안 Tier 3 자산 40% pre-production).
-  - **신규 리스크 R-A12**: MVP 콘텐츠 빈약 인상 → ASO/스크린샷 강화 + "지속 업데이트" 메시징.
-  - **현금 예산 절감**: $340~540 → **$170~270** (MVP 4개월).
-
----
-
-## [2026-05-23] ADR-002 채택: 자체 제작 + Asset Store/AI 도구 + full feature + 마스코트 스타일. MVP 일정 8~12개월.
-- **무엇**:
-  - `docs/decisions.md` 신설 + **ADR-002 기록** (Status: Accepted). ADR-001은 재래시장 다점포 결정 backfill 후보로만 표시.
-  - `docs/GDD.md` §9 MVP Scope 전면 확대 (Tier 1~5 full, 음식 50개, 친구 5명 full, Scene 3 tier 5종, 파티 모드 포함). §10 Roadmap을 M0~M3 milestone 구조로 재작성 (8~12개월).
-  - `docs/art-workload-estimate.md` v1.0 → **v2.0**: 외주 제거, 자체 제작 + 마스코트 캐릭터, 워크로드 ~70h → ~200~260h 재계산, MJ anchor 2종(캐릭터+환경) 듀얼 운영, Suno BGM + Asset Store 구매 리스트, 10 risk register, M0 anchor lock 게이트.
-- **왜**: 사용자가 v1.0 권장(외주 $1.5k~4k) 대안으로 5가지 제약·선호 제시 — 외주 X, AI/Asset Store O, full feature 유지, 일정 연장 수용, 마스코트 스타일. 비가역·고비용 결정이라 ADR로 정식 기록.
-- **결과/다음 단계**:
-  - **즉시**: MJ Standard Plan + Suno Pro 결제, 캐릭터/환경 anchor 각 5장 생성, M0 Week 1~2 anchor lock 게이트 운영.
-  - **병렬 진행 (M0)**: game-designer가 친구 5명 personality + 호불호 시스템 디자인 (캐릭터 anchor 작업 prerequisite). ui-designer가 다점포 screen-flow 작성 (art와 독립).
-  - **art-director 후속 문서**: `docs/art-style-guide.md`, `docs/prompts-library.md` 신설 필요.
-  - **balance-config.md 미존재** — 친구 호불호 시스템 디자인이 마스코트 스타일과 맞물려야 하므로 game-designer 호출 시 1순위로 작성.
-  - **M0 종료 시 reality check 게이트** — 일정 ±20% 초과 시 ADR 신규 작성 + scope 재조정.
-
----
-
-## [2026-05-23] Art workload estimate v1.0 — Scene 1 재래시장
-- **무엇**: `docs/art-workload-estimate.md` 신설 (art-director 대행). Scene 1 워크로드 정량화(BG 11 + 숨은 ~50 item), tier 변화 옵션 A/B/C 비교, Midjourney consistency 전략 (style anchor + `--sref`/`--niji 6`/prompt template), 비주얼 톤 결정(따뜻한 일러스트 Ghibli-ish + K-touch), 옵션별 production 시간(A: ~70h, B: ~80h, C: ~145h), 8 risk + 외주/구매 권장 분리($1.5k~4k).
-- **왜**: 직전 다점포 메커닉 결정으로 art 워크로드 6배 증가 flag — pm 의사결정·일정 산정 위해 정량 근거 필요. 사용자의 "11컷"이 백그라운드만임을 명확히 하여 재료 카드/UI/VFX 등 숨은 워크로드 노출.
-- **결과/다음 단계**:
-  - **권장: Option A (단일 비주얼) + 4-5주 sprint**.
-  - **즉시 액션**: MJ Standard Plan 결제, 친구 캐릭터 외주 발주(3-4주 리드타임), style anchor 후보 3~5장 생성, Week 1 anchor 게이트 통과 필수.
-  - **외주 분리 명시**: 친구 5명 캐릭터 + reaction은 MJ 약점 → 외주($1.5k~4k).
-  - prompts-library.md, art-style-guide.md, sound-guide.md 후속 생성 필요 (art-director 1순위).
-
----
-
-## [2026-05-23] open question 12개 일괄 resolve + 재래시장 다점포 메커닉 확정
-- **무엇**:
-  - `docs/systems/cooking-mechanics.md` v0.2 → **v0.3**: §10 12개 open question 일괄 결정 — game-designer 권장 default 그대로 채택.
-  - #9 수퍼마켓 톤 → **재래시장 + 다점포 순회**로 확정. Scene 1을 가게 5종(🥬 청과 / 🥩 정육 / 🐟 어물 / 🌾 곡물 / 🫙 잡화) 순회 메커닉으로 §2 전면 재작성.
-  - §8에 `Ingredient.category → store_type` 매핑 + 다점포 디스트랙터 알고리즘 의사코드.
-  - §9 Remote Config 키 `distractor_count_by_tier` → `distractor_per_store_by_tier` 변경 (가게당 카운트).
-  - §10.2에 다점포 파생 follow-up 7항 신설 (간판 시인성, 빈 가게 페널티, 튜토리얼 안내, 사운드 hook 등).
-  - `docs/GDD.md` §2 Stage 2 sync (🛒 수퍼마켓 → 🏪 재래시장 + 가게 5종 명시).
-- **왜**: 12개 결정을 게임플레이/아트/UX 영역으로 분류해 일괄 처리 — 컨텍스트 분산 방지. 재래시장 다점포는 K-stylistic 차별화 + 공간 기억 학습이라는 자연 progression 메커닉을 추가로 확보.
-- **결과/다음 단계**:
-  - **아트 워크로드 6배 flag**: Scene 1 = 가게 5컷 + 입구 1컷 (이전 단일 수퍼 1컷 대비). art-director Phase 2 최우선 가늠 대상.
-  - **사운드 hook 확장**: 가게별 ambient(정육 칼질/어물 얼음/청과 인사) sound-guide.md 신설 시 반영.
-  - **ftue.md 신설 필요**: 튜토리얼 4-step + 다점포 안내 횟수 → ui-designer 호출 시 1순위.
-  - 잡화점 post-launch 분할(양념가게+잡화점) 마이그레이션 시 Remote Config 기반 store_type 재맵핑 가능하도록 설계 권장.
-
----
-
-## [2026-05-23] Round 3-scene 구조 확정 — 수퍼마켓 → 키친 → 식탁
-- **무엇**:
-  - `docs/systems/cooking-mechanics.md` v0.1 → **v0.2**: Round 다이어그램을 3-scene로 재작성, Stage 1(수퍼마켓)/Stage 2·3(키친) UI에 scene 컨텍스트와 메타포(매대·장바구니·도마·가스레인지) 명시, §5.1 식탁 화면 신설(캐릭터 시식 연출, tier별 식탁 = GDD §4 progression과 1:1 매핑, 친구 선호도 시각 반응). open questions 6항 추가.
-  - `docs/GDD.md` §2 Core Loop 한 줄로 sync (scene 이모지 + cooking-mechanics 참조).
-- **왜**: 사용자가 각 Stage의 공간 컨텍스트(수퍼마켓/키친/식탁) 결정. GDD §4 사회적 progression(혼밥→파티)이 Scene 3 식탁 인원 변화로 비주얼 표현되는 자연스러운 연결고리 확보 — 정서적 arc가 매 Round마다 발화.
-- **결과/다음 단계**:
-  - **아트 워크로드 증가** flag: Scene 3 식탁 5종(tier) × 캐릭터 시식 reaction(★1/2/3 × 친구 5명) — art-director 호출 시 최우선 가늠 필요.
-  - Scene 1·2 tier별 일러스트 변화는 미정(워크로드 vs 효용).
-  - Scene 트랜지션 사양(애니메이션·스킵 옵션)은 ui-designer territory.
-  - 수퍼마켓 디자인 톤(모던 마트 vs 재래시장) 미정 — art-director 결정 사항.
-
----
-
-## [2026-05-23] GDD v2.0 — pm 관점 4개 섹션 신설
-- **무엇**: `docs/GDD.md` v1.0 → **v2.0** 증분 개정. §11 Success Metrics/KPI(D1/D7/D30, ARPDAU, FTUE, gameplay health, 필수 분석 이벤트), §12 Dependencies(외부 계정 6종 + 라이선스 + 기술 스택), §13 Risks 10개(영향·가능성·완화안 매트릭스), §14 Go/No-Go 판정 기준(품질/수익화/법무 hard gates + conditional). 부록에 변경 이력 추가.
-- **왜**: 사용자가 pm role 위임. 기존 GDD는 디자인 중심이라 pm이 출시 판정·리스크 관리·KPI 추적을 할 근거가 없었음. 메인 스레드가 pm mandate에 따라 대행 (다음 세션부터 pm sub-agent로 이관).
-- **결과/다음 단계**: KPI 목표 수치는 캐주얼 모바일 게임 벤치마크 기반 — 실제 출시 후 1~2주 데이터로 재보정 필요. Go/No-Go gates를 release checklist로 분리 운영 권장(`docs/release-checklist.md` 후보).
-
----
-
-## [2026-05-23] game-designer 소유 경로 정정 — cooking-mechanics.md
-- **무엇**: `.claude/agents/game-designer.md`와 `docs/agent-roster.md`에서 game-designer가 소유하는 mechanics 문서 경로를 가상의 `docs/mechanics-spec.md`에서 **실제 존재하는 `docs/systems/cooking-mechanics.md`**로 정정.
-- **왜**: PM 검증에서 명명 충돌 발견. 정정하지 않으면 다음 세션에서 game-designer 첫 호출 시 기존 cooking-mechanics.md를 무시하고 mechanics-spec.md를 새로 만들 위험.
-- **결과/다음 단계**: 정식 GO. 세션 재시작 시 실제 sub-agent 위임 가능.
-
----
-
-## [2026-05-23] Sub-agent 팀 구조 도입 — 9 agents
-- **무엇**: `.claude/agents/` 폴더에 9개 agent 정의 (pm, game-designer, unity-dev, backend-dev, ui-designer, qa-tester / Phase 2: art-director, marketing, data-analyst). `docs/agent-roster.md` 요약표 + 위임 가이드 작성. `CLAUDE.md`에 Sub-Agent Team 섹션 추가.
-- **왜**: 작업 책임 분리 및 위임 규칙 명문화. MVP 6 agents + Post-MVP 3 agents로 phase별 활성화.
-- **결과/다음 단계**: 이후 모든 작업은 agent-roster.md 위임 가이드 기준으로 분배. 각 agent의 본문은 현재 1줄 요약 수준 — 운영 중 실제 워크플로우 확정되면 상세화 필요.
-
----
-
-## [2026-05-23] 프로젝트명 "K-Food Master" 확정 + 잔존 "merge" 정리
-- **무엇**:
-  - 프로젝트명을 가칭 "K-Food Merge" → **"K-Food Master"** 로 확정.
-  - `CLAUDE.md` 헤더·프로젝트명·번들 ID(`com.{studio}.kfoodmaster`).
-  - `docs/GDD.md` 헤더 ("내부 코드네임" 표기 제거).
-  - `build/README.md` 파일명 규칙 (`kfoodmerge-*` → `kfoodmaster-*`, 3건).
-  - `unity-project/README.md` Gameplay 설명 (`merge 로직, 보드, 아이템` → `cooking 3단계 루프(재료/방법/타이밍), 채점`).
-  - `CHANGELOG.md` 헤더 문구.
-- **왜**: 디자인이 merge가 아닌 cooking matching으로 확정됨에 따라 명명 일관성 확보. 향후 빌드/스토어 등록/번들 ID 발급 전에 정리해야 변경 비용 최소.
-- **결과/다음 단계**:
-  - 잔존 "merge" 의도적으로 유지: `research/README.md` 경쟁작명(Merge Mansion 등 실제 게임), CHANGELOG 과거 항목(historical).
-  - 스튜디오 결정 시 번들 ID `com.{studio}.kfoodmaster`에서 `{studio}` 부분 확정 필요.
-  - 폴더명 `kfood-game`은 OS 경로라 유지.
-
----
-
-## [2026-05-23] cooking-mechanics.md v0.1 + "merge" 표현 정정
-- **무엇**: `docs/systems/cooking-mechanics.md` v0.1 작성 — Stage 1/2/3 룰, 채점 공식(곱셈 모델), 디스트랙터 알고리즘, Stage 3 PERFECT 구간 너비, Hint 트리거, Remote Config 키 7종, edge case 7개.
-  - 부수 정정: `CLAUDE.md` 컨셉/장르 ("merge" → "cooking matching"), `docs/README.md` 예시 ("merge 시스템" / "merge-mechanics.md" → "cooking matching" / "cooking-mechanics.md").
-- **왜**: 초기 부트스트랩 시 사용된 "merge" 명명이 이후 GDD에서 정의된 cooking matching 메커닉과 충돌. 신규 문서 작성 전 명명 정합성 확보.
-- **결과/다음 단계**:
-  - 미정정 잔존 "merge" — 손대지 않음: 프로젝트명 `K-Food Merge (가칭)` (이미 가칭으로 표시됨), `unity-project/README.md`의 "merge 로직" 예시 (사용자 확인 후), `build/` 번들 ID `kfoodmerge` (프로젝트명 derive), `research/README.md`의 경쟁작명 (Merge Mansion 등 실제 게임명), CHANGELOG 과거 항목 (historical).
-  - 프로젝트명 자체를 "K-Food Master"로 확정할지 결정 필요 (GDD는 이미 내부 코드네임으로 사용 중).
-
----
-
-## [2026-05-23] GDD 정합성 sync — Section 1·8 + 부록 follow-up
-- **무엇**:
-  - Section 1 Concept 한 줄을 "3-stream 수익 모델" 표현으로 갱신, §5 참조 추가.
-  - Section 8 Tech Stack에 Firebase **Cloud Functions** (Stream B 백엔드), **Google Places API**, **카카오맵 API**(검토), **Amazon Associates / 쿠팡 Partners**(affiliate) 추가. 기존 항목은 Stream A/B/C 라벨링.
-  - 부록 follow-up을 게임플레이 / Stream A / Stream B / Stream C 4개 그룹으로 재정렬. Store Ads 관련 6개 항목 신규 추가 (Amazon·쿠팡 계정, Cloud Functions 스펙, Places 쿼터, 카카오맵 결정, Privacy Policy, Disclosure UX).
-- **왜**: 직전 Monetization 재구조화로 다른 섹션과 어긋남 발생. 누락 시 향후 작업이 outdated 컨셉/스택 기준으로 진행될 위험.
-- **결과/다음 단계**: GDD 전체 일관성 회복. Stream B 신규 follow-up은 별도 작업 큐로 분리 가능.
-
----
-
-## [2026-05-23] Monetization 듀얼 광고 stream 추가 — Store Ads (affiliate + sponsored)
-- **무엇**: GDD Section 5 재구조화. 단일 "광고+IAP" → **3 streams** (A: AppLovin 프로그래매틱 / B: 한식 매장 affiliate·sponsored / C: IAP). Firebase Functions 백엔드 기반 동적 affiliate 링크 아키텍처.
-- **왜**: 게임 테마(한식)와 직접 연관된 affiliate/sponsored 수익원 확보. UX 친화적이며 long-tail 수익 잠재력 (성숙기 +$3K/월).
-- **결과/다음 단계**: Section 1·8 사용자 확인 후 sync 필요 (Concept 문구·Tech Stack에 Firebase Functions). Amazon Associates / 쿠팡 Partners 계정 신청, 매장 매칭 백엔드 스펙 작성 필요.
-
----
-
-## [2026-05-23] GDD Section 4 progression 표 확정
-- **무엇**: Section 4 5-tier 표를 확정본으로 교체 (레벨 범위/인분/음식 예시/사회적 컨텍스트/광고 트리거 컬럼). tier 진입 시 친구 1명 unlock 규칙 및 Tier 5 post-launch 분리 명시.
-- **왜**: GDD v1.0 작성 시 누락됐던 사용자 원본 표 수신.
-- **결과/다음 단계**: 부록 follow-up에서 "원본 표 교체 필요" 항목 제거. Tier별 친구 5명 캐스팅 follow-up 신규 추가.
-
----
-
-## [2026-05-23] GDD v1.0 작성
-- **무엇**: `docs/GDD.md` 작성 — concept, core loop, scoring, 5-tier progression, monetization(광고+IAP), data structure, tech stack, MVP scope, 6개월 로드맵
-- **왜**: 핵심 기획 합의 및 향후 모든 시스템 작업의 기준점 확보
-- **결과/다음 단계**: Section 4 progression 표는 사용자 원본 표 누락 → 컨셉 기반 초안 삽입, 확정본 들어오면 교체. 부록 follow-up 항목 5개 별도 추적.
-
----
-
-## [2026-05-23] 프로젝트 부트스트랩
-- **무엇**: 리포지토리 초기 구조 생성
-  - `CLAUDE.md` — 프로젝트 헌법(컨셉, 수익모델, 컨벤션, 빌드 정책)
-  - 폴더 7종: `docs/`, `unity-project/`, `assets-raw/`, `assets-processed/`, `marketing/`, `research/`, `build/`
-  - 각 폴더 `README.md` 작성
-  - `.gitignore` — Unity 표준 + Windows OS + 주요 IDE(Visual Studio, Rider, VS Code) + 시크릿
-  - `CHANGELOG.md` (이 파일)
-- **왜**: 한식 테마 캐주얼 merge 게임 프로젝트 시작. Claude가 향후 일관된 컨텍스트로 작업하도록 헌법/구조 선제 정의.
-- **결과/다음 단계**:
-  - [ ] Unity Hub로 `unity-project/`에 Unity 2022 LTS 2D 템플릿 생성
-  - [ ] git 저장소 초기화 + 첫 커밋 (`git init && git add . && git commit -m "chore: bootstrap project structure"`)
-  - [ ] `docs/gdd.md` 초안 작성 (핵심 루프, merge tier 정의, 한식 아이템 트리)
-  - [ ] AppLovin MAX 계정 생성 + Android SDK 키 발급
-  - [ ] 경쟁작 1차 분석 (Merge Mansion, Travel Town) → `research/competitors/`
-
----
-
-<!-- 아래 형식 예시 (지우지 말 것)
-## [2026-MM-DD] 예: merge 코어 로직 1차 구현
-- **무엇**: 같은 tier 두 아이템 드래그 시 다음 tier 생성, 보드 9칸 그리드
-- **왜**: 핵심 루프 검증 (clickability + 만족감)
-- **결과/다음 단계**: `Assets/Scripts/Gameplay/MergeBoard.cs` 추가, 다음은 SO 기반 아이템 데이터 분리
--->
+    - `docs/art-style-guide.md` v0.2 → **v1.0** (flat 톤 baseline, MJ 약점 flat 특화 10항, ADR-005 cut anim 

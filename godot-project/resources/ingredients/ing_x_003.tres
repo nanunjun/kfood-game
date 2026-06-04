@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://bcc0ww1yqantb"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_x_003"
+name_ko = "간장"
+name_en = "Soy Sauce"
+store_type = &"pantry"
+used_in_foods = Array[StringName]([&"t1_006", &"t1_008", &"t2_010", &"t2_012", &"t2_014"])
+is_distractor_friendly = false
+distractor_weight = 0
+is_basic_pantry = true
+cut_variations = Array[StringName]([])
+notes = "**basic_pantry LOCK 2026-05-30 (C-2)** — kitchen rack 자동 제공, Stage 1 진열대 미표시. 한식 base; 옹기 시각 디스트랙터 (고추장과 페어); 잔치국수 육수 양념 + 불고기 양념. accuracy_ingredients 분모 N에서 제외; cut 메커닉 X (양념재우기 시 marinade bowl에 자동 부어짐, motion 시각 cue만)"

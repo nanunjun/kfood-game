@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://be9mzq3xn6jmc"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_p_002"
+name_ko = "쪽파"
+name_en = "Chive Onion"
+store_type = &"produce"
+used_in_foods = Array[StringName]([&"t1_006"])
+is_distractor_friendly = true
+distractor_weight = 2
+is_basic_pantry = false
+cut_variations = Array[StringName]([&"CUT-05"])
+notes = "파(ing_p_001)와 디스트랙터 페어; 해물파전 송송 CUT-05"

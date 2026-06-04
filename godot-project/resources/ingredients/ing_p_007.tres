@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://bw4gcod2r3g7a"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_p_007"
+name_ko = "시금치"
+name_en = "Spinach"
+store_type = &"produce"
+used_in_foods = Array[StringName]([&"t1_004", &"t2_008", &"t2_010"])
+is_distractor_friendly = true
+distractor_weight = 2
+is_basic_pantry = false
+cut_variations = Array[StringName]([&"CUT-04"])
+notes = "비빔밥/잡채 색감 핵심; 통썰기 CUT-04 (살짝 데친 후 줄기 통)"

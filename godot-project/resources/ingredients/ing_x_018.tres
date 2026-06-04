@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="IngredientDefinition" load_steps=2 format=3 uid="uid://b9fav9agjs2wb"]
+
+[ext_resource type="Script" uid="uid://df5hl3wmo1t33" path="res://scripts/resources/ingredient_definition.gd" id="1_ing"]
+
+[resource]
+script = ExtResource("1_ing")
+ingredient_id = &"ing_x_018"
+name_ko = "다진마늘"
+name_en = "Minced Garlic"
+store_type = &"sundry"
+used_in_foods = Array[StringName]([&"t1_008", &"t2_014"])
+is_distractor_friendly = true
+distractor_weight = 2
+is_basic_pantry = false
+cut_variations = Array[StringName]([])
+notes = "잔치국수 육수 양념 + 불고기 양념 (N-1·N-2 신규 2026-05-30); 마늘(ing_p_005, 통마늘 produce)과 form factor 변별 디스트랙터 페어 — minced=잡화 분류 (병조림/팩 SKU); ADR-005 다지기 140 BPM cut style anchor 매핑 (CUT-01 mince) — but 다진마늘은 이미 minced state라 Stage 2A cut 메커닉 X (whole 마늘 ing_p_005가 cut hero); 잡화 SKU로 시각 디스트랙터 역할만"
