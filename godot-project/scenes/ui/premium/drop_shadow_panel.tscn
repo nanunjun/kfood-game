@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://bixjpnetci5ai"]
+
+[ext_resource type="Script" path="res://scripts/ui/premium/drop_shadow_panel.gd" id="1_ds"]
+
+[node name="DropShadowPanel" type="Panel"]
+custom_minimum_size = Vector2(400, 200)
+script = ExtResource("1_ds")

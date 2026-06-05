@@ -1271,32 +1271,140 @@ func _finish() -> void:
 	var s: float = clampf(base + dish_bonus, 0.0, 1.0)
 	var stars := _stars(s)
 	var passed: bool = s >= float(_level.get("theta", 0.6))
-	var vname: String = MenuDB.vessel(_dish_choice).get("name_en", _dish_choice)
-	var tier: String = MenuDB.dish_tier(_menu, _dish_choice)
-	var dish_word: String = ("best match ▲▲" if tier == "best" else ("poor match ▼" if tier == "bad" else ("decent ▲" if tier == "2nd" else "neutral")))
+	# Guest System 2.0: compat + reward shaping
+	var compat: int = 50
+	var mood: String = "easy"
+	var compat_sys := get_node_or_null("/root/CompatCalc")
+	var mood_sys := get_node_or_null("/root/MoodSystem")
+	if not _is_evaluator and compat_sys != null and mood_sys != null:
+		mood = mood_sys.today(String(_guest.get("id", "")))
+		compat = compat_sys.score(_menu, _guest, mood)
+	# Result Screen 2.0: new record check (so reward_bonus can include +500).
+	var sm := get_node_or_null("/root/SaveManager")
+	var food_id: String = String(_menu.get("id", ""))
+	var guest_id: String = String(_guest.get("id", ""))
+	# integer score 0~10000 for record keeping (3 decimals -> int)
+	var score_int: int = int(round(s * 10000.0))
+	var record_broken: bool = false
+	var record_prev_score: int = 0
+	if sm and sm.has_method("record_of"):
+		record_prev_score = sm.record_of(food_id, guest_id)
+	if sm and sm.has_method("check_record"):
+		record_broken = sm.check_record(food_id, guest_id, score_int)
+	# friendship delta + milestone (Guest System 2.0)
+	var friendship_delta: int = 0
+	var friendship_after: int = 0
+	var milestone: int = 0
+	if not _is_evaluator and sm != null:
+		if s >= 0.55:
+			friendship_delta = stars + (1 if compat >= 80 else 0)
+			if sm.has_method("add_friendship"):
+				friendship_after = sm.add_friendship(guest_id, friendship_delta)
+			else:
+				sm.add_intimacy(guest_id, float(friendship_delta) * 0.5)
+		else:
+			friendship_delta = 0
+			sm.add_intimacy(guest_id, -0.5)
+			if sm.has_method("friendship_of"):
+				friendship_after = sm.friendship_of(guest_id)
+		if sm.has_method("friendship_milestone_pending"):
+			milestone = sm.friendship_milestone_pending(guest_id)
+	# reward
 	var reward: int = 0
 	if passed:
-		reward = int(round(float(_level.get("reward", 0)) * (1.3 if s >= float(_level.get("star4", 0.85)) else 1.0)))
-	var reward_line: String = ("Earned %s coins" % _commas(reward)) if passed else "Didn't pass — try again!"
-	_info.position = Vector2(40, 1520)
-	_info.text = "%s  %s\n%s\nVessel: %s — %s\n%s\n(tap to return to menu)" % [
-		"★".repeat(stars) + "☆".repeat(5 - stars), _guest.get("name", "Guest"),
-		_guest_line(s), vname, dish_word, reward_line]
-	# persist economy + progression
-	var sm := get_node_or_null("/root/SaveManager")
+		var base_reward: int = int(round(float(_level.get("reward", 0)) * (1.3 if s >= float(_level.get("star4", 0.85)) else 1.0)))
+		var reward_calc := get_node_or_null("/root/RewardCalc")
+		if not _is_evaluator and reward_calc != null:
+			if reward_calc.has_method("final_with_bonuses"):
+				reward = reward_calc.final_with_bonuses(base_reward, compat, _guest, record_broken, milestone)
+			else:
+				reward = reward_calc.final(base_reward, compat, _guest)
+		else:
+			reward = base_reward
 	if sm:
 		if passed and reward > 0:
 			sm.add_money(reward)
-		sm.record_round(String(_menu.get("id", "")), stars, passed, String(_level.get("market", "home")))
-		if not _is_evaluator:
-			var d: float = 1.0 if s >= 0.80 else (0.0 if s >= 0.55 else -0.5)
-			if d != 0.0:
-				sm.add_intimacy(String(_guest.get("id", "")), d)
+		sm.record_round(food_id, stars, passed, String(_level.get("market", "home")))
+	# Recipe XP (Result Screen 2.0)
+	var xp_gained: int = 0
+	var xp_total_after: int = 0
+	var recipe_xp := get_node_or_null("/root/RecipeXP")
+	if not _is_evaluator and sm != null and recipe_xp != null:
+		xp_gained = recipe_xp.xp_gain(stars, compat, record_broken)
+		xp_total_after = sm.add_recipe_xp(food_id, xp_gained)
+	# Reaction text (Result Screen 2.0)
+	var reaction_text: String = ""
+	var reaction_db := get_node_or_null("/root/ReactionDB")
+	if reaction_db != null:
+		reaction_text = reaction_db.generate_text(_guest, _menu, stars, compat, mood)
+	# Emotion level + breakdown rows
+	var emotion_level: String = "okay"
+	var breakdown_rows: Array = []
+	var reward_calc := get_node_or_null("/root/RewardCalc")
+	if reward_calc != null:
+		emotion_level = reward_calc.emotion_level(stars, compat)
+		var prep_avg: float = _avg(_cat_acc.get("prep", []))
+		var cook_avg: float = _avg(_cat_acc.get("cook", []))
+		var season_avg: float = _avg(_cat_acc.get("season", []))
+		var plating_acc: float = 0.5
+		var tier_str: String = MenuDB.dish_tier(_menu, _dish_choice)
+		match tier_str:
+			"best": plating_acc = 1.0
+			"2nd":  plating_acc = 0.7
+			"bad":  plating_acc = 0.2
+			_:      plating_acc = 0.5
+		breakdown_rows = reward_calc.score_breakdown_rows(prep_avg, cook_avg, season_avg,
+			plating_acc, compat, mood, _guest)
 	var hm := get_node_or_null("/root/HapticManager")
 	if hm:
 		hm.play(hm.REVEAL)
-	print("[M1+] %s L%d S=%.2f base=%.2f dish=%.2f pass=%s phases=%s" % [
-		_menu.get("id", "?"), int(_level.get("level", 1)), s, base, dish_bonus, passed, _menu.get("phases", [])])
+	print("[M1+] %s L%d S=%.2f base=%.2f dish=%.2f pass=%s compat=%d mood=%s emo=%s rec=%s phases=%s" % [
+		food_id, int(_level.get("level", 1)), s, base, dish_bonus, passed, compat, mood,
+		emotion_level, record_broken, _menu.get("phases", [])])
+	# Hand off to Result Screen v2.
+	_launch_result_v2({
+		"food": _menu,
+		"guest": _guest,
+		"mood": mood,
+		"compat": compat,
+		"stars": stars,
+		"score": score_int,
+		"score_norm": s,
+		"breakdown_rows": breakdown_rows,
+		"emotion_level": emotion_level,
+		"reaction_text": reaction_text,
+		"record_broken": record_broken,
+		"record_prev_score": record_prev_score,
+		"xp_gained": xp_gained,
+		"xp_total_after": xp_total_after,
+		"friendship_delta": friendship_delta,
+		"friendship_after": friendship_after,
+		"milestone_just_hit": milestone,
+		"final_coin": reward,
+		"passed": passed,
+	})
+
+
+## Build + show ResultScreenV2 over the current node (replaces inline reveal).
+func _launch_result_v2(payload: Dictionary) -> void:
+	_clear_stage()
+	if is_instance_valid(_now_cooking):
+		_now_cooking.visible = false
+	if is_instance_valid(_info):
+		_info.visible = false
+	if is_instance_valid(_howto):
+		_howto.visible = false
+	var scene: PackedScene = load("res://scenes/ui/result_screen_v2.tscn") as PackedScene
+	if scene == null:
+		push_error("[rhythm_proto] result_screen_v2.tscn not found")
+		return
+	var rs := scene.instantiate()
+	rs.setup(payload)
+	# Mount on a fresh CanvasLayer so it sits above all phase art.
+	var top := CanvasLayer.new()
+	top.layer = 10
+	add_child(top)
+	top.add_child(rs)
 
 
 func _commas(n: int) -> String:
@@ -1403,8 +1511,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		"season":
 			pass  # buttons only
 		"done":
-			if pressed:
-				get_tree().change_scene_to_file("res://scenes/menu_select.tscn")
+			# Result Screen v2 owns input via its own sticky CTA buttons; the legacy
+			# "tap anywhere to return to menu" handler is intentionally disabled.
+			pass
 
 
 func _beat_side_tap(side: String) -> void:

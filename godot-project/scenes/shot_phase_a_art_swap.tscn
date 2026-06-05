@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bphasea001"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_phase_a_art_swap.gd" id="1_phaseA"]
+
+[node name="ShotPhaseA" type="Node"]
+script = ExtResource("1_phaseA")

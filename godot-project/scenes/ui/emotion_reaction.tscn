@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://brsv2cp30emo"]
+
+[ext_resource type="Script" path="res://scripts/ui/components/emotion_reaction.gd" id="1_cp30"]
+
+[node name="EmotionReaction" type="Panel"]
+custom_minimum_size = Vector2(960, 460)
+script = ExtResource("1_cp30")

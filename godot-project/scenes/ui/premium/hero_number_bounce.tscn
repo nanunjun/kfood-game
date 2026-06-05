@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://bammyyt73faiq"]
+
+[ext_resource type="Script" path="res://scripts/ui/premium/hero_number_bounce.gd" id="1_hn"]
+
+[node name="HeroNumberBounce" type="Control"]
+custom_minimum_size = Vector2(540, 160)
+script = ExtResource("1_hn")

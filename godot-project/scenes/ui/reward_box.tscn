@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://brsv2cp29rwd"]
+
+[ext_resource type="Script" path="res://scripts/ui/components/reward_box.gd" id="1_cp29"]
+
+[node name="RewardBox" type="Panel"]
+custom_minimum_size = Vector2(960, 480)
+script = ExtResource("1_cp29")

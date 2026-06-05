@@ -6,10 +6,10 @@ uid="uid://br68luei4l5uk"
 
 [deps]
 
-files=["res://data/guests.name.translation", "res://data/guests.vec.translation", "res://data/guests.tol.translation", "res://data/guests.line.translation", "res://data/guests.line.translation", "res://data/guests.line.translation", "res://data/guests.role.translation"]
+files=["res://data/guests.name.translation", "res://data/guests.vec.translation", "res://data/guests.tol.translation", "res://data/guests.line.translation", "res://data/guests.line.translation", "res://data/guests.line.translation", "res://data/guests.role.translation", "res://data/guests.favorite.translation", "res://data/guests.disliked.translation", "res://data/guests.reward.translation", "res://data/guests.friendship.translation", "res://data/guests.mood.translation"]
 
 source_file="res://data/guests.csv"
-dest_files=["res://data/guests.name.translation", "res://data/guests.vec.translation", "res://data/guests.tol.translation", "res://data/guests.line.translation", "res://data/guests.line.translation", "res://data/guests.line.translation", "res://data/guests.role.translation"]
+dest_files=["res://data/guests.name.translation", "res://data/guests.vec.translation", "res://data/guests.tol.translation", "res://data/guests.line.translation", "res://data/guests.line.translation", "res://data/guests.line.translation", "res://data/guests.role.translation", "res://data/guests.favorite.translation", "res://data/guests.disliked.translation", "res://data/guests.reward.translation", "res://data/guests.friendship.translation", "res://data/guests.mood.translation"]
 
 [params]
 

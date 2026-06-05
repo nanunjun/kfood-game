@@ -16,6 +16,49 @@
 
 ---
 
+## [2026-06-05] D1+D2+D3 Premium Polish Pass — Result Hero + Action Puck + Cooking BG (godot-dev)
+- **무엇**: Result Screen v2 production polish (D1) + 8 cooking module unified ActionPuck system (D2) + shared CookingBackground / steam VFX / dish shadow (D3). gameplay/scoring/progression 절대 무변경 — visual only.
+- **왜**: 사용자 피드백 critical issue 3건 (placeholder oval, NEW RECORD ribbon overlap, ASCII stars) + 5건 (rectangular orange TAP pads inconsistent, "floating dish in beige void" 느낌, awning bleeds into cooking/result). premium mobile game tier 도달 목표.
+- **결과**:
+  - **신규 GDScript 3**: `scripts/ui/action_puck.gd` (5-state circular puck), `scripts/ui/cooking_background.gd` (3-band procedural kitchen surface), `scripts/ui/cooking_fx.gd` (steam loop + dish shadow helpers)
+  - **신규 PackedScene 2**: `scenes/ui/action_puck.tscn`, `scenes/ui/cooking_background.tscn`
+  - **수정 GDScript 11**: `scripts/gameplay/result_screen_v2.gd` (D1 dish hero + sprite stars + NEW RECORD above + emotion hero mode), `scripts/ui/components/emotion_reaction.gd` (set_hero_mode API: avatar 220→320, bubble width+height, font 30→34), `scripts/gameplay/cooking_module_runner.gd` (MarketBG awning → CookingBackground), `scripts/cooking_modules/base_module.gd` (shared helpers _attach_cooking_bg / _make_action_puck / _attach_dish_shadow / _attach_steam), 8 module 전부 (slice/arrange/stir/flip/timing/season/roll/plate) rectangular pads → ActionPuck swap
+  - **D1 Result Screen**: dish hero card (real food sprite if exists OR chef hat + dish name fallback for unready dishes — NO more beige oval void); 5-point Polygon2D sprite stars (gold fill + dark outline + inner highlight crescent) replacing ASCII `***__`; NEW RECORD ribbon repositioned ABOVE stars+score (was overlapping below); EmotionReaction hero mode = primary focal point (avatar 320 px + speech bubble width+font enlarge + autowrap)
+  - **D2 ActionPuck 5 states**: idle (persimmon #E04C24 + soft glow + drop shadow + inner highlight crescent) / hover (scale 1.05 + brighter) / active (scale 0.95) / perfect (gold flash + sparkle ring + bounce 1.0→1.20→1.0) / miss (red flash + shake ±10 px + dim 0.85α). signals (`pressed` / `button_down` / `button_up` / `state_changed`) drop-in compatible with old Button — gameplay 무변경 보장.
+  - **D3 Cooking Background**: 3-band procedural composite (top: warm cream/peach kitchen wall gradient, middle: working area with warm radial spotlight pool under dish anchor, bottom: warm brown countertop strip with 4 slim wood-grain accent lines) + soft bottom vignette. dish shadow ellipse (2-layer for soft edge) + steam swirl loop (3 puffs rising + alpha fade + scale 0.6→1.0, stagger 0.7 s) reusing existing `art/vfx/steam_swirl.png`. Awning bleed Critical Issue #8 resolved by replacing MarketBG with CookingBackground in cooking_module_runner + result_screen_v2 (menu_select / guest_select still use MarketBG = awning preserved).
+  - **신규 art 0건**: LOCK assets 100% 재활용 (food 12 + character 5×4 emotion + UI star_rating + VFX steam_swirl + perfect_glow + tool 12 + ingredient cut/whole 12), 추가 procedural 1건 (5-point Polygon2D star).
+  - **regression**: cooking_modules_smoke 166 PASS / 0 FAIL + cooking_runner_integration_smoke 36 PASS / 0 FAIL = **202/202 PASS**. signal contract identical, ADR-011 score-mapping table 무변경, 12 dish sequence 동일.
+  - **screenshots**: `assets-raw/_screenshots/d1_d2_d3_polish/` 15 PNG (01 result_top with NEW RECORD ribbon above + chef hat hero + sprite stars + hero emotion / 02 result_bottom / 03-07 cooking modules with cooking BG + ActionPuck / 08-10 puck idle/hover/active states / 11-13 arrange/flip/roll / 14-15 result no-record variant with real food sprite).
+- **follow-up**: Critical Issue 10 중 D1+D2+D3로 해결: #1 placeholder dish oval / #2 NEW RECORD overlap / #3 ASCII stars / #4 rectangular pads / #5 floating beige void / #8 awning bleed. **남은 6건**: #6 guest_select avatar quality / #7 menu_select dish thumbnail crop / #9 sticky CTA wallet pill formatting / #10 milestone toast position 등은 다음 sprint. art-director에 sparkle particle PNG sprite sheet 16 frame / steam particle PNG 정식 의뢰 (현재는 procedural Polygon2D + 기존 LOCK swirl 재활용).
+
+---
+
+## [2026-06-04] Visual Quality Audit + Premium Redesign v1 sprint LOCK (ui-designer)
+- **무엇**: 4 screen (Menu Select / Guest Select / Cooking 8 module / Result v2) **시각 품질 audit + premium redesign spec lock**. gameplay / 데이터 / scoring / progression **무변경** — visual only.
+- **왜**: 사용자 피드백 "STOP adding gameplay systems, focus only on visual quality. Act as a senior mobile game UI designer." Royal Match (Dream Games 2021) / Travel Town (Magmatic 2021) / Cooking Madness (Mobaska 2017) / Merge Mansion (Metacore 2020) 4 premium casual benchmark 기준 현 quality 3.5/10 → 목표 8/10. 4 goal = 정보 density / 시각 hierarchy / character presence / reward presentation.
+- **결과**:
+  - **신규**: `docs/ui/visual-audit-2026-06.md` v0.1 (4 screen × 4 카테고리 = 16 section audit, 4 reference 게임 시각 패턴 분석, 4 goal mapping)
+  - **신규**: `docs/ui/premium-redesign-v1.md` v0.1 (각 screen별 5~11 redesign items P0/P1/P2 priority + before/after ASCII sketch + 색상 palette hex lock + Typography lock + 4 goal contribution + godot-dev sprint 7.1~7.5 파일별 변경 list + before/after screenshot 캡처 plan + 11 open questions + 8 decisions PR-1~8)
+  - **갱신**: `docs/ui/components.md` **v0.5 → v0.6** — Premium Redesign 시각 컴포넌트 **CP-33~41 9종 신설** (glossy_button / drop_shadow_card / sparkle_particle / character_idle_animator / hero_number_bounce / gold_ribbon_banner / coin_spray_particle / now_cooking_banner / step_progress_dots). §16 Z-order 9 row 추가. Decisions PR-1~8 등록. Confirm #23~28 신설.
+  - **scope lock**: gameplay 변경 X / 데이터 구조 변경 X / scoring 변경 X / progression 변경 X / placeholder art OK / 기존 anchor 재활용 우선 (food 12 hero + character 5 anchor + mood 5 sprite + CUT-00~06 + TOOL-01~12 + ICUT-01~12 = 2026-05-31 LOCK 자산 100% 활용).
+  - **godot-dev hand-off**: P0 only 32h (1주 sprint), P0+P1 48h. 7.1 menu_select / 7.2 guest_select / 7.3 cooking_module_runner + 8 sub-module / 7.4 result_screen_v2 / 7.5 신규 9 component PackedScene + scripts. shot_*.tscn 기존 스크립트 재활용. after screenshot 캡처 디렉터리 `assets-raw/_screenshots/premium_v1/`.
+  - **art-director hand-off (this sprint)**: sparkle particle PNG sprite sheet 16 frame / steam particle PNG / gold ribbon NinePatch sprite (fishtail) / speech bubble round template. MVP fallback = procedural Polygon2D + simple white circle (godot-dev이 placeholder로 진행 가능, art polish는 art-director sprint 동시 진행).
+  - **4 goal 달성 예상 (after redesign)**: 정보 density 5→8 / 시각 hierarchy 4→8 / character presence 2→8 (largest gain) / reward presentation 3→9 (largest gain).
+- **follow-up**: godot-dev sprint 진입 (P0 32h 1주). game-designer M2에 CP-36 idle breathing scale amplitude/period confirm 요청 (1.0→1.02 vs 1.0→1.05 / 2s vs 1.5s, 권고 1.0→1.02 / 2s SINE). art-director에 4 자산 (sparkle/steam/gold ribbon/speech bubble) 1주 sprint 의뢰. before/after 비교 보고서 = godot-dev sprint 종료 시 `docs/ui/before-after-premium-v1.md` 작성.
+
+## [2026-06-04] Cooking Framework 2.0 — ADR-011 8-module runner refactor (godot-dev)
+- **무엇**: 하드코딩된 7-phase rhythm flow(`rhythm_proto.gd`)를 데이터 주도 8-module runner로 교체. 새 음식 추가 = `dish_modules.csv` 1줄 + `menus.csv` 1줄 → **코드 수정 0**.
+- **왜**: ADR-011 lock — 음식 12종 × 미니게임 다양성을 phase token 7개로 표현 못 함. 8 module(slice/arrange/stir/flip/timing/season/roll/plate) universal primitive + per-dish sequence CSV.
+- **결과**:
+  - **신규**: `scripts/gameplay/cooking_module_runner.gd` (CSV → 8 module 디스패치 → ResultScreenV2 핸드오프, 옵션 A clean refactor). `scripts/cooking_modules/base_module.gd` + `slice/arrange/stir/flip/timing/season/roll/plate_module.gd` (각각 `module_completed(score: float)` signal). `scenes/cooking/*.tscn` 8개 + `scenes/cooking_module_runner.tscn`.
+  - **데이터**: `godot-project/data/dish_modules.csv` 15행(12 음식 + 3 stew fallback). `MenuDB.module_sequence(food_id)` API + ALL_MODULES whitelist + FALLBACK_SEQUENCE.
+  - **라우팅**: `menu_select.gd` + `guest_select.gd` → `cooking_module_runner.tscn`. `rhythm_proto.gd`는 git history 보존 위해 남김(진입점 없음).
+  - **score map (ADR-011 lock)**: slice/arrange/roll → prep · stir/flip → cook · timing → timing(cook 4-factor에 fold) · season → season · plate → plating.
+  - **save compat**: SaveManager v2 그대로 (records / recipe_xp / friendship / intimacy 전부 backward compat). v1/v2/v2+records 3-tier 로드 테스트 통과.
+  - **테스트**: `cooking_modules_smoke` 166 PASS, `cooking_runner_integration_smoke` 36 PASS (12 음식 _finish() 정상 도달), `result_v2_smoke` 50 PASS(regression), `save_migration_test` 4 PASS(regression). **합계 256 PASS / 0 FAIL**.
+  - **스크린샷**: `assets-raw/_screenshots/cooking_framework_v2/` 10장 (slice/arrange/roll/timing/plate/flip + 김밥 full sequence 4프레임).
+- **follow-up**: art-director에 12 그릇/garnish + module별 visual variation 의뢰. ui-designer에 FTUE/Plate polish 의뢰. season "marinade" 모드 외 다른 음식별 special variant는 CSV column 확장(현재는 `_build_module_params` hardcode bridge).
+
 ## [2026-06-03] 미니게임 재설계 시작: "음식이 곧 게이지" + 끓는 냄비 + Perfect 연출
 - **무엇**: "튜토리얼 설명서" 같던 미니게임을 음식 중심으로 전환. Boil = 막대 → **실제 끓는 냄비**, 모든 조리 페이즈에 "지금 만드는 음식" 상시 배너, **PERFECT! 버스트**.
 - **왜**: 크리에이티브 피드백 — 음식이 안 보임/막대 심심함/Perfect 약함/리듬게임 느낌 약함. Royal Match처럼 핵심 오브젝트(음식)가 항상 보여야.

@@ -12,6 +12,15 @@ extends RefCounted
 const MENUS_CSV := "res://data/menus.csv"
 const GUESTS_CSV := "res://data/guests.csv"
 const LEVELS_CSV := "res://data/levels.csv"
+const FLAVORS_CSV := "res://data/flavors.csv"
+## Cooking Framework 2.0 (ADR-011): per-dish 8-module sequence.
+##   food_id -> Array[String] of module ids from ALL_MODULES.
+const DISH_MODULES_CSV := "res://data/dish_modules.csv"
+## 8 universal cooking modules (ADR-011 lock). New dishes pick from this set in CSV.
+const ALL_MODULES: Array = ["slice", "arrange", "stir", "flip", "timing", "season", "roll", "plate"]
+## Fallback sequence used when a menu has no row in dish_modules.csv (keeps the round
+## playable even before designers fill in a new dish). Mirrors the legacy 4-step flow.
+const FALLBACK_SEQUENCE: Array = ["slice", "timing", "season", "plate"]
 
 # Vessel catalog — id -> {name_en, color, kind}. kind drives reveal shape.
 #   metal=손잡이 냄비 / ceramic=사기 / stone=돌솥 / clay=뚝배기(옹기)
@@ -35,6 +44,8 @@ const BONUS_BAD := -0.08
 static var _menus: Dictionary = {}     # menu_id -> Dictionary
 static var _guests: Dictionary = {}    # guest_id -> Dictionary
 static var _levels: Dictionary = {}    # level:int -> Dictionary
+static var _flavors: Dictionary = {}   # flavor_id -> {name_en, icon, color, category}
+static var _dish_modules: Dictionary = {}  # food_id -> {sequence: Array[String], signature: String, notes: String}
 static var _order: Array = []          # menu ids in file order
 static var _loaded: bool = false
 
@@ -46,6 +57,20 @@ static func _ensure() -> void:
 	_load_menus()
 	_load_guests()
 	_load_levels()
+	_load_flavors()
+	_load_dish_modules()
+
+
+static func _split_pipe(s: String) -> Array:
+	# CSV pipe-separated list (e.g. "spicy|salty|umami") -> Array[String], trimmed.
+	if s.is_empty():
+		return []
+	var out: Array = []
+	for chunk in s.split("|", false):
+		var v: String = chunk.strip_edges()
+		if v != "":
+			out.append(v)
+	return out
 
 
 static func _header_index(header: PackedStringArray) -> Dictionary:
@@ -108,6 +133,8 @@ static func _load_menus() -> void:
 			"food_img": food_img,
 			"ready": has_art,
 			"phases": phases,
+			# Guest System 2.0: pipe-separated flavor tags (e.g. spicy|salty|umami|fermented|hearty)
+			"flavor_tags": _split_pipe(_cell(row, idx, "flavor_tags")),
 		}
 		_order.append(id)
 	f.close()
@@ -130,6 +157,8 @@ static func _load_guests() -> void:
 		var nums: PackedStringArray = _cell(row, idx, "vec").split("|")
 		for i in range(min(axes.size(), nums.size())):
 			vec[axes[i]] = float(nums[i])
+		var rb_raw: String = _cell(row, idx, "reward_bonus")
+		var reward_bonus: float = float(rb_raw) if rb_raw != "" else 1.0
 		_guests[id] = {
 			"id": id,
 			"name": _cell(row, idx, "name"),
@@ -139,8 +168,45 @@ static func _load_guests() -> void:
 			"line_ok": _cell(row, idx, "line_ok"),
 			"line_bad": _cell(row, idx, "line_bad"),
 			"role": _cell(row, idx, "role"),
+			# --- Guest System 2.0 (CSV v3.0) ---
+			"favorite_flavors": _split_pipe(_cell(row, idx, "favorite_flavors")),
+			"disliked_flavors": _split_pipe(_cell(row, idx, "disliked_flavors")),
+			"reward_bonus": reward_bonus,
+			"friendship_level_initial": int(_cell(row, idx, "friendship_level_initial")),
+			"mood_pool": _split_pipe(_cell(row, idx, "mood_pool")),
 		}
 	f.close()
+
+
+static func _load_flavors() -> void:
+	var f := FileAccess.open(FLAVORS_CSV, FileAccess.READ)
+	if f == null:
+		# flavors.csv is optional — UI badges will fall back to plain text
+		return
+	var header := f.get_csv_line(",")
+	var idx := _header_index(header)
+	while not f.eof_reached():
+		var row := f.get_csv_line(",")
+		var id := _cell(row, idx, "flavor_id")
+		if id == "":
+			continue
+		_flavors[id] = {
+			"id": id,
+			"name_en": _cell(row, idx, "name_en"),
+			"icon": _cell(row, idx, "icon"),
+			"color": Color.html(_cell(row, idx, "color_hex")) if _cell(row, idx, "color_hex") != "" else Color(0.7, 0.7, 0.7),
+			"category": _cell(row, idx, "category"),
+		}
+	f.close()
+
+
+static func get_flavor(id: String) -> Dictionary:
+	_ensure()
+	return _flavors.get(id, {
+		"id": id, "name_en": id.capitalize(),
+		"icon": id.substr(0, 1).to_upper(), "color": Color(0.7, 0.7, 0.7),
+		"category": "",
+	})
 
 
 static func _load_levels() -> void:
@@ -199,7 +265,7 @@ static func guest_ids(role: String = "") -> Array:
 	return out
 
 
-## Non-evaluator guests (friends + mentor) — selectable in guest select.
+## Non-evaluator guests (friends + mentor + family) — selectable in guest select.
 static func selectable_guest_ids() -> Array:
 	_ensure()
 	var out: Array = []
@@ -267,3 +333,66 @@ static func dish_tier(menu: Dictionary, dish_id: String) -> String:
 	elif dish_id == String(menu.get("dish_bad", "")):
 		return "bad"
 	return "neutral"
+
+
+# --- Cooking Framework 2.0 (ADR-011) — 8-module sequence per dish ---
+
+static func _load_dish_modules() -> void:
+	var f := FileAccess.open(DISH_MODULES_CSV, FileAccess.READ)
+	if f == null:
+		push_warning("MenuDB: dish_modules.csv missing — using fallback sequence for every dish")
+		return
+	var header := f.get_csv_line(",")
+	var idx := _header_index(header)
+	while not f.eof_reached():
+		var row := f.get_csv_line(",")
+		var fid := _cell(row, idx, "food_id")
+		if fid == "":
+			continue
+		var seq_raw := _cell(row, idx, "module_sequence")
+		var sequence: Array = []
+		for tok in seq_raw.split("|", false):
+			var t: String = tok.strip_edges()
+			if t == "":
+				continue
+			# strict ADR-011: skip any unknown module id (data hygiene)
+			if not ALL_MODULES.has(t):
+				push_warning("MenuDB: unknown module '%s' in dish_modules.csv for %s — skipped" % [t, fid])
+				continue
+			sequence.append(t)
+		# every dish ends in a plate-style finish; auto-append if author forgot
+		if sequence.is_empty() or String(sequence.back()) != "plate":
+			sequence.append("plate")
+		_dish_modules[fid] = {
+			"sequence": sequence,
+			"signature": _cell(row, idx, "signature_step"),
+			"notes": _cell(row, idx, "notes"),
+		}
+	f.close()
+
+
+## Module sequence (Array[String]) for a food_id. Falls back to FALLBACK_SEQUENCE
+## when the CSV has no row — keeps unknown / new dishes playable.
+static func module_sequence(food_id: String) -> Array:
+	_ensure()
+	if _dish_modules.has(food_id):
+		return (_dish_modules[food_id]["sequence"] as Array).duplicate()
+	return FALLBACK_SEQUENCE.duplicate()
+
+
+## Signature module id for a dish (e.g. "timing", "roll"). "" when none defined.
+static func dish_signature(food_id: String) -> String:
+	_ensure()
+	return String(_dish_modules.get(food_id, {}).get("signature", ""))
+
+
+## Raw entry (debug / smoke). Empty dict for unknown food_id.
+static func dish_module_row(food_id: String) -> Dictionary:
+	_ensure()
+	return _dish_modules.get(food_id, {})
+
+
+## All food_ids that have a module sequence row.
+static func dish_module_ids() -> Array:
+	_ensure()
+	return _dish_modules.keys()

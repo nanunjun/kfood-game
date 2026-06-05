@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://brsv2cp28row"]
+
+[ext_resource type="Script" path="res://scripts/ui/components/score_breakdown_row.gd" id="1_cp28"]
+
+[node name="ScoreBreakdownRow" type="Panel"]
+custom_minimum_size = Vector2(960, 100)
+script = ExtResource("1_cp28")

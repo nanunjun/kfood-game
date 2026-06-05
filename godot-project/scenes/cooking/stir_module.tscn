@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://bcfm2stir01"]
+
+[ext_resource type="Script" path="res://scripts/cooking_modules/stir_module.gd" id="1_stir"]
+
+[node name="StirModule" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_stir")

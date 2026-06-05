@@ -11,7 +11,7 @@ signal level_up(new_level)
 signal money_changed(amount)
 
 const SAVE_PATH: String = "user://kfood_save.json"
-const SCHEMA_VERSION: int = 1
+const SCHEMA_VERSION: int = 2
 const SEED_MONEY: int = 50000
 const START_STOCK: int = 3
 const RESTOCK_QTY: int = 3
@@ -21,10 +21,16 @@ const MAX_LEVEL: int = 8
 # clears needed to advance FROM level L to L+1 (~41 rounds L1->L8)
 const CLEARS_REQ := {1: 4, 2: 5, 3: 5, 4: 6, 5: 6, 6: 7, 7: 8}
 
+# Guest System 2.0 (v2 schema): friendship 0~10 milestones.
+const FRIENDSHIP_MAX: int = 10
+const FRIENDSHIP_MILESTONES := [3, 7, 10]
+
 const MenuDB := preload("res://scripts/gameplay/menu_db.gd")
 
 var data: Dictionary = {}
 var _pending_levelup: int = 0   # 0 = none; consumed by menu grid for toast
+# Guest System 2.0: pending milestone toast — Dictionary {guest_id: milestone_value(3/7/10)}.
+var _pending_milestones: Dictionary = {}
 
 
 func _ready() -> void:
@@ -42,6 +48,16 @@ func _default_data() -> Dictionary:
 		"unlocks": {"markets": ["home"]},
 		"stats": {"plays": 0, "passes": 0, "best_stars": {}, "total_stars": 0},
 		"intimacy": {},
+		# Guest System 2.0 (v2): integer 0~10 friendship per guest_id. Legacy "intimacy"
+		# is kept for the existing 5-heart UI display path; "friendship" is the new
+		# canonical progression.
+		"friendship": {},
+		# Result Screen 2.0: per (food_id, guest_id) high-score record (int 0~10000).
+		# Layout: data["records"][food_id][guest_id] = score_final_int.
+		"records": {},
+		# Result Screen 2.0: per food_id cumulative recipe XP (int). Level curve in
+		# data/recipe_xp.csv; level is derived (not stored).
+		"recipe_xp": {},
 		"player_char": "",
 		"settings": {"haptics": true, "volume": 1.0, "subtitle_kr": false},
 	}
@@ -142,7 +158,7 @@ func consume_levelup_notice() -> int:
 	return v
 
 
-# --- guest intimacy ---
+# --- guest intimacy (legacy 0~5 float — kept for old 5-heart UI display) ---
 func intimacy_of(guest_id: String) -> float:
 	return float((data.get("intimacy", {}) as Dictionary).get(guest_id, 0.0))
 
@@ -151,6 +167,85 @@ func add_intimacy(guest_id: String, delta: float) -> void:
 	var im: Dictionary = data["intimacy"]
 	im[guest_id] = clampf(intimacy_of(guest_id) + delta, 0.0, 5.0)
 	_save()
+
+
+# --- Guest System 2.0: friendship 0~10 (v2 schema) ---
+## Current friendship level (0~10) for a guest.
+func friendship_of(guest_id: String) -> int:
+	return int((data.get("friendship", {}) as Dictionary).get(guest_id, 0))
+
+
+## Adds delta to friendship, clamps 0~10, queues a milestone toast if 3/7/10 was just
+## reached. Returns the new friendship value.
+func add_friendship(guest_id: String, delta: int) -> int:
+	var fr: Dictionary = data["friendship"]
+	var prev: int = friendship_of(guest_id)
+	var nv: int = clampi(prev + delta, 0, FRIENDSHIP_MAX)
+	fr[guest_id] = nv
+	for ms in FRIENDSHIP_MILESTONES:
+		if prev < int(ms) and nv >= int(ms):
+			_pending_milestones[guest_id] = int(ms)
+			break
+	# also bump legacy intimacy so existing star display stays in sync (0~10 -> 0~5)
+	var im: Dictionary = data["intimacy"]
+	im[guest_id] = clampf(float(nv) * 0.5, 0.0, 5.0)
+	_save()
+	return nv
+
+
+## Returns the milestone (3/7/10) just reached for this guest (and consumes it), 0 = none.
+func friendship_milestone_pending(guest_id: String) -> int:
+	if not _pending_milestones.has(guest_id):
+		return 0
+	var v: int = int(_pending_milestones[guest_id])
+	_pending_milestones.erase(guest_id)
+	return v
+
+
+# --- Result Screen 2.0: per (food_id, guest_id) score records ---
+## Returns the previously stored high-score for (food, guest), or 0 if none.
+func record_of(food_id: String, guest_id: String) -> int:
+	var recs: Dictionary = data.get("records", {}) as Dictionary
+	if not recs.has(food_id):
+		return 0
+	var by_guest: Dictionary = recs[food_id] as Dictionary
+	return int(by_guest.get(guest_id, 0))
+
+
+## Tests whether the new score breaks the record for (food, guest). Updates and
+## persists on success. Returns true if a new record was set (including the very
+## first round for this pair).
+func check_record(food_id: String, guest_id: String, score_int: int) -> bool:
+	var recs: Dictionary = data.get("records", {}) as Dictionary
+	if not recs.has(food_id):
+		recs[food_id] = {}
+	var by_guest: Dictionary = recs[food_id] as Dictionary
+	var prev: int = int(by_guest.get(guest_id, -1))  # -1 = never played
+	if score_int > prev:
+		by_guest[guest_id] = score_int
+		data["records"] = recs
+		_save()
+		return true
+	return false
+
+
+# --- Result Screen 2.0: per food_id recipe XP (cumulative int) ---
+## Cumulative XP earned on this menu. 0 if never cooked.
+func recipe_xp_of(food_id: String) -> int:
+	var xp: Dictionary = data.get("recipe_xp", {}) as Dictionary
+	return int(xp.get(food_id, 0))
+
+
+## Adds XP to a menu's cumulative pool and persists. Returns the post-add total.
+## Level computation (RecipeXP autoload) is intentionally external — this stays a
+## dumb counter so the curve can be re-tuned without touching saves.
+func add_recipe_xp(food_id: String, xp_delta: int) -> int:
+	var xp: Dictionary = data.get("recipe_xp", {}) as Dictionary
+	var nv: int = maxi(0, recipe_xp_of(food_id) + xp_delta)
+	xp[food_id] = nv
+	data["recipe_xp"] = xp
+	_save()
+	return nv
 
 
 # --- settings ---
@@ -223,7 +318,29 @@ func _load() -> void:
 		return
 	# shallow-merge into defaults so new fields appear after updates
 	_merge(data, parsed as Dictionary)
-	# future: migrate by data["version"] here
+	# Guest System 2.0: v1 -> v2 migration. v1 had only "intimacy" (0~5 float). v2 adds
+	# "friendship" (0~10 int) as the canonical progression. Project legacy intimacy onto
+	# friendship by rounding (0~5) * 2.
+	var ver: int = int(data.get("version", 1))
+	if ver < 2:
+		_migrate_v1_to_v2()
+	data["version"] = SCHEMA_VERSION
+	_save()
+
+
+func _migrate_v1_to_v2() -> void:
+	if not data.has("friendship") or typeof(data["friendship"]) != TYPE_DICTIONARY:
+		data["friendship"] = {}
+	var fr: Dictionary = data["friendship"]
+	var im: Dictionary = data.get("intimacy", {}) as Dictionary
+	for gid in im.keys():
+		# legacy intimacy stored as float 0~5; project to integer 0~10
+		var legacy_val: float = float(im[gid])
+		var projected: int = clampi(int(round(legacy_val * 2.0)), 0, FRIENDSHIP_MAX)
+		# never overwrite an already-present v2 value
+		if not fr.has(gid):
+			fr[gid] = projected
+	print("[SaveManager] migrated v1 -> v2: friendship=", fr)
 
 
 func _merge(base: Dictionary, over: Dictionary) -> void:

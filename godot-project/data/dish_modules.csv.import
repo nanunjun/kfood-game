@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://b51hkq75nmrj4"
+
+[deps]
+
+files=["res://data/dish_modules.name.translation", "res://data/dish_modules.name.translation", "res://data/dish_modules.tier.translation", "res://data/dish_modules.module.translation", "res://data/dish_modules.step.translation", "res://data/dish_modules.signature.translation", "res://data/dish_modules.notes.translation"]
+
+source_file="res://data/dish_modules.csv"
+dest_files=["res://data/dish_modules.name.translation", "res://data/dish_modules.name.translation", "res://data/dish_modules.tier.translation", "res://data/dish_modules.module.translation", "res://data/dish_modules.step.translation", "res://data/dish_modules.signature.translation", "res://data/dish_modules.notes.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

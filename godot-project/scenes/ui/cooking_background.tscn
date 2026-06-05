@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://bd3kbg001"]
+
+[ext_resource type="Script" path="res://scripts/ui/cooking_background.gd" id="1_kbg"]
+
+[node name="CookingBackground" type="Control"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("1_kbg")

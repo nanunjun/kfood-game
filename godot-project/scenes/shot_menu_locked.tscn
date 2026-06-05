@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bv2shotmlock1"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_menu_locked.gd" id="1_mlock"]
+
+[node name="ShotMenuLocked" type="Node"]
+script = ExtResource("1_mlock")

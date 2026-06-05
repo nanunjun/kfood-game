@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://3m7sbvssf2nr"
+
+[deps]
+
+files=["res://data/reaction_templates.emotion.translation", "res://data/reaction_templates.template.translation"]
+
+source_file="res://data/reaction_templates.csv"
+dest_files=["res://data/reaction_templates.emotion.translation", "res://data/reaction_templates.template.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

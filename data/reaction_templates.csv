@@ -1,0 +1,41 @@
+guest_id,emotion_level,template_text,note
+junho,excellent,Junho roared "Now THAT is a kick!" — perfect {top_matched_flavor} hit.,3+ fav hit dominant flavor
+junho,good,Junho liked the bold {top_matched_flavor}, just wanted more punch.,1-2 fav hit
+junho,okay,Junho shrugged — it was okay but not bold enough.,neutral
+junho,bad,Junho frowned: too much {top_disliked_flavor} for him today.,fav 0 + dis hit OR mood penalty
+mina,excellent,Mina beamed — "Mmm sweet and perfect — love it!",sweet/savory/oily match
+mina,good,Mina smiled, but wished for a touch more {missing_favorite}.,1 fav hit
+mina,okay,Mina nibbled politely — "It's alright I guess.",neutral
+mina,bad,Mina pushed it aside — too {top_disliked_flavor} for her taste.,dis hit (bitter/sour)
+riley,excellent,Riley gasped — "Whoa that zing is amazing!" — the {top_matched_flavor} popped.,sour/fresh/umami match
+riley,good,Riley liked it but wanted a sharper {missing_favorite} edge.,1 fav hit
+riley,okay,Riley nodded — fine, but a bit too plain for her.,neutral
+riley,bad,Riley wrinkled her nose — way too {top_disliked_flavor}.,oily/bitter dis hit
+mrs_lee,excellent,Mrs. Lee closed her eyes — "Just right. That deep savory touch.",mild/umami/fermented/hearty match
+mrs_lee,good,Mrs. Lee approved, but felt it missed some {missing_favorite} depth.,1-2 fav hit
+mrs_lee,okay,Mrs. Lee nodded silently — acceptable, not memorable.,neutral
+mrs_lee,bad,Mrs. Lee sighed — too {top_disliked_flavor}, lacking refinement.,spicy/oily dis hit
+seoyeon,excellent,Seoyeon hugged the bowl — "This is exactly the comfort I needed!",hearty/salty/umami/sweet match
+seoyeon,good,Seoyeon smiled warmly, hoping for a touch more {missing_favorite}.,1 fav hit
+seoyeon,okay,Seoyeon ate quietly — "It's underseasoned for me.",neutral
+seoyeon,bad,Seoyeon set it down — too {top_disliked_flavor}, not her home taste.,spicy/sour dis hit
+mother_01,excellent,Mother smiled softly — "Just like home, my child. Wonderful work.",mild/sweet/hearty/umami match
+mother_01,good,Mother said, "Tastes nice — needs a bit more {missing_favorite} though.",1-2 fav hit
+mother_01,okay,Mother nibbled gently — "Hmm, it's alright.",neutral
+mother_01,bad,Mother frowned — "A little heavy for me today, dear.",spicy/oily/bitter dis hit
+father_01,excellent,Father slapped the table — "Now THAT hits the spot — bold and rich!",spicy/salty/oily/savory/umami match
+father_01,good,Father nodded — "Solid. Could use more {missing_favorite} though.",1-2 fav hit
+father_01,okay,Father grunted — "Not bad. Needs more punch honestly.",neutral
+father_01,bad,Father grimaced — too {top_disliked_flavor}, not his style.,bitter/sour dis hit
+mystery_diner,excellent,They noted something down and gave a satisfied nod.,evaluator silent positive
+mystery_diner,good,They wrote briefly — a small approving glance.,1 fav hit
+mystery_diner,okay,They took another bite, expression unchanged.,neutral
+mystery_diner,bad,They closed the notebook and slipped away silently.,oily dis hit
+blogger_daniel,excellent,Daniel Kim snapped a photo — "Posting this right now — looks amazing!",savory/umami/spicy/sweet match
+blogger_daniel,good,Daniel said, "Decent post material — wanted more {missing_favorite}.",1 fav hit
+blogger_daniel,okay,Daniel hesitated with the camera — borderline content.,neutral
+blogger_daniel,bad,Daniel said, "Not sure I'd recommend this one honestly.",bitter dis hit
+goldspoon,excellent,A slow nod of approval. "You have earned it.",umami/hearty/fermented/mild match
+goldspoon,good,A measured glance. "Promising. Refine the {missing_favorite}.",1 fav hit
+goldspoon,okay,Silent. The fork rests. "Adequate.",neutral
+goldspoon,bad,"Not yet at our standard. Keep refining.",oily/sweet dis hit

@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://301wnbaesm8g"]
+
+[ext_resource type="Script" path="res://scripts/ui/premium/step_progress_dots.gd" id="1_sd"]
+
+[node name="StepProgressDots" type="Control"]
+custom_minimum_size = Vector2(260, 44)
+script = ExtResource("1_sd")

@@ -30,6 +30,11 @@ BeatClock="*res://scripts/autoload/beat_clock.gd"
 Tuning="*res://scripts/autoload/tuning.gd"
 HapticManager="*res://scripts/autoload/haptic_manager.gd"
 FeedbackBus="*res://scripts/autoload/feedback_bus.gd"
+MoodSystem="*res://scripts/autoload/mood_system.gd"
+CompatCalc="*res://scripts/autoload/compatibility.gd"
+RewardCalc="*res://scripts/autoload/reward_calc.gd"
+RecipeXP="*res://scripts/autoload/recipe_xp.gd"
+ReactionDB="*res://scripts/autoload/reaction_db.gd"
 
 [display]
 

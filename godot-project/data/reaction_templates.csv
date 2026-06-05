@@ -1,0 +1,45 @@
+guest_id,emotion,template
+junho,excellent,Junho loved the {top_matched_flavor} kick — best meal of the week!
+junho,good,Junho liked the {top_matched_flavor} touch — solid plate.
+junho,okay,Junho ate it without much to say. Maybe more {missing_favorite} next time.
+junho,bad,Junho frowned — way too much {top_disliked_flavor} for him.
+mina,excellent,Mina beamed at the {top_matched_flavor} balance — a sweet win!
+mina,good,Mina enjoyed it — she'd want more {missing_favorite} though.
+mina,okay,Mina shrugged. Could use a touch more {missing_favorite}.
+mina,bad,Mina barely touched it — the {top_disliked_flavor} threw her off.
+riley,excellent,Riley's eyes lit up — that {top_matched_flavor} zing is everything!
+riley,good,Riley nodded along — nice {top_matched_flavor} edge.
+riley,okay,Riley smiled politely. A sharper {missing_favorite} would help.
+riley,bad,Riley grimaced — far too {top_disliked_flavor} for her taste.
+mrs_lee,excellent,Mrs. Lee nodded slowly — perfect {top_matched_flavor} depth.
+mrs_lee,good,Mrs. Lee approved the {top_matched_flavor} care in this dish.
+mrs_lee,okay,Mrs. Lee paused — the {missing_favorite} could be stronger.
+mrs_lee,bad,Mrs. Lee set her spoon down — too {top_disliked_flavor} for her palate.
+seoyeon,excellent,Seoyeon sighed happily — pure {top_matched_flavor} comfort food.
+seoyeon,good,Seoyeon smiled — the {top_matched_flavor} reminded her of home.
+seoyeon,okay,Seoyeon ate quietly. Could lean more into the {missing_favorite}.
+seoyeon,bad,Seoyeon barely smiled — the {top_disliked_flavor} ruined it for her.
+mother_01,excellent,Mother beamed — exactly like she used to make it, {top_matched_flavor} and all!
+mother_01,good,Mother nodded warmly — the {top_matched_flavor} was just right.
+mother_01,okay,Mother smiled gently — a bit more {missing_favorite} would have been perfect.
+mother_01,bad,Mother frowned — that {top_disliked_flavor} doesn't agree with her.
+father_01,excellent,Father grinned wide — bold {top_matched_flavor}, exactly the kick he wanted!
+father_01,good,Father gave a thumbs up — solid {top_matched_flavor} punch.
+father_01,okay,Father chewed thoughtfully. More {missing_favorite} next round.
+father_01,bad,Father grunted — too {top_disliked_flavor} and not enough heat.
+mystery_diner,excellent,The Mystery Diner jotted something down with a small smile — {top_matched_flavor} approved.
+mystery_diner,good,The Mystery Diner nodded once — clean {top_matched_flavor} work.
+mystery_diner,okay,The Mystery Diner wrote a brief note. The {missing_favorite} needs work.
+mystery_diner,bad,The Mystery Diner left half the plate — too {top_disliked_flavor} to recommend.
+blogger_daniel,excellent,Daniel Kim snapped a photo — "this {top_matched_flavor} is the SHOT, viral incoming!"
+blogger_daniel,good,Daniel Kim filmed a bite — "the {top_matched_flavor} works, posting tonight."
+blogger_daniel,okay,Daniel Kim paused his camera. "Needs more {missing_favorite} to go viral."
+blogger_daniel,bad,Daniel Kim put the camera away — "the {top_disliked_flavor} kills the post."
+goldspoon,excellent,The Golden Spoon Inspector nods deeply — the {top_matched_flavor} is masterful.
+goldspoon,good,The Golden Spoon Inspector approves the {top_matched_flavor} craft.
+goldspoon,okay,The Golden Spoon Inspector waits. The {missing_favorite} must be sharper.
+goldspoon,bad,The Golden Spoon Inspector shakes their head — {top_disliked_flavor} ruins the work.
+default,excellent,The guest loved the {top_matched_flavor} — best meal in a while!
+default,good,The guest enjoyed the {top_matched_flavor} touch.
+default,okay,The guest ate it. A bit more {missing_favorite} next time.
+default,bad,The guest barely ate — too much {top_disliked_flavor}.

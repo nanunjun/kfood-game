@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bcfm2intg01"]
+
+[ext_resource type="Script" path="res://scripts/dev/cooking_runner_integration_smoke.gd" id="1_intg"]
+
+[node name="CookingRunnerIntegrationSmoke" type="Node"]
+script = ExtResource("1_intg")

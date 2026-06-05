@@ -1,16 +1,60 @@
 # Balance Config — MVP
 
-> 버전: **v0.4 (2026-05-31, supersedes v0.3.3)** · 작성자: game-designer
-> Scope: **MVP (Tier 1~2, 음식 12개, 친구 1~2명) + ADR-005 4-stage 메커닉 + C-2 basic_pantry 정책 + M2 prerequisite D3 본격 BPM lock**.
-> 상위 문서: [`systems/cooking-mechanics.md` v0.7](systems/cooking-mechanics.md), [`systems/motion-spec.md` v0.1](systems/motion-spec.md), [`systems/mvp-food-selection.md` v2.2 §3.1](systems/mvp-food-selection.md), [`foods-database.csv`](foods-database.csv), [`store-distribution.md` v1.3](store-distribution.md), [`friends-system.md` v0.3](friends-system.md), [`decisions.md` ADR-005 + ADR-007 (pending)](decisions.md#adr-005)
+> 버전: **v0.7 (2026-06-04, supersedes v0.6)** · 작성자: game-designer
+> Scope: **MVP (Tier 1~2, 음식 12개, 친구 1~2명) + ADR-005 4-stage 메커닉 + C-2 basic_pantry 정책 + M2 prerequisite D3 본격 BPM lock + Guest System 2.0 (ADR-009) + Result Screen 2.0 (ADR-010) + 8-Module Cooking Pipeline (ADR-011)**.
+> 상위 문서: [`systems/cooking-mechanics.md` v0.7](systems/cooking-mechanics.md), [`systems/cooking-modules-v1.md` v1.0](systems/cooking-modules-v1.md), [`systems/motion-spec.md` v0.1](systems/motion-spec.md), [`systems/mvp-food-selection.md` v2.2 §3.1](systems/mvp-food-selection.md), [`systems/guest-system-v2.md` v2.0](systems/guest-system-v2.md), [`systems/result-screen-v2.md` v2.0](systems/result-screen-v2.md), [`foods-database.csv`](foods-database.csv), [`data/dish_modules.csv`](../data/dish_modules.csv), [`store-distribution.md` v1.3](store-distribution.md), [`friends-system.md` v0.3 (deprecated by ADR-009)](friends-system.md), [`decisions.md` ADR-005 + ADR-007 + ADR-009 + ADR-010 + ADR-011](decisions.md#adr-005)
 >
 > 본 문서는 **공식·범위·갯수**만 lock한다. 정확한 튜닝 수치는 alpha 빌드 이후 데이터 기반 조정. 본 문서의 모든 숫자는 **placeholder default**.
+>
+> ⚠️ **v0.7 신설**: §15 8-Module Cooking Pipeline wire (Slice/Arrange/Stir/Flip/Timing/Season/Roll/Plate 8 module × BPM/window/threshold lock + dish-to-module sequence matrix + Remote Config 키 6종). ADR-011 동시 lock. ADR-005 4-stage meta 무변경 (8 module = low-level primitive). `data/dish_modules.csv` 신설 (12 음식 × sequence).
+>
+> ⚠️ **v0.6 보존**: §14 Result Screen 2.0 wire (Recipe XP 12 음식 × Lv 1~10 + New Record (food, guest) pair best + ₩500 bonus + Milestone reveal toast/banner/overlay + Emotion reaction 4 levels). pure display layer, mechanic 무영향.
+>
+> ⚠️ **v0.5 보존**: §13 Guest System 2.0 wire (12 flavor × 7 selectable × mood rotation × friendship 0~10). friends-system v0.3 ±5% axis 모델 supersede. compat 0~100% × reward_multiplier curve × guest reward_bonus 1.15~2.00x.
 >
 > ⚠️ **v0.4 본격**: §7.1 음식별 prep_bpm 12 음식 모두 lock (v0.3.2 placeholder 2개 + v0.4 신규 10개 = 12/12). foods-database.csv `prep_*` 4 컬럼 sync 완료 (M2-D2). motion-spec.md v0.1 sync (M2-D1). ADR-005 §7 BPM 음식별 본격 spec.
 
 ---
 
-## 0. v0.4 변경 요약 (vs v0.3.3)
+## 0. v0.7 변경 요약 (vs v0.6)
+
+| # | 항목 | 변경 내용 |
+|---|------|----------|
+| **M-1** | **§15 신설 — 8-Module Cooking Pipeline wire** | 8 module (Slice/Arrange/Stir/Flip/Timing/Season/Roll/Plate) × BPM·window·threshold lock. cooking-modules-v1.md §1 spec와 1:1 sync. Stir = tap rhythm MVP / Flip = single perfect-window tap MVP (해물파전 full mechanic post-launch C-3 lock 유지) / Roll = swipe motion 0.5~1.0s 윈도 / Plate = drag/drop bonus {1.0, 0.6, 0.2}. |
+| **M-2** | **§15.2 dish-to-module sequence matrix** | 12 음식 × 3~5 module sequence lock. 평균 4.4 step/음식. Plate 12 / Timing 11 / Slice 10 / Stir 5 / Season 5 / Arrange 4 / Flip 3 / Roll 1 reuse 분포 (ADR-011 정합). `data/dish_modules.csv` 신설 (12 row, pipe-separated module_sequence). |
+| **M-3** | **§15.3 Remote Config 키 6종 신설** | `cooking.modules.enabled_set` / `cooking.modules.stir_interaction_mode` / `cooking.modules.flip_required_foods` (C-3 lock alias) / `cooking.modules.roll_swipe_speed_band_ms` / `cooking.modules.plate_bonus_levels` / `cooking.modules.arrange_correct_glow_ms`. |
+| **M-4** | **§15.4 module별 polish 우선순위** | P0 (Plate / Timing / Slice — 10~12 음식 reuse) / P1 (Stir / Season — 5 음식) / P2 (Arrange / Flip — 3~4 음식) / P3 (Roll — 김밥 단독). godot-dev Sprint M3 implementation 우선순위 lock. |
+| **M-5** | **§7.1 prep_bpm 12 음식 표 ↔ §15 sequence 정합 검증** | 모든 음식의 §7.1 prep_bpm + cut_style이 §15.2 sequence Slice step과 1:1 sync. 콘도그 dip / 불고기 marinade는 sequence에서 Flip / Season(marinade) 매핑. 충돌 0. |
+| **M-6** | **§11 #16 신규 — rhythm_proto.gd → cooking_module_runner.gd migration** | godot-dev Sprint M3 권고. knead 토큰 제거 + Arrange/Plate enum 추가 + 8 module dispatch. 본 sprint = design only, code 변경 별도 sprint. |
+
+---
+
+## 0. v0.6 변경 요약 (vs v0.5)
+
+| # | 항목 | 변경 내용 |
+|---|------|----------|
+| **R-1** | **§14 신설 — Result Screen 2.0 wire** | 6 row breakdown (prep/cook/season/plating + compat/mood/guest_bonus) + 4-level emotion reaction (excellent/good/okay/bad) + 44 reaction templates (`data/reaction_templates.csv` 신설). compat ≥ 90 / 70 / 50 / star ≥ ★3·★2·★1 임계. mood_badge 재활용 (asset 0 추가). |
+| **R-2** | **§14.2 Recipe XP system 신설** | 음식별 누적 XP (Lv 1~10), `data/recipe_xp.csv` 신설. XP 산식: `10 × stars + (compat/10) + (new_record ? +20 : 0)`. T1/T1-mid/T2 3종 curve (T1 lv10=3200 / T1-mid=3360 / T2=3600~3780). Level up 보상 9종 (signature line / perfect_window +5ms / signature dish glow / reward_bonus_perm +0.05 / Master title 등). |
+| **R-3** | **§14.3 New Record logic** | storage key `(food_id, guest_id)` pair. value = score_final integer (0~100). 갱신 시 +₩500 one-time. 첫 라운드는 항상 NEW RECORD (기준선). SaveManager v2 schema 유지, `records: Dictionary` + `recipe_xp: Dictionary` 2 dict 추가 (v3 bump 불필요). |
+| **R-4** | **§14.4 Milestone reveal styles** | Lv 3 → toast (우상단 슬라이드 +₩500) / Lv 7 → banner (중앙 풀, signature dish unlock + compat +5% perm) / Lv 10 → full-screen overlay (portrait skin + reward_bonus +0.10x perm). milestone payout은 NEW RECORD bonus와 additive. |
+| **R-5** | **§14.5 Remote Config 키 10종 신설** | `result.score_breakdown.show_modifier_rows` / `result.reaction.compat_thresholds` / `result.reaction.star_overrides` / `result.recipe_xp.formula` / `result.recipe_xp.max_level` / `result.record.new_record_bonus_coin` / `result.record.first_record_counts` / `result.milestone.reveal_styles` / `result.milestone.overlay_duration_sec` / `result.reaction.emotion_levels`. |
+| **R-6** | **검증 3종** | Mrs.Lee × 잔치국수 (happy) ★3 93% excellent → "Just right. Deep savory touch." + NEW RECORD + Lv 4 / Father × 떡볶이 (grumpy) ★2 69% okay → "Not bad. Needs more punch." / Mother × 김치찌개 (picky) ★1 49% bad → "A little heavy for me today, dear." + 첫 라운드 NEW RECORD. |
+
+---
+
+## 0. v0.5 변경 요약 (vs v0.4)
+
+| # | 항목 | 변경 내용 |
+|---|------|----------|
+| **G-1** | **§13 신설 — Guest System 2.0 wire** | 12 flavor 카테고리 × 7 selectable guests × 5 mood rotation × friendship 0~10. compat 공식 lock (W_BASE=50 + W_FAV=12 + W_DIS=18 × mood multiplier). compat → reward_multiplier curve (90+/70/50/30/<30 → 1.30x/1.15x/1.00x/0.85x/0.70x). guest별 reward_bonus 1.15x~2.00x. |
+| **G-2** | **§13.4 신설 — friendship curve + milestone** | 0~10 누적, milestone 3/7/10 (gift ₩500 / compat +5% perm / reward_bonus +0.10x perm). round 평균 +2 → 5 round로 milestone 1. |
+| **G-3** | **§13.5 신설 — mood rotation algorithm** | daily seed `hash(today_iso + guest_id)`, 5 mood pool 후보 중 선택. 7 guest 각자 독립 mood. |
+| **G-4** | **friends-system.md v0.3 ±5% axis 모델 deprecated** | `friends.like_bonus_pct` / `friends.dislike_penalty_pct` / `friends.preference_affect_stars` 3 키 deprecated (§2.2 표 markdown 유지하나 ADR-009 supersede 명시). v2.0 compat가 신규 source of truth. |
+| **G-5** | **검증 (대표 케이스 3종)** | Junho × 김치찌개 (happy) = 93% ✅ (사용자 verbatim 92% 예시 일치) / Mina × 김밥 (easy) = 62% ✅ (목표 63% 일치) / Mrs.Lee × 잔치국수 (happy) = 93% ★ (mentor signature). compat 분포 30~95 range로 의미있는 분산 검증. |
+
+---
+
+## 0.0 v0.4 변경 요약 (vs v0.3.3)
 
 | # | 항목 | 변경 내용 |
 |---|------|----------|
@@ -90,9 +134,9 @@
 | `cooking.stage1.ftue_perfect_width_multiplier` | `2.0` | float | FTUE Step 3 한정 PERFECT 폭 배수 (= 0.10 × 2.0 = 0.20) |
 | `cooking.stage3.flip_required_foods` | `[]` | string[] | **C-3 lock 2026-05-24**: MVP는 빈 배열 (단일 탭). post-launch에서 `["t1_006"]` 활성화 검토 |
 | **`cooking.stage3.band_distribution`** | **`{"perfect":0.10,"good":0.45,"miss":0.45}`** | object | **C-4 lock 2026-05-24**: PERFECT 외 good/miss 균등 분배. cooking-mechanics §4.4 v0.4(30/60) supersede. Soft launch alpha 재조정 가능 |
-| `friends.like_bonus_pct` | `0.05` | float | 친구가 음식 좋아함 → Round 점수 가산 (5%) |
-| `friends.dislike_penalty_pct` | `0.05` | float | 친구가 음식 싫어함 → Round 점수 감산 (5%) |
-| `friends.preference_affect_stars` | `false` | bool | 친구 호불호가 ★ 임계에도 영향 주는지 (기본 false = 점수만) |
+| ~~`friends.like_bonus_pct`~~ | ~~`0.05`~~ | float | ~~친구가 음식 좋아함 → Round 점수 가산 (5%)~~ **DEPRECATED v0.5 (ADR-009) — §13 Guest System 2.0 compat 공식이 supersede** |
+| ~~`friends.dislike_penalty_pct`~~ | ~~`0.05`~~ | float | ~~친구가 음식 싫어함 → Round 점수 감산 (5%)~~ **DEPRECATED v0.5 (ADR-009)** |
+| ~~`friends.preference_affect_stars`~~ | ~~`false`~~ | bool | ~~친구 호불호가 ★ 임계에도 영향 주는지 (기본 false = 점수만)~~ **DEPRECATED v0.5 (ADR-009)** |
 | `economy.coin_per_star_by_tier` | `{1:10, 2:20}` | object | tier별 ★1개당 코인 보상 |
 | `ads.interstitial_round_interval` | `3` | int | 인터스티셜 노출 간격 (Round) |
 | `ads.ftue_block_minutes` | `5` | int | FTUE 광고 차단 분 (GDD §5.2) |
@@ -516,10 +560,340 @@ total = (accuracy_ingredients × 0.25)
 | **13** | **C-2 basic_pantry 정책 alpha 검증** — Stage 1 자동 제외 학습률 / kitchen rack 인지 / 옹기 시각 디스트랙터 손실 회복 | game-designer + ui-designer + qa-tester | **open (alpha 후)** |
 | **14** | **ADR-007 신설** — basic_pantry 정책 정식 ADR 격상 (Stage 1 진열대 자동 제외 + kitchen rack 자동 제공 + accuracy 분모 차감의 의사결정 기록) | pm | **open (별도 sprint 위임)** |
 | **15** | **소금 ing_x_007 ID 재매핑 ripple** — 기존 ing_x_007 (깨) → ing_x_019 이동 시 Resource(.tres) 정합성 + foods CSV 명시 X 정합성 | godot-dev | **open (Resource sync sprint)** |
+| **16** | **ADR-011 rhythm_proto.gd → cooking_module_runner.gd migration** — 8 module dispatch refactor + knead 제거 + Arrange/Plate enum 신규. dish recipe data load (data/dish_modules.csv) | godot-dev | **open (Sprint M3 권고)** |
+| **17** | **ADR-011 Stir interaction MVP lock** — tap_rhythm vs swipe_circular 중 alpha 후 확정. MVP는 tap_rhythm 권고 (latency 부담 ↓) | game-designer + godot-dev | **open (alpha 후)** |
+| **18** | **ADR-011 Plate module 그릇/garnish art workload** — 12 음식 × 평균 2 garnish = ~36 art assets. art-style lock 후 산정 | art-director | **open (art-style lock 후)** |
+
+---
+
+## 13. Guest System 2.0 wire (v0.5 신설 — ADR-009)
+
+> Full spec: [`systems/guest-system-v2.md` v2.0](systems/guest-system-v2.md). 본 §13은 balance-config 관점 핵심 공식·키·튜닝 수치만 lock.
+
+### 13.1 Compatibility 공식 (lock)
+
+```
+hit_fav = |food.flavor_tags ∩ guest.favorite_flavors|
+hit_dis = |food.flavor_tags ∩ guest.disliked_flavors|
+
+fav_score = hit_fav × W_FAV × mood_mult_fav[mood_of_the_day]
+dis_score = hit_dis × W_DIS × mood_mult_dis[mood_of_the_day]
+raw       = W_BASE + fav_score − dis_score
+compat    = clamp(raw, 0, 100)    // 0~100% integer
+```
+
+**lock 값** (alpha 후 fine-tune):
+- `W_BASE = 50`
+- `W_FAV = 12`
+- `W_DIS = 18`
+
+### 13.2 Mood multipliers (5 mood)
+
+| mood | mood_mult_fav | mood_mult_dis | 페르소나 |
+|------|:-------------:|:-------------:|---------|
+| hungry | 1.3 | 0.9 | "I'll eat anything good." 선호 강조 |
+| happy | 1.2 | 1.0 | 관대한 톤 |
+| easy | 1.0 | 0.7 | 호불호 다 약화 |
+| picky | 1.1 | 1.5 | 까다로움 (dislike 가중) |
+| grumpy | 0.8 | 1.6 | 매우 까다로움 (high risk, high reward) |
+
+### 13.3 Compat → Reward Multiplier curve
+
+| compat | reward_multiplier | UI tag |
+|:------:|:-----------------:|--------|
+| ≥ 90 | **1.30x** | "Perfect match! 💯" |
+| 70~89 | 1.15x | "Great match ✨" |
+| 50~69 | 1.00x | (neutral) |
+| 30~49 | 0.85x | "Mediocre 😐" |
+| < 30 | 0.70x | "Bad match 😔" |
+
+```
+final_reward = base_reward × guest.reward_bonus × compat_multiplier(compat)
+```
+
+`base_reward` = `levels.csv` reward × stars multiplier (§10). guest.reward_bonus = 1.15~2.00x (guest별 CSV 정의).
+
+### 13.4 Friendship Curve + Milestone
+
+**누적 공식 (라운드 결과 후)**:
+```
+base_delta = stars                       # ★1=+1, ★2=+2, ★3=+3
+compat_bonus = +1 if compat >= 80 else 0
+friendship[guest_id] = clamp(friendship[guest_id] + base_delta + compat_bonus, 0, 10)
+```
+
+**Milestone**:
+| friendship_lv | 보상 | 게임플레이 가치 |
+|:-:|------|----------------|
+| **3** | one-time gift ₩500 + special line_ok unlock | 초기 친밀도 동기 |
+| **7** | "signature dish" reveal + compat +5% permanent (해당 guest 한정) | 같은 guest 반복 선택 강화 정서 |
+| **10** | portrait skin unlock + reward_bonus +0.10x permanent | end-game progression |
+
+**도달 곡선** (round 평균 +2 가정 = ★2 × compat 60):
+- Milestone 1 (Lv 3) ≈ 2 round
+- Milestone 2 (Lv 7) ≈ 4 round
+- Milestone 3 (Lv 10) ≈ 5~7 round (★3 dominant 시)
+- 7 guest × MAX = ~50 round 콘텐츠 (LiveOps 풀)
+
+### 13.5 Mood Rotation Algorithm
+
+```
+mood_of_the_day(guest_id):
+    seed_str = ISO8601_date_today + "_" + guest_id   // "2026-06-04_junho"
+    seed_hash = hash(seed_str)
+    pool = GuestDB[guest_id].mood_pool                // Array[mood_id], 3~5 entries
+    return pool[abs(seed_hash) % pool.size()]
+```
+
+**특성**:
+- Deterministic per (date, guest) — 같은 날 같은 guest = 같은 mood
+- 7 guest 각자 독립 — 오늘 Junho=hungry, Mina=picky, Mrs.Lee=easy (동시 가능)
+- pool에 중복 entry 허용 = 가중치 효과 (예: `hungry|hungry|happy|easy|picky` → hungry 40%)
+
+### 13.6 Remote Config 키 (G-1 ~ G-3 신설)
+
+| 키 | 기본값 | 타입 | 설명 |
+|----|--------|------|------|
+| `guest.compat.weights` | `{base:50, fav:12, dis:18}` | object | compat 공식 가중치 |
+| `guest.compat.mood_multipliers` | `{hungry:[1.3,0.9], happy:[1.2,1.0], easy:[1.0,0.7], picky:[1.1,1.5], grumpy:[0.8,1.6]}` | object | mood_id → [fav_mult, dis_mult] |
+| `guest.compat.reward_multiplier_curve` | `[[90,1.30],[70,1.15],[50,1.00],[30,0.85],[0,0.70]]` | array | compat 임계 → multiplier (descending) |
+| `guest.friendship.milestones` | `[3,7,10]` | int[] | milestone level |
+| `guest.friendship.milestone_rewards` | `{"3":{"coin":500}, "7":{"compat_bonus_perm":0.05}, "10":{"reward_bonus_perm":0.10}}` | object | milestone 보상 |
+| `guest.friendship.delta_per_round` | `{"base":"stars","compat_bonus_threshold":80,"compat_bonus":1}` | object | friendship 증가 공식 |
+| `guest.friendship.max` | `10` | int | friendship cap |
+| `guest.mood.daily_seed_pattern` | `"%date_iso%_%guest_id%"` | string | daily seed input format |
+| `guest.compat.show_score_in_ui` | `false` | bool | UI에 compat % 노출 여부 (false = 전략적 모호함) |
+
+### 13.7 점수 vs 보상 분리 정책
+
+- compat은 **보상(코인)** 에 영향. **★ 임계 score_final**에는 영향 X (Stage 2A/2B/2C 4-factor 그대로).
+- 사유: ★는 플레이어 스킬 평가, compat은 guest fit 평가 → 정합성 분리. 친구를 잘 골랐다고 ★이 늘어나는 것은 직관 위반.
+- friends-system v0.3 §5.1의 `score_pre + preference_modifier × 100` 모델은 deprecated. 신규 모델:
+
+```
+score_final = clamp01(score_pre) × 100              # ★ 결정 (변동 없음, 4-factor)
+coin_reward = (★ multiplier) × base_coin × guest.reward_bonus × compat_multiplier(compat)
+              + friendship_milestone_payout(if hit)
+```
+
+### 13.8 검증 예시 (3종)
+
+| guest | food | mood | hit_fav | hit_dis | fav_score | dis_score | raw | compat | reward_mult |
+|-------|------|------|:-------:|:-------:|:---------:|:---------:|:---:|:------:|:-----------:|
+| Junho | Kimchi Stew | happy | 3 | 0 | 3×12×1.2=43.2 | 0 | 93.2 | **93%** ★★★ | 1.30x |
+| Mina | Gimbap | easy | 1 | 0 | 1×12×1.0=12 | 0 | 62 | **62%** | 1.00x |
+| Mrs.Lee | Janchi Guksu | happy | 3 | 0 | 3×12×1.2=43.2 | 0 | 93.2 | **93%** ★★★ | 1.30x |
+| Father | Tteokbokki | grumpy | 2 | 0 | 2×12×0.8=19.2 | 0 | 69.2 | 69% | 1.00x (high risk) |
+| Mother | Kimchi Stew | picky | 2 | 1 | 2×12×1.1=26.4 | 1×18×1.5=27.0 | 49.4 | **49%** | 0.85x |
+
+> compat 분포 49~93% → guest selection이 의미있는 결정 (Auto Select dominant 회피 검증).
+
+---
+
+## 14. Result Screen 2.0 wire (v0.6 신설 — ADR-010)
+
+> Full spec: [`systems/result-screen-v2.md` v2.0](systems/result-screen-v2.md). 본 §14는 balance-config 관점 핵심 공식·키·튜닝 수치만 lock.
+
+### 14.1 6 row breakdown 데이터 모델
+
+| # | row_id | source (rhythm_proto / Save / Guest) | 시각 표시 | 코인 기여 (display) |
+|---|--------|---|----|---|
+| 1 | prep_score | `_cat_acc.prep` 평균 | progress bar (blue) + % + ★1~3 | base × 0.20 × score |
+| 2 | cook_score | `_cat_acc.cook` 평균 | progress bar (orange) + % + ★1~3 | base × 0.20 × score |
+| 3 | seasoning_score | `_cat_acc.season` 평균 | progress bar (red) + % + ★1~3 | base × 0.20 × score |
+| 4 | plating_score | `dish_bonus` (best/2nd/bad = 1.0/0.6/0.2) | dish thumb + label | base × 0.20 × score |
+| 5 | compatibility_bonus | `RewardCalc.bonus_multiplier(compat)` | compat % bar (compat_color) + pill | × compat_mult (전체 곱) |
+| 6 | mood_bonus_or_penalty | `mood_mult_fav` 또는 `mood_mult_dis` 영향분 | mood_badge 재활용 + label "+20%" / "-50%" | (compat에 이미 반영, explanation 전용) |
+| 7 | reward_bonus | `guest.reward_bonus` (CSV) | guest portrait + "× guest_bonus" pill | × guest.reward_bonus (전체 곱) |
+
+`final_coin = base × compat_mult × guest_bonus + (new_record ? 500 : 0) + milestone_payout`
+
+### 14.2 Emotion Reaction — 4 levels (lock)
+
+```
+level_from_compat = excellent(≥90) / good(70~89) / okay(50~69) / bad(<50)
+level_from_stars  = excellent(★3 + compat≥70) / good(★3 alone) / okay(★2) / bad(★1)
+final_level       = max(level_from_compat, level_from_stars)
+```
+
+| level | mood_badge mood 매핑 | tween | sfx |
+|-------|---------------------|-------|-----|
+| excellent | happy (smile) | scale 1.0 → 1.20 punch | sting_perfect |
+| good | easy (~) | scale 1.0 → 1.10 | sting_good |
+| okay | picky (?) | scale 1.0 → 1.05 small | sting_ok |
+| bad | grumpy (>(:) | scale 1.0 → 0.95 sag | sting_bad |
+
+**Template lock**: `data/reaction_templates.csv` 44 row (8 selectable guests + 3 evaluators × 4 levels). placeholder `{top_matched_flavor}` / `{top_disliked_flavor}` / `{missing_favorite}` 치환.
+
+### 14.3 Recipe XP curve (lock)
+
+**XP 산식**:
+```
+xp_per_round = 10 × stars + (compat / 10) + (new_record ? +20 : 0)
+recipe_xp[food_id] += xp_per_round   (cap = lv10_cumxp)
+```
+
+> 평균 round = ★2 + compat 60 = 26 XP/round. T1 lv10 도달 = ~120 round (3200/26).
+
+**Tier별 curve** (`data/recipe_xp.csv` 12 음식 sync):
+
+| level | T1 (3 음식) | T1-mid (5 음식) | T2 (4 음식) |
+|:-:|:-:|:-:|:-:|
+| 1 | 0 | 0 | 0 |
+| 2 | 100 | 120 | 140~160 |
+| 3 | 250 | 280 | 320~360 |
+| 4 | 450 | 500 | 560~620 |
+| 5 | 700 | 780 | 860~940 |
+| 6 | 1000 | 1120 | 1220~1320 |
+| 7 | 1400 | 1540 | 1660~1780 |
+| 8 | 1900 | 2040 | 2200~2340 |
+| 9 | 2500 | 2640 | 2840~3000 |
+| 10 | 3200 | 3360 | 3600~3780 |
+
+**Level up 보상**:
+
+| recipe_lv | T1/T1-mid | T2 | 가치 |
+|:-:|---|---|---|
+| 2 | +₩300 | +₩400 | 초기 동기 |
+| 3 | signature_line unlock | same | persona depth |
+| 4 | +₩500 | +₩650 | mid 부스트 |
+| 5 | perfect_window +5ms (this food only) | same | skill aid |
+| 6 | +₩800 | +₩1000 | |
+| 7 | signature dish glow effect | same | 시각 보상 |
+| 8 | +₩1200 | +₩1500 | |
+| 9 | reward_bonus_perm +0.05 (this food only) | same | end-game compounding |
+| 10 | "Master of X" title + max badge | same | bragging right |
+
+### 14.4 New Record + Milestone
+
+- **storage key**: `data.records[food_id][guest_id] = score_final_int` (0~100)
+- **bonus**: 갱신 시 `+₩500` (`economy.new_record_bonus_coin`)
+- **첫 라운드도 NEW RECORD** (기준선 설정)
+- **milestone payout과 additive** (둘 다 add, exclusive 아님)
+
+Milestone reveal styles (UI 강도 ramp):
+
+| level | reveal | hold | confetti |
+|:-:|---|:-:|:-:|
+| 3 | toast (corner slide) | 1.5s | X |
+| 7 | banner (center pool) | 2.0s | small |
+| 10 | full-screen overlay | 2.5s | big + portrait reveal |
+
+### 14.5 Remote Config 키 (R-5 신설)
+
+| 키 | 기본값 | 타입 | 설명 |
+|----|--------|------|------|
+| `result.score_breakdown.show_modifier_rows` | `true` | bool | compat/mood/bonus 3 modifier row 표시 |
+| `result.reaction.emotion_levels` | `["excellent","good","okay","bad"]` | string[] | 4 emotion level id |
+| `result.reaction.compat_thresholds` | `[90,70,50]` | int[] | compat → emotion level 임계 (≥90/≥70/≥50 → excellent/good/okay) |
+| `result.reaction.star_overrides` | `{"3":"good","2":"okay","1":"bad"}` | object | ★ → min emotion level (compat과 max로 결합) |
+| `result.recipe_xp.formula` | `{"per_star":10,"per_compat_div":10,"new_record_bonus":20}` | object | XP 산식 변수 |
+| `result.recipe_xp.max_level` | `10` | int | 최대 recipe level |
+| `result.record.new_record_bonus_coin` | `500` | int | NEW RECORD 갱신 1회 보상 |
+| `result.record.first_record_counts` | `true` | bool | 첫 라운드도 NEW RECORD 처리 |
+| `result.milestone.reveal_styles` | `{"3":"toast","7":"banner","10":"overlay"}` | object | level별 reveal 시각 스타일 |
+| `result.milestone.overlay_duration_sec` | `2.5` | float | Lv 10 portrait overlay 노출 시간 |
+
+### 14.6 점수 vs 보상 분리 정책 (재확인 — v0.5 §13.7 정합)
+
+- **★ 임계 (4-factor)**는 cooking 메커닉만 평가 — compat/mood/recipe_xp 무영향
+- **Coin reward**는 ★ × compat × guest_bonus × (new_record + milestone) 곱 + 가산
+- **Recipe XP**는 ★ + compat만 영향 (guest_bonus 무관 — guest 누가 와도 같은 음식 lv up은 동일 속도)
+- **Friendship**은 ★ + compat (≥80 +1)만 영향 (이미 §13.4 lock)
+
+---
+
+## 15. 8-Module Cooking Pipeline wire (v0.7 신설 — ADR-011)
+
+> Full spec: [`systems/cooking-modules-v1.md` v1.0](systems/cooking-modules-v1.md). 본 §15는 balance-config 관점 핵심 공식·키·sequence 매트릭스만 lock.
+
+### 15.1 8 modules — interaction · output · 핵심 수치
+
+| # | module | interaction | output | 핵심 수치 (Remote Config wire) |
+|:-:|--------|-------------|--------|-------------------------------|
+| 1 | **slice** | rhythm tap (BPM-driven) | `accuracy_prep ∈ [0,1]` | §6 perfect_window_ms=100 (LOCKED ±80) / good=200 / §7 BPM by cut style (다지기 140 / 채썰기 115 / 어슷 100 / 통썰기 70 / 송송 110 / 깍둑 90) |
+| 2 | **arrange** | drag/drop placement | `accuracy_arrange ∈ [0,1]` | `cooking.modules.arrange_correct_glow_ms = 250` (snap glow), wrong → bounce 350ms. 분모 = total_slots (2~5) |
+| 3 | **stir** | tap rhythm (MVP) / swipe circular (post-launch) | `accuracy_cook ∈ [0,1]` | `cooking.modules.stir_interaction_mode = "tap_rhythm"`. BPM = §7.1 footer `cook.bpm_by_action`(stir 100, slow 60, fast 110) |
+| 4 | **flip** | single perfect-window tap (MVP fallback per C-3) | `flip_score ∈ {1.0, 0.6, 0.0}` | C-3 lock: `cooking.modules.flip_required_foods = []` (post-launch `["t1_006"]`). perfect_width = §3.2 음식별 |
+| 5 | **timing** | gauge fill + perfect tap | `accuracy_timing ∈ {1.0, 0.6, 0.2, 0.0}` | §3.1 C-4 lock band distribution 0.10/0.45/0.45, §3.2 음식별 perfect_width 12 row |
+| 6 | **season** | 1-tap auto-pour (default) / marinade rhythm (sub) | default: `accuracy_season = 1.0` (시각 only) / marinade: `accuracy_prep` 가산 | ADR-007 정합. marinade variant = `prep_bpm=60` (불고기 MAR-00), 3 press tap |
+| 7 | **roll** | swipe motion (left → right) | `accuracy_roll ∈ [0,1]` | `cooking.modules.roll_swipe_speed_band_ms = [500, 1000]`. band 밖 → retry (점수 영향 0, FTUE 학습) |
+| 8 | **plate** | drag/drop + garnish placement | `plate_bonus ∈ {1.0, 0.6, 0.2}` | `cooking.modules.plate_bonus_levels = [1.0, 0.6, 0.2]` (적절 그릇+garnish / 적절 그릇만 / 잘못된 그릇). Result Screen 2.0 §14.1 row 4 wire (dish_bonus) |
+
+### 15.2 Dish-to-Module Sequence Matrix (12 음식)
+
+| food_id | 음식 | sequence | 시그니처 step | step count |
+|---------|------|----------|---------------|:----------:|
+| t1_002 | 라면 | slice → timing → season → plate | timing (끓이기 9s) | 4 |
+| t1_003 | 떡볶이 | slice → season → stir → timing → plate | stir + season(고추장) | 5 |
+| t1_004 | 김밥 | arrange → roll → slice → plate | roll + slice | 4 |
+| t1_005 | 김치볶음밥 | slice → stir → timing → plate | stir (wok) | 4 |
+| t1_006 | 해물파전 | slice → flip → timing → plate | flip (MVP single) | 4 |
+| t1_007 | 콘도그 | slice → flip → timing → plate | flip (dip+rotation) | 4 |
+| t1_008 | 잔치국수 | slice → timing → arrange → plate | timing + arrange(고명) | 4 |
+| t2_008 | 비빔밥 | slice → arrange → season → stir → plate | arrange(6색) + stir | 5 |
+| t2_010 | 잡채 | slice → arrange → stir → timing → plate | stir(toss) + arrange | 5 |
+| t2_012 | 갈비구이 | slice → season → timing → flip → plate | timing(0.04 좁음) | 5 |
+| t2_013 | 순두부찌개 | slice → timing → season → plate | timing(뚝배기) | 4 |
+| t2_014 | 불고기 | season(marinade) → slice → stir → timing → plate | season(MAR-00 60 BPM) | 5 |
+
+**Module reuse 분포**:
+
+| module | 사용 음식 수 | polish 우선순위 |
+|--------|:----:|:-----:|
+| plate | 12 | **P0** |
+| timing | 11 | **P0** |
+| slice | 10 | **P0** |
+| stir | 5 | P1 |
+| season | 5 | P1 |
+| arrange | 4 | P2 |
+| flip | 3 | P2 |
+| roll | 1 | P3 |
+
+**sequence 길이**: 4 step (7 음식) / 5 step (5 음식). 평균 4.4 step.
+
+> Single source of truth: `data/dish_modules.csv` (12 row, pipe-separated `module_sequence` 컬럼). 본 §15.2 표는 docs 가독성용 미러.
+
+### 15.3 Remote Config 키 (M-3 신설)
+
+| 키 | 기본값 | 타입 | 설명 |
+|----|--------|------|------|
+| `cooking.modules.enabled_set` | `["slice","arrange","stir","flip","timing","season","roll","plate"]` | string[] | 8 module id lock (no add, no remove per ADR-011) |
+| `cooking.modules.stir_interaction_mode` | `"tap_rhythm"` | string enum | MVP = "tap_rhythm" / post-launch alt = "swipe_circular" |
+| `cooking.modules.flip_required_foods` | `[]` | string[] | C-3 lock alias. MVP 빈 배열 (해물파전 single tap fallback). post-launch `["t1_006"]` 활성화 |
+| `cooking.modules.roll_swipe_speed_band_ms` | `[500, 1000]` | int[] | Roll module swipe 속도 [min, max] ms. band 밖 → retry |
+| `cooking.modules.plate_bonus_levels` | `[1.0, 0.6, 0.2]` | float[] | Plate module 보너스 3-tier (적절 그릇+garnish / 그릇만 / 잘못 그릇) |
+| `cooking.modules.arrange_correct_glow_ms` | `250` | int | Arrange module correct slot snap glow 지속 ms. wrong → 350ms bounce |
+
+### 15.4 Polish 우선순위 (godot-dev Sprint M3 wire)
+
+| 순위 | module | 사유 |
+|:---:|---|---|
+| **P0** | plate, timing, slice | 10~12 음식 reuse — polish 1주가 12 음식 체감 multiply |
+| **P1** | stir, season | 5 음식 — mid feel polish |
+| **P2** | arrange, flip | 3~4 음식 — MVP fallback 활용 |
+| **P3** | roll | 김밥 1개 — signature single, 간소 polish 충분 |
+
+### 15.5 ADR-005 / ADR-007 정합 (재확인)
+
+- **ADR-005 4-stage meta**: **무변경**. 8 module = Stage 2A (Slice / Season marinade) / Stage 2B (Stir / Flip / 부분적 Method) / Stage 2C (Timing) / 추가 (Arrange / Roll / Plate)의 low-level primitive.
+- **ADR-007 basic_pantry**: **무변경**. Season module default = "basic_pantry 1-tap auto-pour" (Scene 2 진입 시 자동 rack). 양념 "고르기" 행위 X 정합.
+- **rhythm_proto.gd 7-phase**: 본 ADR-011로 supersede. migration map은 `cooking-modules-v1.md` §5. knead dead code 제거.
+
+### 15.6 사용자 verbatim 검증
+
+| 사용자 verbatim | 보장 메커니즘 |
+|----------------|---------------|
+| "Players should feel they are cooking a specific Korean dish." | sequence permutation (§15.2) + signature step (음식별 1~2 hero module) + visual variation per module (Slice 8가지 한식 cutting) + Plate signature (12 그릇 art) |
+| "Avoid creating unique minigames per dish." | 12 음식 sequence는 모두 8 module 풀에서만 조합. 신규 module 0건. MVP code surface = 8 module scene + 12 recipe data row |
+| "Reuse modules." | 평균 module reuse = 6.4 음식/module (Plate 12 / Timing 11 / Slice 10 highest). 5/8 module이 5+ 음식에서 reuse |
 
 ---
 
 ## 12. 변경 이력
+- **2026-06-04 v0.7** (supersedes v0.6) — **8-Module Cooking Pipeline wire (M-1 ~ M-6)**. §15 신설 (8 module × BPM/window/threshold lock + dish-to-module sequence matrix 12 row + Remote Config 키 6종 + polish 우선순위 P0~P3). `data/dish_modules.csv` 신설 (12 row, pipe-separated module_sequence). ADR-011 동시 lock. ADR-005 4-stage meta 무변경 (8 module = low-level primitive). ADR-007 basic_pantry 정합 (Season default 1-tap auto-pour). rhythm_proto.gd 7-phase token supersede (knead 제거 + Arrange/Plate enum 추가, godot-dev Sprint M3 권고). 사용자 verbatim 검증 3건 (specific Korean dish 느낌 / avoid per-dish minigame / reuse modules).
+- **2026-06-04 v0.6** (supersedes v0.5) — **Result Screen 2.0 wire (R-1 ~ R-6)**. §14 신설 (6 row breakdown + 4-level emotion reaction + Recipe XP 12 음식 × Lv 1~10 + New Record (food, guest) pair + Milestone reveal toast/banner/overlay + Remote Config 키 10종 신설). `data/recipe_xp.csv` 신설 (12 row T1/T1-mid/T2 3종 curve). `data/reaction_templates.csv` 신설 (44 row = 8 selectable + 3 evaluators × 4 emotion levels). mood_badge 재활용 (asset 0 추가). 사용자 verbatim 검증 ("Mina loved the spicy kick" persona 불일치 → Junho × 김치찌개 happy로 재해석 / "Junho liked it but wanted more savory" → Junho × 김밥 easy 62% okay band 일치, placeholder `{missing_favorite}` 으로 흡수). pure display layer — cooking mechanic 무영향. ADR-010 동시 lock.
+- **2026-06-04 v0.5** (supersedes v0.4) — **Guest System 2.0 wire (G-1 ~ G-5)**. §13 신설 (compat 공식 W_BASE=50 + W_FAV=12 + W_DIS=18 lock + 5 mood × 2 multiplier 매트릭스 + reward_multiplier curve 5 tier + friendship 0~10 + milestone 3/7/10 + daily mood rotation algorithm + Remote Config 키 9종 신설). `friends.like_bonus_pct` / `friends.dislike_penalty_pct` / `friends.preference_affect_stars` 3 키 deprecated (ADR-009 supersede). 점수 vs 보상 분리 정책 lock (compat는 코인에만 영향, ★ 4-factor 무변경). 검증 예시 5종 (Junho×김치찌개 93% / Mina×김밥 62% / Mrs.Lee×잔치국수 93% — 사용자 verbatim 목표 92%·63% 일치).
 - **2026-05-31 v0.4** (supersedes v0.3.3) — **M2 prerequisite design sprint D3 본격 lock**. §7.1 음식별 prep_bpm 12음식 전체 매핑 본격 lock (v0.3.2 placeholder 2개 → v0.4 본격 12/12). foods-database.csv `prep_*` 4 컬럼 sync (M2-D2). motion-spec.md v0.1 cross-ref (M2-D1). BPM 분포 검증 표 신설 (T1 평균 94.3 / T2 평균 103, T1·T2 범위 정합 검증). Cut style 분포 8 카테고리 모두 노출 검증 (송송 3 / 채썰기 2 / 통썰기 2 / 어슷 1 / 깍둑 1 / 다지기 1 / 양념재우기 1 / dip substitute 1). Tap 수 분포 점진 ramp 검증 (T1 3~5 / T2 5~6). Stage 2C 보조 cook 행위 BPM 표 신설 (시각 ambient 용도, 보조 rhythm 메커닉 도입은 alpha 후 결정). §7.2 사용자 confirm 4건 정리. §11 #9 ADR-005 음식별 prep lock open 해소 (v0.4 D3 본격 lock).
 - **2026-05-31 v0.3.3** (supersedes v0.3.2) — **C-2 lock 적용 (basic_pantry 5종 정책)**. §4A "Basic Pantry 정책" 신설 (간장/고추장/설탕/참기름/소금 5종 정의 + Remote Config 키 3종 신설 `cooking.basic_pantry_ingredient_ids` / `cooking.stage1.exclude_basic_pantry` / `cooking.accuracy.exclude_basic_pantry`). §2.2.2 음식별 time_limit 재산정 (떡볶이 22→18s / 잡채 30→25s / 그 외 변동 없음). §2.2.3 디스트랙터 평균 재산정 (T1 3.86→3.43 / T2 3.4→2.8, 잡화 SKU pool 17→12 검증 PASS). §5.1 accuracy_ingredients 공식 갱신 (분모 N에서 basic_pantry 자동 차감). §11 #13·#14·#15 신규 (alpha 검증 / ADR-007 격상 / ing_x_007 ID 재매핑 ripple).
 - **2026-05-30 v0.3.2** (supersedes v0.3.1) — N-1·N-2 lock 적용 (F-02 호떡 → 잔치국수 / F-09 김치찌개 → 불고기). §2.2.2 Stage 1 time_limit 행 교체 (호떡 t1_001 18s → 잔치국수 t1_008 22s / 김치찌개 t2_009 25s → 불고기 t2_014 28s). §3.2 perfect_width 행 교체 (호떡 8s·1100ms·0.14 → 잔치국수 12s·1000ms·0.10 / 김치찌개 15s·950ms·0.06 → 불고기 16s·900ms·0.09). §2.2.3 디스트랙터 평균 재산정 (T1 3 → 3.7, 잔치국수 4가게 영향). **§7.1 음식별 prep_bpm placeholder 신설** (잔치국수=대파 송송 110 BPM·4 taps / 불고기=양념재우기 60 BPM·3 taps — ADR-005 §7 양념재우기 시그니처 음식 lock). §11 #5 FTUE 첫 음식 lock 해소 (라면 자동 결정).

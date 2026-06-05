@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bd2puckstates"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_puck_states.gd" id="1_puckst"]
+
+[node name="ShotPuckStates" type="Node"]
+script = ExtResource("1_puckst")

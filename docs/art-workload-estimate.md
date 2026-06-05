@@ -1,7 +1,8 @@
 # Art Workload Estimate — K-Food Master MVP
 
-> 버전: **v4.1 (2026-05-27, ChatGPT 영구 sync from MJ, supersedes v4.0)** — art 도구 영구 변경 반영. 시간 ±10% 미세 변동, 비용 ~70% 절감.
-> 작성: 2026-05-23 · 최종 개정: 2026-05-27
+> 버전: **v5.0 (2026-06-04, premium V1 placeholder swap sprint 추가, supersedes v4.1)** — 5 priority audit 결과 반영, character/cooking tool integration 신규 책정.
+> 작성: 2026-05-23 · 최종 개정: 2026-06-04 (v5.0)
+> v4.1 origin: 2026-05-27 (ChatGPT 영구 sync from MJ).
 > 근거: [`decisions.md` ADR-003](decisions.md#adr-003-mvp-first-전환--34개월-출시--점진-확대-supersedes-adr-002), [`decisions.md` ADR-005](decisions.md#adr-005) / [`GDD.md`](GDD.md) §9 §10 / [`systems/cooking-mechanics.md`](systems/cooking-mechanics.md) §2 §X / [`art-style-guide.md` v1.1](art-style-guide.md) / [`ai-session-kit.md` v1.1](ai-session-kit.md)
 > 작성자: art-director · 대상: pm, godot-dev, game-designer
 
@@ -13,25 +14,42 @@
 > 🆕 **ADR-005 (2026-05-26)**: 4-stage 메커닉 — 칼/도마 + cut style 6종 + hero ingredient cut variation
 > 🆕 **art-style lock (2026-05-27)**: 하이퍼캐주얼 flat (Subway Surfers / Crossy Road / Stack 계열).
 > 🆕 **art 도구 영구 변경 (2026-05-27)**: Midjourney → **ChatGPT (GPT-4o image / DALL-E)**. 비용 **~70% 절감** (MJ Standard $30/월 → ChatGPT Plus $20/월 + DALL-E 무제한 한계 비용 0), 시간 **±10% 미세 변동** (4-grid 손실 vs 자연어 iteration 속도 + 1 image 생성 속도 빠름 상쇄).
+> 🆕 **v5.0 (2026-06-04) — Premium V1 placeholder swap sprint**: Premium V1 redesign (drop shadow / glossy / ribbon / sparkle) 적용 후 5 priority axis audit 완료. **신규 44 PNG + 57 LOCK import**, 약 **29~37h**, 비용 **~$1.9** (ChatGPT Plus 한도 내). 가장 큰 누락 = **5 guests character art** (junho/mina/riley/mrs_lee/seoyeon) — 현 색깔 동그라미 + 첫 글자 placeholder. 자세히는 [`art/asset-production-list-v1.md`](art/asset-production-list-v1.md).
 >
 > **순 art 작업 시간 (v4.1 flat 톤 + ChatGPT)**: M1 sprint **~50~55h** + ADR-005 cut anim **~12~18h** → **MVP total ~62~73h**. v4.0 대비 시간 무변동 (도구 변경이 평가/제작 시간에 큰 영향 없음).
 > mascot v3.1 ~100~115h 대비 **-37~46% 감소** 유지.
 
-| 항목 | v3.1 (mascot baseline, pm) | v4.0 (flat 톤 + MJ) | **v4.1 (flat 톤 + ChatGPT)** | v3.1 대비 감소율 |
-|------|---------------------------|--------------------|------------------------------|----------------|
-| M1 art sprint (base, mascot 80h) | ~80h | ~50~55h | **~50~55h** | -31~38% |
-| ADR-005 추가 (pm 25~35h) | ~25~35h | ~12~18h | **~12~18h** | -48~52% |
-| **M1 total (MVP)** | **~100~115h** | ~62~73h | **~62~73h** | **-37~46%** |
-| M0 사전 (anchor lock) | ~10~16h | ~8~12h | **~8~12h** | -25% (flat 단순화) |
-| **총 art 시간 (M1 + 사전)** | ~110~131h | ~70~85h | **~70~85h** | **-35~36%** |
-| MVP sprint 일정 | 4~7주 | 3~5주 | **3~5주** | -1~2주 |
-| **art 도구 비용** | MJ $30/월 × 4개월 = ~$120 | MJ ~$60~90 (fast hour 소비 감소) | **ChatGPT Plus $20/월 × MVP 4~5주 ≈ ~$20~25** | **-79~83%** vs v3.1 / **-67~78%** vs v4.0 |
-| 외주 비용 | $0 | $0 | **$0** (변경 없음) | |
-| 사운드 | M2~M3 deferred | M2~M3 deferred | **M2~M3 deferred** (art 톤·도구 무관) | |
+| 항목 | v3.1 mascot | v4.1 flat+ChatGPT | **v5.0 + premium V1 swap** | v3.1 대비 |
+|------|-------------|-------------------|----------------------------|-----------|
+| M1 art sprint (base) | ~80h | ~50~55h | ~50~55h (LOCK 완료) | -31~38% |
+| ADR-005 cut anim | ~25~35h | ~12~18h | ~12~18h (LOCK 완료) | -48~52% |
+| **M1 total (MVP, lock 부분)** | **~100~115h** | ~62~73h | **~62~73h (완료)** | **-37~46%** |
+| M0 사전 anchor | ~10~16h | ~8~12h | ~8~12h (완료) | -25% |
+| 🆕 **v5.0 premium V1 swap sprint** | — | — | **+29~37h** (44 신규 + 57 import) | 신규 추가 |
+| **누적 art 시간** | ~110~131h | ~70~85h | **~99~122h** | **-9~17%** (premium swap 후) |
+| MVP sprint 일정 | 4~7주 | 3~5주 | **4~6주** (+1주 swap) | -1~2주 |
+| **art 도구 비용** | MJ ~$120 | ChatGPT Plus ~$20~25 | **ChatGPT Plus ~$20~25 + swap gen ~$1.9** | **-79~82%** vs v3.1 |
+| 외주 비용 | $0 | $0 | **$0** | |
+| 사운드 | M2~M3 | M2~M3 | **M2~M3 deferred** | |
 
 ### 0.X 도구 변경 영향 (한 줄)
 
 > **도구 영구 변경: MJ Standard → ChatGPT Plus, 비용 ~70% 절감 (MVP 기간 ~$60~90 → ~$20~25), 시간 ~±10% 미세 변동 (4-grid 손실 vs 자연어 iteration 속도 상쇄 — net 무변동). ChatGPT sref 부재로 캐릭터 일관성 lock이 MJ 대비 약한 trade-off가 있으나, reference image upload + subject anchor 문장 + 같은 채팅 세션 follow-up 3축 운영으로 보완.**
+
+### 0.Y v5.0 Placeholder Swap Sprint 신규 항목 (한눈에)
+
+| 카테고리 | 신규 PNG | LOCK import | 시간 | 비용 |
+|----------|---------|------------|------|------|
+| Character avatar (5 guests) | 5 | 0 | 2.5h | $0.21 |
+| Character emotion (5 guests × 4) | 20 | 0 | 8h | $0.84 |
+| Mother/Father import + reaction R-01~06 | 0 | 8 | 0.5h | $0 |
+| Cooking module backplate (8 module) | 8 | 0 | 4.8h | $0.34 |
+| Tool 9 + cut 5 import only (이미 도구 LOCK) | 0 | 14 | 0.4h | $0 |
+| Vector star sprite (3 state) | 1 | 2 | 0.5h | $0.04 |
+| Market BG 5 (Lv별 가게) import | 0 | 5 | 0.4h | $0 |
+| **합계 v5.0 swap sprint** | **34** | **29** | **~17h art + ~6h godot-dev swap** | **~$1.4 (gen)** |
+
+> P2의 polish 신규 10장 추가 (이후 단계) → 총 44 신규 / 57 import / 29~37h. 자세히 [`art/asset-production-list-v1.md`](art/asset-production-list-v1.md).
 
 ### 0.1 ADR-005 추가 작업 항목 (v4.1 flat 톤 + ChatGPT 재산정)
 

@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://brsv2result1"]
+
+[ext_resource type="Script" path="res://scripts/gameplay/result_screen_v2.gd" id="1_rsv2"]
+
+[node name="ResultScreenV2" type="Control"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_rsv2")

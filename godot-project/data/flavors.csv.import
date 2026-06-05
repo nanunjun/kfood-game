@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://bbkkjjvvbpc8"
+
+[deps]
+
+files=["res://data/flavors.name.translation", "res://data/flavors.icon.translation", "res://data/flavors.color.translation", "res://data/flavors.category.translation"]
+
+source_file="res://data/flavors.csv"
+dest_files=["res://data/flavors.name.translation", "res://data/flavors.icon.translation", "res://data/flavors.color.translation", "res://data/flavors.category.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

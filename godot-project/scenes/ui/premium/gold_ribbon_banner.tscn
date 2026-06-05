@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://cpidgen8wuq7i"]
+
+[ext_resource type="Script" path="res://scripts/ui/premium/gold_ribbon_banner.gd" id="1_gr"]
+
+[node name="GoldRibbonBanner" type="Control"]
+custom_minimum_size = Vector2(540, 100)
+script = ExtResource("1_gr")

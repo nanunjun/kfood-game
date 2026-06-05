@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://brsv2cp32mst"]
+
+[ext_resource type="Script" path="res://scripts/ui/components/milestone_toast.gd" id="1_cp32"]
+
+[node name="MilestoneToast" type="Panel"]
+custom_minimum_size = Vector2(880, 130)
+script = ExtResource("1_cp32")

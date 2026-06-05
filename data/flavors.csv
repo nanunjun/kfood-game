@@ -1,0 +1,13 @@
+flavor_id,name_en,name_ko,category,korean_anchor,global_anchor,intensity_default,notes
+spicy,Spicy,매운,heat,gochugaru/gochujang,chili/sriracha,3,한식 핵심 axis; 고추 베이스 capsaicin
+sweet,Sweet,단,base,seoltang/honey,sugar/syrup,2,단맛; 양념 단단한 단맛 + 디저트
+salty,Salty,짠,base,ganjang/sogeum/saeujeot,soy sauce/salt/fish sauce,3,짠맛; 한식 base 양념 다수가 salty 동반
+oily,Oily,기름진,texture,chamgireum/deep-fry,butter/lard/fry,3,기름진 식감; 튀김·구이·기름·고기 지방 포함
+mild,Mild,담백,base,bone-broth/tofu/rice,plain/savory-light,2,담백; 자극 적고 깊은 base — 국·찜·소면
+umami,Umami,감칠맛,depth,doenjang/anchovy/fermented,mushroom/parmesan/dashi,3,감칠맛; 발효 + dashi 계열 깊은 맛
+sour,Sour,신,accent,chojang/sikhae/vinegar,vinegar/citrus,2,신맛; 회·해물 dipping + 김치 발효
+bitter,Bitter,쓴,accent,doraji/jeotgal-aftertaste,coffee/dark-chocolate,1,쓴맛; 한식에선 약하게 사용 (도라지·취나물)
+savory,Savory,짭짤한,base,fried-rice/grilled-meat,roast/grill,2,짭짤+감칠 혼합 톤 (salty + umami 약한 mix); 김밥/볶음밥/구이
+fresh,Fresh,산뜻한,texture,raw-veggies/herbs/sprouts,salad/herb,1,산뜻; 채소·나물·산뜻한 garnish (콩나물·미나리·쑥갓)
+hearty,Hearty,푸근한,emotion,jeongseong/home-style,comfort-food/stew,2,푸근/정성; 집밥 정서 (찌개·전·잔치국수) — 정서 axis
+fermented,Fermented,발효,depth,kimchi/jang/jeotgal,sauerkraut/miso,2,발효; 한식 시그니처 (김치·간장·된장·젓갈) — umami와 페어

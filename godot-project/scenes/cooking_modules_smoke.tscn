@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bcfm2smoke01"]
+
+[ext_resource type="Script" path="res://scripts/dev/cooking_modules_smoke.gd" id="1_cfm2smoke"]
+
+[node name="CookingModulesSmoke" type="Node"]
+script = ExtResource("1_cfm2smoke")

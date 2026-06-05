@@ -14,6 +14,9 @@
 | **005** | **메커닉 확장 — 3-stage → 4-stage (Stage 2A 재료 준비 신설, rhythm tap, Option C optional skill bonus)** | **Accepted** | **2026-05-26** |
 | **006** | **Art 생성 도구 pivot — Midjourney → ChatGPT (GPT-4o image / DALL-E 3)** | **Accepted** | **2026-05-27** |
 | **007** | **기본 양념 자동 제공 — Basic Pantry SKU 분리 (Stage 1 진열대 제외 + Kitchen 자동 rack)** | **Accepted** | **2026-05-31** |
+| **009** | **Guest System 2.0 — 12 flavor × 7 selectable guests × mood × friendship (supersedes Guest 1.0 + friends-system v0.3 axis 모델)** | **Accepted** | **2026-06-04** |
+| **010** | **Result Screen 2.0 — 6 row breakdown + 4 emotion + recipe XP + new record + milestone reveal (pure display layer, mechanic 무영향, ADR-009 후속)** | **Accepted** | **2026-06-04** |
+| **011** | **8-Module Cooking Pipeline — Slice/Arrange/Stir/Flip/Timing/Season/Roll/Plate 8 reusable modules로 12 음식 sequence 표현 (avoid per-dish minigame)** | **Accepted** | **2026-06-04** |
 
 > **ADR-001 backfill 권장**: 재래시장 다점포 메커닉 결정은 `systems/cooking-mechanics.md` §2 + `CHANGELOG.md`에 기록됐으나 ADR 형식 미작성. 필요 시 사후 backfill.
 
@@ -701,4 +704,398 @@ ADR-002 #3은 art 생성 주력 도구로 Midjourney를 명시했고, ADR-003에
 - [balance-config.md](balance-config.md) — Remote Config 키 신설
 - [systems/cooking-mechanics.md](systems/cooking-mechanics.md) — Stage 1 basic_pantry 제외 룰 명시
 - game-designer 보고 (2026-05-30 양념 제거 ripple 분석)
+
+---
+
+## ADR-009: Guest System 2.0 — 12 flavor × 7 selectable guests × mood × friendship (supersedes Guest 1.0 + friends-system v0.3 axis 모델)
+
+- **Status**: **Accepted**
+- **Date**: 2026-06-04
+- **Deciders**: 사용자 (pm role 위임), game-designer 작성
+- **Supersedes**:
+  - **Guest System 1.0** (현 codebase `data/guests.csv` v2.3 + `phase1/guest-select-ui.md` v1) — guest selection이 사실상 "Auto Select" dominant choice로 수렴, 전략적 결정이 아니었음.
+  - **[`friends-system.md` v0.3](friends-system.md)** §3 Preference Axis 5종(spicy/sweet/salty/oily/mild) × {like, neutral, dislike} 매트릭스 모델 — `friends.like_bonus_pct=0.05` ±5% 가산 메커닉은 점수 영향 미미 + ★ 임계 불변 정책으로 게임플레이 가시성 부족.
+- **상위 트리거**: 사용자 verbatim "Implement Guest System 2.0. Goal: Make guest selection a meaningful strategic decision."
+
+### Context
+
+현 시스템 한계:
+1. **guests.csv v2.3**: vec 5-dim (rhythm_proto cooking match 용도) + line_enter/ok/bad만 보유. preference 시스템 없음, friendship 표시만 있고 누적 보상 없음.
+2. **friends-system v0.3**: ±5% per axis 가산은 score_pre 합산이라 ★ 변동 거의 없고 (★ 임계 불변 정책), guest별 차별화가 미미 → "Auto Select" dominant.
+3. **friend 모델 mismatch**: friends-system은 mother/father 가족 2명 L11 동시 unlock, guests.csv는 글로벌 친구 5명 자유 unlock — 두 source 모두 다른 모델로 운영.
+
+→ guest selection을 **매일 변하는 mood + flavor 매칭 + friendship 누적 + 가시적 보상 multiplier**로 격상.
+
+### Decision
+
+#### 1. Data Model 확장
+
+- **`data/menus.csv` + 1 컬럼**: `flavor_tags` (pipe-separated, 2~5 tag) — 12 음식 모두 매핑.
+- **`data/guests.csv` + 5 컬럼**: `favorite_flavors`, `disliked_flavors`, `reward_bonus` (1.15~2.00), `friendship_level_initial` (default 0), `mood_pool` (3~5 mood pipe-separated).
+- **`data/flavors.csv` 신설**: 12 flavor 카테고리 (spicy/sweet/salty/oily/mild/umami/sour/bitter/savory/fresh/hearty/fermented) — friends-system v0.3 axis 5종을 superset으로 포함.
+
+#### 2. Compat 공식 (lock)
+
+```
+hit_fav = |food.flavor_tags ∩ guest.favorite_flavors|
+hit_dis = |food.flavor_tags ∩ guest.disliked_flavors|
+fav_score = hit_fav × 12 × mood_mult_fav[mood]
+dis_score = hit_dis × 18 × mood_mult_dis[mood]
+compat = clamp(50 + fav_score − dis_score, 0, 100)
+```
+
+#### 3. Mood Rotation (5 mood × daily seed)
+
+- mood: `hungry / happy / easy / picky / grumpy` (multiplier matrix → balance-config §13.2)
+- daily seed: `hash(today_iso + guest_id)` → deterministic per (date, guest)
+- guest별 mood_pool 후보 list (3~5 entries, 중복 허용 = 가중치 효과)
+
+#### 4. Compat → Reward Multiplier curve
+
+- compat ≥ 90 → 1.30x / 70~89 → 1.15x / 50~69 → 1.00x / 30~49 → 0.85x / <30 → 0.70x
+- `final_reward = base_reward × guest.reward_bonus × compat_multiplier(compat)`
+- 점수 (★) 영향 X — 4-factor 그대로. **compat은 코인 보상에만 영향** (스킬 평가 vs guest fit 평가 분리).
+
+#### 5. Friendship 0~10 + Milestone 3 / 7 / 10
+
+- `delta = stars + (1 if compat ≥ 80 else 0)` per round
+- Lv 3: ₩500 gift + special line_ok / Lv 7: compat +5% perm / Lv 10: reward_bonus +0.10x perm + portrait skin
+
+#### 6. Guest Pool 통합 (friends-system mismatch 해결)
+
+**selectable 7 + evaluator 3 = 10 guests 통합 풀**:
+
+| 풀 | guest |
+|----|------|
+| selectable friends (5) | junho / mina / riley / mrs_lee / seoyeon |
+| selectable **family** (2, friends-system 흡수) | **mother_01** / **father_01** (L11 동시 unlock 유지) |
+| auto-pick evaluators (3) | mystery_diner / blogger_daniel / goldspoon (`MenuDB.selectable_guest_ids()` 제외 유지) |
+
+- **friends-system v0.3 §3 axis 매트릭스 deprecated** (본 ADR이 supersede). mother/father personality (§2) + L11 unlock 결정 (§1) + reaction 표현 (§3.8)은 유지.
+- 가족 별도 unlock track 안 거절 — 통합 풀이 mood × compat × friendship 시스템 일관성 ↑.
+
+#### 7. UI 정책
+
+- compat % 점수 **비표시** (default `guest.compat.show_score_in_ui = false`) — 전략적 모호함 유지, 플레이어가 mood + flavor tag 자연어 hint로 추정.
+- mood badge 표시 ("Today: 😋 Hungry") + 1-line hint ("They'll love spicy today!").
+- friendship 0~10 → ★ 5단계 (`floor(friendship / 2)` 매핑).
+
+### Consequences
+
+**Positive**
+- **Guest selection 전략적 결정으로 격상**: compat 분포 30~95 range로 의미있게 분산. mood가 매일 바뀌어 같은 guest의 최적 음식이 변화.
+- **friendship 누적 progression**: 7 guest × MAX = ~50 round LiveOps 콘텐츠. milestone 3 단계로 동기 다양화.
+- **reward 가시성 ↑**: ±5% 미미한 가산 → 0.70x~1.30x compat × 1.15x~2.00x guest = 최대 **2.6x reward gap** (Junho 최악 ~₩4000 vs goldspoon 최고 ~₩39000 in same round). guest 선택이 보상에 직접 영향.
+- **friends-system mismatch 해소**: 통합 풀 10 guests, single source of truth (data/guests.csv).
+- **flavor 12종 superset**: friends-system v0.3 axis 5종 포함 → 마이그레이션 부담 최소 (axis 5종 → flavor_tags 변환만).
+- **Schema 안정**: post-launch 친구 +3~5명 추가 시 row append만, 공식·키 변경 X.
+
+**Negative**
+- **SaveManager schema migration 필요** — `data.friendship: Dictionary` 신규 필드 (godot-dev follow-up, version 1 → 2). 기존 `data.intimacy` (float 0~5)와 분리 운영 또는 마이그레이션 (godot-dev 결정 spec).
+- **UI 작업 ripple**: guest_select.gd 카드에 mood badge + flavor hint 추가 필요 (ui-designer follow-up).
+- **balance-config Remote Config 키 +9** (guest.compat.* / guest.friendship.* / guest.mood.*) — Remote Config schema 부담.
+- **CSV 컬럼 + 6 (menus +1 / guests +5)**: 콘텐츠 작업자 학습 곡선 (도큐 `guest-system-v2.md` v2.0으로 mitigate).
+- **사용자 verbatim 92% 예시 reconciliation**: "김치찌개 + Mina(favorite=spicy/sour) = 92%" 예시는 illustrative. 실제 Mina persona는 sweet tooth (line_enter "I've got a serious sweet tooth!") → Mina favorite=sweet/savory/oily 설계. 92% 케이스는 Junho × 김치찌개 (happy mood)로 재해석 (compat 93% 검증). 사용자 verbatim의 의도 = "특정 조합이 high compat → high reward"는 정확히 충족.
+
+### Alternatives Considered
+
+| 대안 | 거절 이유 |
+|------|----------|
+| friends-system v0.3 ±5% 모델 유지 | guest selection이 의미있는 결정으로 격상 안 됨 (사용자 verbatim goal 미달) |
+| compat 점수 UI 표시 (compat % 직접 노출) | 전략적 모호함 상실, RPG-식 min-max gaming 유도 → 캐주얼 톤 위배 |
+| flavor 5 axis 그대로 (friends-system 호환만) | 12 음식 × 5 axis 표현력 부족, mood × flavor 조합 깊이 부족. 12 카테고리가 한식 변별에 적합 (fermented/umami/hearty 등 한식 시그니처 추가) |
+| family 별도 unlock track | guest 시스템 통합성 손실, mood/compat 일관성 깨짐. 통합 풀 + unlock_level 다르게 운영하면 충분 |
+| compat을 ★ 임계 영향까지 확장 | 스킬 평가 (★) vs guest fit (compat) 정합성 깨짐. friend를 잘 골랐다고 ★이 늘면 직관 위반 |
+| mood 7+ (romantic / nostalgic 등 추가) | MVP scope creep. 5 mood로 mood × compat 분산 충분 검증. post-launch 시즌 한정 mood hook 보존 |
+
+### ADR-003 / ADR-005 / ADR-007 정합성
+
+- **ADR-003 MVP scope**: 음식 12 / Tier 1~2 / 친구 1~2 → 본 ADR로 **친구 풀 7 selectable (family 흡수)** 변경. ADR-003 §"친구 1~2" 명시는 family 단위 의미 (혼밥 → 가족 정서 arc). family 2 unlock은 L11 동시 그대로, friends 5는 이미 guests.csv에 있던 기존 풀 → MVP scope 실질적 추가 0. **scope 위반 없음**.
+- **ADR-005 4-stage 메커닉**: 본 ADR은 점수 공식 (4-factor) 무변경. compat은 코인 보상에만 wire → 메커닉 충돌 0.
+- **ADR-007 basic_pantry**: 본 ADR은 ingredient 시스템 무변경. flavor_tags는 food 모델 확장이라 ingredient 분리 정책과 직교.
+
+### Follow-up Actions
+
+#### 1순위 — game-designer (이번 sprint 완료)
+- [x] `data/flavors.csv` 신설 (12 카테고리)
+- [x] `data/guests.csv` 5 컬럼 확장 (favorite_flavors / disliked_flavors / reward_bonus / friendship_level_initial / mood_pool) + 7 selectable + 3 evaluator
+- [x] `data/menus.csv` `flavor_tags` 컬럼 추가 + 12 음식 매핑
+- [x] `docs/systems/guest-system-v2.md` v2.0 신설 (full spec)
+- [x] `docs/balance-config.md` v0.4 → v0.5 (§13 Guest System 2.0 wire 신설 + friends.* 3 키 deprecated mark)
+- [x] `docs/decisions.md` ADR-009 신설 (본 ADR)
+
+#### 2순위 — pm (즉시)
+- [ ] `docs/friends-system.md` v0.4 patch — §3 Preference Axis deprecated mark + 본 ADR cross-ref. §1 (L11 동시 unlock) + §2 (Mother/Father personality) + §3.8 reaction은 유지.
+- [ ] `docs/phase1/guest-select-ui.md` v2 — mood badge + flavor hint 추가 spec (ui-designer 영역과 cross). family 2 카드 추가.
+
+#### 3순위 — godot-dev (M2/M3 sprint)
+- [ ] **SaveManager schema migration v1 → v2**:
+  - `data["friendship"] = {}` 신규 (int 0~10 per guest_id). 기존 `data["intimacy"]` (float 0~5) — 마이그레이션 또는 dual 운영 결정.
+  - `_default_data()` 갱신 + `_load()` 마이그레이션 로직 (`if data["version"] < 2: migrate_v1_to_v2()`).
+- [ ] **`scripts/gameplay/guest_model.gd` 신설**: GuestDB.get_guest() 확장 — favorite_flavors / disliked_flavors / reward_bonus / mood_pool field load.
+- [ ] **`scripts/gameplay/compatibility.gd` 신설**: `Compatibility.compute(food_id, guest_id) -> int` (0~100) + `Compatibility.reward_multiplier(compat) -> float` + `Compatibility.mood_of_the_day(guest_id) -> String`.
+- [ ] **`scripts/gameplay/menu_db.gd` 확장**: `get_menu().flavor_tags` field load (pipe-separated parse).
+- [ ] **`scripts/gameplay/round_result.gd` (또는 RoundSummary)**: round 종료 시 friendship_delta 계산 + SaveManager.add_friendship(guest_id, delta) + milestone 발동 체크 + UI toast 트리거.
+- [ ] **`scripts/ui/guest_select.gd` 확장**: mood badge + flavor hint 자연어 1-line + friendship ★ 5단계 표시 + family 2 카드 (mother/father unlock_level=11 check).
+- [ ] **Remote Config wire (선택, M3+)**: balance-config §13.6 9 키 → ConfigService에 노출.
+
+#### 4순위 — ui-designer (godot-dev 병렬)
+- [ ] guest card mood badge UI spec (icon + label "Today: hungry").
+- [ ] flavor hint 자연어 generation 룰 ("They'll love spicy heat today!" / "Avoid oily today.").
+- [ ] friendship milestone toast UI (Lv 3/7/10 도달 시).
+
+#### 5순위 — qa-tester (M3 alpha)
+- [ ] compat 공식 검증 (3 검증 케이스 + extreme cases — guest-system-v2.md §4 / balance-config §13.8).
+- [ ] mood rotation determinism 검증 (같은 날 = 같은 mood, 다음 날 = 새 mood).
+- [ ] friendship persist 검증 (save reload 후 누적 유지).
+- [ ] guest selection 분포 KPI 검증 (Auto Select 비율 ≤ 40% target — 전략 결정 활성화 신호).
+
+### 관련 문서
+- [`systems/guest-system-v2.md` v2.0](systems/guest-system-v2.md) — full spec (본 ADR이 lock하는 핵심 spec)
+- [`balance-config.md` v0.5 §13](balance-config.md) — Remote Config 키 + 공식 wire
+- [`friends-system.md` v0.3](friends-system.md) — §3 axis 매트릭스 deprecated (본 ADR supersede). §1·§2·§3.8 유지
+- [`phase1/guest-select-ui.md`](phase1/guest-select-ui.md) — v2 patch follow-up (ui-designer)
+- [`data/flavors.csv`](../data/flavors.csv) — 12 flavor 카테고리 lock
+- [`data/guests.csv`](../godot-project/data/guests.csv) — 5 신규 컬럼 적용
+- [`data/menus.csv`](../godot-project/data/menus.csv) — flavor_tags 컬럼 적용
+- ADR-003 (MVP-first) — 친구 풀 7 selectable로 변경 명시 (family 흡수, scope 위반 없음)
+- ADR-005 (4-stage 메커닉) — 점수 공식 무변경, compat은 코인 wire 분리 정합
+
+
+---
+
+## ADR-010: Result Screen 2.0 — Rewarding + Explanatory display layer
+
+- **Status**: ✅ **Accepted**
+- **Date**: 2026-06-04
+- **Deciders**: 사용자 (사양 명시) → game-designer (spec lock)
+- **상위 트리거**: ADR-009 Guest System 2.0 후속. 라운드 보상감 ↑ + "왜 좋고 왜 나쁜지" 설명 부재 문제. 현 `result_screen.gd` 5라인 압축 → 정보량 빈약, progression sense 없음, compat/mood/friendship 누적 wire 없음.
+
+### Context
+
+ADR-009로 Guest System 2.0 (12 flavor × 7 guest × 5 mood × friendship 0~10)이 lock된 후 라운드 종료 화면은 다음 정보를 보여줘야 함:
+1. **점수가 왜 그렇게 나왔는지** — prep / cook / season / plating 4 base + compat / mood / guest_bonus 3 modifier
+2. **이 guest가 만족했는지** — 4 emotion level × persona 톤 reaction text
+3. **이 음식이 얼마나 숙련됐는지** — Recipe XP (음식별 누적 leveling)
+4. **새 기록인지** — (food, guest) pair best score 갱신
+5. **friendship 누적 milestone에 도달했는지** — Lv 3 / 7 / 10 도달 시 즉시 reveal
+
+현 ResultScreen은 (1) 일부만 ("Prep X Method Y Timing Z" 한 줄), (2)~(5) 전부 부재.
+
+### Decision
+
+**Result Screen 2.0을 pure display layer rewrite로 도입한다. Cooking mechanic은 손대지 않는다.**
+
+핵심 결정:
+
+1. **6 row breakdown** (4 base + 3 modifier) — prep_score / cook_score / seasoning_score / plating_score / compatibility_bonus / mood_bonus_or_penalty / reward_bonus. 각 row가 raw value + 시각 + 코인 기여를 표시.
+2. **4-level emotion reaction** — excellent (compat ≥90 OR ★3+compat≥70) / good (compat 70~89 OR ★3) / okay (compat 50~69 OR ★2) / bad (compat <50 OR ★1). `level = max(level_from_compat, level_from_stars)`.
+3. **44 reaction templates** — 8 selectable guests + 3 evaluators × 4 emotion levels. placeholder `{top_matched_flavor}` / `{top_disliked_flavor}` / `{missing_favorite}` 치환으로 음식·mood 변동 흡수. `data/reaction_templates.csv` 신설.
+4. **Recipe XP system** — 음식별 누적 (Lv 1~10), `xp = 10 × stars + (compat/10) + (new_record ? +20 : 0)`. T1/T1-mid/T2 3종 curve. 9 단계 level up reward (signature line / perfect_window +5ms / signature dish glow / reward_bonus_perm +0.05 / Master title 등). `data/recipe_xp.csv` 신설.
+5. **New Record** — storage key `(food_id, guest_id)` pair, value = score_final integer 0~100. 갱신 시 +₩500 one-time. 첫 라운드도 NEW RECORD (기준선).
+6. **Milestone reveal styles** — Lv 3 toast (corner slide) / Lv 7 banner (center pool) / Lv 10 full-screen overlay (portrait reveal + confetti). milestone payout은 NEW RECORD bonus와 additive.
+7. **mood_badge 재활용** — emotion 4 level을 기존 5 mood badge 중 4개 (happy/easy/picky/grumpy)로 매핑. **asset 0 추가**. art-director 후속 sprint에서 전용 4 reaction 일러스트로 교체 가능 (선택).
+8. **SaveManager v2 schema 유지** — `records: Dictionary` + `recipe_xp: Dictionary` 2 dict만 추가. v3 bump 불필요 (`_merge()` backward compat 자동).
+9. **점수 vs 보상 분리** (v0.5 §13.7 재확인) — ★ 임계 score는 4-factor cooking만 평가. compat / recipe_xp / new_record / milestone은 코인·XP 누적에만 wire.
+
+### Alternatives Considered
+
+| 대안 | 평가 |
+|------|------|
+| A. 4 row만 (4-factor cooking) — modifier 3 row 생략 | Reject. compat/mood/guest_bonus를 숨기면 "왜 이만큼 받았는지" 설명 불가 → Guest System 2.0 가치 0 |
+| B. 12 음식 × 7 guest × 4 emotion = 336 templates lock (full triple) | Reject. 콘텐츠 부담 ↑, persona 일관성 ↓. placeholder 치환으로 (guest, emotion) 2-key 44 templates 충분 |
+| C. Recipe XP를 음식 12개 통합 single XP로 단순화 | Reject. 음식별 progression sense 사라짐. 단순 통합 XP는 곧 player level과 redundant |
+| D. NEW RECORD를 food_id only (guest 무관) | Reject. Guest System 2.0의 핵심 "이 손님을 위해 이 음식"이 (food, guest) pair best로 강화됨 |
+| E. Milestone reveal을 별도 menu 진입 시 표시 | Reject. 즉각성 손실. Result Screen이 milestone "fireworks moment" 적기 |
+| F. 전용 reaction 일러스트 4 level × 8 guest = 32 sprite 즉시 발주 | Reject (이 sprint). asset 0 추가 ship 우선, post-launch 개선 |
+
+### Consequences
+
+✅ **Positive**:
+- 라운드 종료 보상감 ↑ — 4 row breakdown으로 "내가 어디 잘했고 어디 못했는지" 명확. compat/mood로 "이 guest가 좋아한 이유" 설명.
+- Guest System 2.0 가치 노출 — compat/mood/friendship 누적이 모두 result에서 시각화.
+- LiveOps long-tail — 12 음식 × Lv 10 × 7 guest = ~1400 round 깊이의 progression.
+- 코드 변경 최소 — SaveManager 2 dict 추가 + RewardCalc 1 함수 + result_screen 1 rewrite + 신규 autoload 2개 (recipe_xp / reaction_db).
+- asset 0 추가 (mood_badge 재활용) — ship 즉시 가능.
+
+⚠️ **Negative**:
+- 표시 정보 ↑ → screen real-estate 부담. 6 row를 mobile portrait에서 어떻게 배치? → ui-designer 후속 sprint 필요 (스크롤 vs 카드 vs 페이지 토글).
+- emotion text 치환 결과가 어색할 가능성 (placeholder가 비어있는 edge case). fallback generic text 필요 — game-designer post-alpha 튜닝.
+- 사용자 verbatim ("Mina loved the spicy kick") persona 불일치는 Junho 치환으로 회피했지만 사용자가 verbatim 100% 보존 요구 시 (food, guest, emotion) triple csv로 확장 필요 (336 row).
+
+🔄 **Follow-ups**:
+- ui-designer: Result Screen 2.0 mobile portrait 1080×1920 layout — 6 row + milestone overlay 어떻게 fold (스크롤 / 카드 / 페이지)
+- godot-dev: SaveManager `records` + `recipe_xp` dict 추가, RecipeXP autoload 신규, ReactionDB autoload 신규, result_screen.gd v2 rewrite
+- art-director (선택): emotion 4 levels × 8 guest 전용 일러스트 (mood_badge 대체 시)
+- qa-tester: NEW RECORD 첫 라운드 처리 검증 / milestone reveal flow 검증 / recipe level up reward 동시 발생 검증
+
+### Open Tasks
+
+#### 1순위 — game-designer (본 sprint resolved)
+- [x] 6 row breakdown 데이터 모델 lock (§14.1)
+- [x] 4 emotion level rule + 44 templates (`data/reaction_templates.csv`)
+- [x] Recipe XP curve 12 음식 × Lv 1~10 (`data/recipe_xp.csv`)
+- [x] New Record logic + bonus (₩500 + first-record-counts)
+- [x] Milestone reveal style lock (Lv 3 toast / Lv 7 banner / Lv 10 overlay)
+
+#### 2순위 — godot-dev (다음 sprint)
+- [ ] SaveManager: `records: Dictionary` + `recipe_xp: Dictionary` 2 dict 추가, `check_record(food_id, guest_id, score_int) -> bool` 신규
+- [ ] RecipeXP autoload 신규 (CSV load + `add(food_id, xp) -> int level_up_count`)
+- [ ] ReactionDB autoload 신규 (reaction_templates.csv load + `template(guest_id, level) -> Dictionary` + placeholder 치환 helper)
+- [ ] RewardCalc 확장: `score_breakdown_rows(prep, cook, season, plating, compat, mood, guest_bonus) -> Array[Dictionary]`
+- [ ] result_screen.gd v2 rewrite — 6 row + emotion 4-level + new record badge + milestone reveal
+- [ ] rhythm_proto.gd `_on_round_end()` wire — recipe XP add + record check + result_screen.setup() 확장 dict
+
+#### 3순위 — ui-designer
+- [ ] Result Screen 2.0 mobile portrait 1080×1920 layout spec (6 row fold 전략, milestone reveal style 시각화)
+- [ ] emotion 4-level mood_badge 매핑 visual confirmation
+- [ ] milestone Lv 10 portrait skin overlay 디자인 spec
+
+#### 4순위 — qa-tester (M3 alpha)
+- [ ] NEW RECORD 첫 라운드 = true 처리 검증
+- [ ] (food, guest) pair best 정합성 (다른 guest 라운드는 영향 X)
+- [ ] milestone reveal + NEW RECORD + recipe level up 동시 발생 시 stack 검증 (3 reveal 순차?)
+- [ ] reaction text placeholder edge case (fav_hit=0 OR dis_hit=0 OR missing=empty)
+- [ ] mood_badge 재활용 표정이 reaction level 4종에 직관적인지 (excellent=happy, good=easy, okay=picky, bad=grumpy) UX 검증
+
+### 관련 문서
+- [`systems/result-screen-v2.md` v2.0](systems/result-screen-v2.md) — full spec (본 ADR이 lock하는 핵심 spec)
+- [`balance-config.md` v0.6 §14](balance-config.md) — Remote Config 키 10종 + 공식·curve
+- [`data/recipe_xp.csv`](../data/recipe_xp.csv) — Recipe XP curve 12 row × Lv 2~10
+- [`data/reaction_templates.csv`](../data/reaction_templates.csv) — 44 reaction templates (8 + 3 × 4 emotion)
+- ADR-009 (Guest System 2.0) — 본 ADR이 후속, compat/mood/friendship wire가 Result Screen에 노출
+- ADR-005 (4-stage 메커닉) — 점수 공식 무변경, Result Screen은 display only
+
+
+---
+
+## ADR-011: 8-Module Cooking Pipeline — Slice/Arrange/Stir/Flip/Timing/Season/Roll/Plate
+
+- **Status**: ✅ **Accepted**
+- **Date**: 2026-06-04
+- **Deciders**: 사용자 (사양 명시 verbatim) → game-designer (spec lock)
+- **상위 트리거**: 사용자 verbatim:
+  > "Define 8 reusable cooking modules: Slice / Arrange / Stir / Flip / Timing / Season / Roll / Plate. Every dish must be represented as a sequence of modules. Create a dish-to-module matrix. Goal: Players should feel they are cooking a specific Korean dish. Avoid creating unique minigames per dish. Reuse modules."
+
+### Context
+
+현 상태:
+1. **ADR-005** (4-stage meta) = Stage 1 시장 / 2A 재료 준비 / 2B 조리 방법 / 2C 조리 시간 — **high-level meta-stage**. mechanic primitive 정의는 부재.
+2. **rhythm_proto.gd 7-phase token** = chop / boil / season / stirfry / panfry / roll / knead — **현재 활성 구현**이나 음식 추가 시 token 비대화 위험. knead는 호떡 superseded 이후 미사용 dead code.
+3. **음식 12개 × 음식별 unique flow 코딩 위험** — 만약 12 음식 = 12 unique minigame scene이면 code surface 폭증 (12 .tscn × 12 .gd) + 신규 음식 1개 추가마다 신규 mini-game 1세트 개발 부담.
+
+→ **8 reusable module 풀로 12 음식 = 12 sequence 조합 표현**. 신규 음식 추가 = sequence row 1개 추가만 (코드 0건).
+
+### Decision
+
+#### 1. 8 Modules lock (no add, no remove)
+
+| # | id | interaction | Korean feel anchor |
+|:-:|----|-------------|---------------------|
+| 1 | **slice** | rhythm tap (BPM-driven 칼+도마) | 6 cut style (다지기·채썰기·어슷·통·송송·깍둑) |
+| 2 | **arrange** | drag/drop placement | 김밥 5색 / 비빔밥 6색 정렬 미학 |
+| 3 | **stir** | tap rhythm (MVP) 또는 swipe circular | wok stir / bibim / toss |
+| 4 | **flip** | single perfect-window tap | 해물파전·콘도그·갈비 양면 |
+| 5 | **timing** | gauge fill + perfect window | 끓이기·볶기·굽기·튀기기 cook timing |
+| 6 | **season** | 1-tap auto-pour (default) / marinade rhythm (sub) | basic_pantry + 양념재우기 (ADR-007 정합) |
+| 7 | **roll** | swipe motion | 김밥 김발 |
+| 8 | **plate** | drag/drop + garnish | 12 음식 시그니처 그릇·고명 |
+
+신규 음식 추가 시 **이 8 module 풀에서만 sequence 조합**. 신규 module 0건.
+
+#### 2. Dish-to-module matrix (12 음식 × sequence)
+
+`docs/systems/cooking-modules-v1.md` §2 + `data/dish_modules.csv` 신설. 12 음식 모두 3~5 module sequence로 표현. 평균 4.4 module/음식. 시그니처 step 1~2개 식별 (§4.2).
+
+#### 3. Korean identity preservation 4-layer
+
+1. **Sequence permutation** — 같은 module도 순서가 다르면 다른 음식
+2. **Signature step** — 음식별 1~2 hero module로 identity anchor
+3. **Visual variation per module** — Slice 1 module = 8가지 한식 cutting 어휘 노출
+4. **Plate signature** — 12 음식 = 12 그릇 art, terminal sealing
+
+#### 4. ADR-005 / ADR-007 정합 (no supersede)
+
+- **ADR-005** (4-stage meta): **무변경**. 8 module은 4-stage 안의 low-level primitive. Stage 2A 재료 준비 = Slice (또는 Season marinade variant). Stage 2C 조리 시간 = Timing.
+- **ADR-007** (basic_pantry): **무변경**. Season module의 default interaction = "basic_pantry 1-tap auto-pour" (시각 ambience). Stage 1에서 양념 "고르기" X 정합 유지.
+- **rhythm_proto.gd 7-phase**: 본 ADR로 **supersede**. migration map은 cooking-modules-v1.md §5에 lock. knead 제거 (호떡 N-1 superseded 이후 dead code). 8 module로 reorganize.
+
+#### 5. Migration scope (godot-dev 후속 sprint spec)
+
+- `rhythm_proto.gd` → `cooking_module_runner.gd` rename + module-based dispatch
+- 8 module × 1 reusable .tscn scene = 8 module scene
+- dish recipe data = sequence 정의 (.tres per food OR `data/dish_modules.csv` single source)
+- **본 sprint = design only**. 코드 구현은 godot-dev 별도 sprint (Sprint M3 권고)
+
+### Alternatives Considered
+
+| 대안 | 평가 |
+|------|------|
+| A. 12 음식 = 12 unique minigame (per-dish scene) | **Reject** (사용자 verbatim 명시 회피). code surface 폭증, 신규 음식 추가 비용 ↑ |
+| B. 4 module만 (Slice / Cook / Season / Plate — Cook이 Timing+Stir+Flip 통합) | Reject. Cook 통합은 mechanic 변별 약화 → Korean dish identity layer 부족 (라면 끓이기 vs 갈비 굽기 vs 콘도그 튀기기가 같은 module이 됨) |
+| C. 12 module (Slice / Arrange / Stir / Flip / Timing / Season / Roll / Plate / Knead / Steam / Boil / Grill) | Reject. Knead는 미사용 (호떡 superseded). Boil/Grill은 Timing 변주로 충분. module 수 ↑ = reuse 분포 sparse |
+| D. **8 module (Slice / Arrange / Stir / Flip / Timing / Season / Roll / Plate)** | **Accept** — 사용자 verbatim. reuse 분포 healthy (Plate 12 / Timing 11 / Slice 10) + Korean cutting 6종 노출 보존 + 김밥 Roll 정체성 유지 |
+| E. 7 module (Plate 제거, Timing이 plate UI 흡수) | Reject. Plate는 음식별 그릇·garnish 시그니처 = dish identity sealing layer. 통합 시 정체성 약화 |
+
+### Consequences
+
+✅ **Positive**:
+- **신규 음식 추가 비용 ↓** — sequence row 1줄 추가만 (코드 0건)
+- **8 module polish가 12 음식 체감으로 multiply** — Plate 1주 polish = 12 음식 모두 향상
+- **art workload predictable** — module별 art + 음식별 variation (Slice 6 cut style 기존 lock + Plate 12 그릇 신규)
+- **Korean identity 4-layer로 "specific dish 느낌" 보존** — sequence + signature step + visual variation + Plate signature
+- **현 7-phase 정리** — knead dead code 제거, panfry/stirfry → Flip+Timing / Stir+Timing 분리로 명료성 ↑
+
+⚠️ **Negative**:
+- **migration ripple** — rhythm_proto.gd refactor 필요 (Sprint M3 권고). 현재 활성 코드 (M2 sprint 진행 중)와의 충돌 관리 필요.
+- **Plate art workload spike** — 12 그릇 + ~24 garnish art (art-director 후속 sprint, art-style lock 후)
+- **Stir interaction MVP lock** — swipe circular vs tap rhythm 중 alpha 후 확정. MVP는 tap rhythm 권고 (latency 부담 ↓).
+- **Flip post-launch deferred** — 해물파전 full flip은 MVP single tap fallback (C-3 lock 유지). post-launch Remote Config 활성화.
+
+🔄 **Follow-ups**:
+- game-designer (본 sprint): `cooking-modules-v1.md` 신설 + `data/dish_modules.csv` 신설 + `balance-config.md` v0.7 §15 신설 + ADR-011 신설
+- godot-dev (Sprint M3 권고): rhythm_proto.gd → cooking_module_runner.gd refactor + 8 module scene + dish recipe data load
+- ui-designer: 8 module별 FTUE 가이드 패턴 (특히 Arrange 첫 노출, Roll 첫 swipe, Slice rhythm tap 첫 onboarding)
+- art-director (art-style lock 후): 8 module × Korean variation art workload 재산정 (Plate 12 그릇 + Slice 6 cut style + Roll 김발 anim 등)
+- qa-tester (M3 alpha): module 재사용성 KPI (음식별 sequence flow 자연스러움 검증 + Korean dish identity 인지율 ≥ 75% target)
+
+### Open Tasks
+
+#### 1순위 — game-designer (본 sprint resolved)
+- [x] 8 module spec (id / interaction / input / output / metric / Korean feel)
+- [x] 12-dish module sequence matrix
+- [x] Module reusability 분포 분석 (Plate 12 / Timing 11 / Slice 10 / Stir 5 / Season 5 / Arrange 4 / Flip 3 / Roll 1)
+- [x] Korean identity preservation strategy (4-layer)
+- [x] 7-phase → 8-module migration map
+
+#### 2순위 — godot-dev (Sprint M3)
+- [ ] rhythm_proto.gd → cooking_module_runner.gd refactor spec 작성
+- [ ] 8 module별 reusable .tscn scene 설계
+- [ ] dish recipe data load (.tres per food OR CSV-driven sequence parser)
+- [ ] knead token 제거 + Arrange/Plate enum 신규 추가
+
+#### 3순위 — ui-designer
+- [ ] 8 module별 FTUE 가이드 spec (Arrange 첫 노출 / Roll swipe / Slice rhythm 등 신규 interaction 학습)
+- [ ] Plate module UI — 그릇 선택 (1~3 후보) + garnish drag/drop 컴포넌트 spec (CP-21~ 신규)
+
+#### 4순위 — art-director (art-style lock 후)
+- [ ] Plate 음식별 그릇 12종 art (사발/접시/뚝배기/플레이트/도마 layout 등)
+- [ ] Plate garnish 6~8종 (참깨/김가루/계란지단/쪽파/마늘/고춧가루)
+- [ ] 8 module × Korean variation art workload v3.3 재산정
+
+#### 5순위 — qa-tester (M3 alpha)
+- [ ] Module 재사용성 검증 — 같은 module(Slice 등)이 음식별 다르게 느껴지는지 (visual variation 효과 검증)
+- [ ] "Specific Korean dish 느낌" 인지율 측정 (qualitative survey + cooking flow 자연스러움 평가)
+- [ ] Sequence 길이 분포 (3~5 step) 적정성 검증 (단조 회피 + 지겨움 회피 trade-off)
+
+### 관련 문서
+- [`systems/cooking-modules-v1.md` v1.0](systems/cooking-modules-v1.md) — full spec (본 ADR이 lock하는 핵심 spec)
+- [`balance-config.md` v0.7 §15](balance-config.md) — module별 BPM/window/threshold lock + dish-to-module wire
+- [`data/dish_modules.csv`](../data/dish_modules.csv) — 12 음식 × module sequence (본 sprint 신설)
+- [`cooking-mechanics.md` v0.7](systems/cooking-mechanics.md) — Stage 룰 (4-stage meta 정합)
+- [`motion-spec.md` v0.1](systems/motion-spec.md) — 음식 × 도구 × motion (module별 motion 참조)
+- ADR-005 (4-stage 메커닉) — high-level meta-stage 무변경, 8 module은 low-level primitive
+- ADR-007 (basic_pantry) — Season module default 정합
+- ADR-008 — rhythm_proto.gd 7-phase token 본 ADR로 supersede (knead 제거)
+
 

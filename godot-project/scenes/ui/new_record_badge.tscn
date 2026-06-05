@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://brsv2cp31rec"]
+
+[ext_resource type="Script" path="res://scripts/ui/components/new_record_badge.gd" id="1_cp31"]
+
+[node name="NewRecordBadge" type="Panel"]
+custom_minimum_size = Vector2(400, 80)
+script = ExtResource("1_cp31")

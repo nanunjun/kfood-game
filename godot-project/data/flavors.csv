@@ -1,0 +1,13 @@
+flavor_id,name_en,icon,color_hex,category
+spicy,Spicy,F,#E14B3A,heat
+sweet,Sweet,S,#F08FBF,heat
+salty,Salty,Sa,#3F8FCB,seasoning
+sour,Sour,So,#C8C84D,seasoning
+umami,Umami,U,#8C6230,depth
+mild,Mild,M,#C8C0A8,base
+hearty,Hearty,H,#B86F30,depth
+fermented,Fermented,Fe,#7D4F2A,depth
+oily,Oily,O,#DDB347,texture
+savory,Savory,Sv,#A6552E,depth
+fresh,Fresh,Fr,#6BAE5A,base
+bitter,Bitter,B,#5A4933,depth

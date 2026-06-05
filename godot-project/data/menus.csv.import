@@ -6,10 +6,10 @@ uid="uid://xd6w5lhfa8vj"
 
 [deps]
 
-files=["res://data/menus.name.translation", "res://data/menus.name.translation", "res://data/menus.intro.translation", "res://data/menus.seasonings.translation", "res://data/menus.dish.translation", "res://data/menus.dish.translation", "res://data/menus.dish.translation", "res://data/menus.guest.translation", "res://data/menus.unlock.translation", "res://data/menus.food.translation", "res://data/menus.ready.translation", "res://data/menus.phases.translation"]
+files=["res://data/menus.name.translation", "res://data/menus.name.translation", "res://data/menus.intro.translation", "res://data/menus.seasonings.translation", "res://data/menus.dish.translation", "res://data/menus.dish.translation", "res://data/menus.dish.translation", "res://data/menus.guest.translation", "res://data/menus.unlock.translation", "res://data/menus.food.translation", "res://data/menus.ready.translation", "res://data/menus.phases.translation", "res://data/menus.flavor.translation"]
 
 source_file="res://data/menus.csv"
-dest_files=["res://data/menus.name.translation", "res://data/menus.name.translation", "res://data/menus.intro.translation", "res://data/menus.seasonings.translation", "res://data/menus.dish.translation", "res://data/menus.dish.translation", "res://data/menus.dish.translation", "res://data/menus.guest.translation", "res://data/menus.unlock.translation", "res://data/menus.food.translation", "res://data/menus.ready.translation", "res://data/menus.phases.translation"]
+dest_files=["res://data/menus.name.translation", "res://data/menus.name.translation", "res://data/menus.intro.translation", "res://data/menus.seasonings.translation", "res://data/menus.dish.translation", "res://data/menus.dish.translation", "res://data/menus.dish.translation", "res://data/menus.guest.translation", "res://data/menus.unlock.translation", "res://data/menus.food.translation", "res://data/menus.ready.translation", "res://data/menus.phases.translation", "res://data/menus.flavor.translation"]
 
 [params]
 

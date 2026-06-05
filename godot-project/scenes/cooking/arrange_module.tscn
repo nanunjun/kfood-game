@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://bcfm2arrange01"]
+
+[ext_resource type="Script" path="res://scripts/cooking_modules/arrange_module.gd" id="1_arrange"]
+
+[node name="ArrangeModule" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_arrange")

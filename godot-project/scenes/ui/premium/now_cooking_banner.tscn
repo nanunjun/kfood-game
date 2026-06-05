@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://s5yvryjyr0vs"]
+
+[ext_resource type="Script" path="res://scripts/ui/premium/now_cooking_banner.gd" id="1_nc"]
+
+[node name="NowCookingBanner" type="Control"]
+custom_minimum_size = Vector2(1000, 88)
+script = ExtResource("1_nc")

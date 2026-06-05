@@ -82,3 +82,54 @@ const REACTION := {
 
 static func reaction(stars: int) -> String:
 	return REACTION.get(str(stars), "")
+
+
+# --- Phase A art-swap helpers ---
+## 모듈별 LOCK art 경로 모음. 파일이 실제로 존재하지 않으면 module은
+## graceful하게 procedural placeholder로 fallback (gameplay 무영향).
+
+const CUTTING_BOARD := "res://art/sprites/cut/cutting_board.png"
+const CUT_SLICED_ROUNDS := "res://art/sprites/cut/cut_sliced_rounds.png"
+
+const TOOL_BOIL := "res://art/sprites/tool/boil.png"            # 솥 끓이기
+const TOOL_DEEPFRY := "res://art/sprites/tool/deepfry.png"      # 튀김기
+const TOOL_FRYING_PAN := "res://art/sprites/tool/frying_pan.png"# 후라이팬 (panfry/flip)
+const TOOL_GRILL := "res://art/sprites/tool/grill.png"          # 그릴 (갈비)
+const TOOL_GRILL_WIRE := "res://art/sprites/tool/grill_wire_grate.png"
+const TOOL_MARINATE := "res://art/sprites/tool/marinate.png"    # 양념재우기 보울
+const TOOL_MIX := "res://art/sprites/tool/mix.png"              # 비빔(plate-pick용 대안)
+const TOOL_PANFRY := "res://art/sprites/tool/panfry.png"        # panfry (해물파전)
+const TOOL_POT_YANGUN := "res://art/sprites/tool/pot_yangun.png"# 양은냄비 (라면)
+const TOOL_ROLL := "res://art/sprites/tool/roll.png"            # 김발 (김밥)
+const TOOL_STIRFRY := "res://art/sprites/tool/stirfry.png"      # 웍 + 뒤집개 (stir)
+const TOOL_STOVETOP := "res://art/sprites/tool/stovetop_gas_burner.png"
+const TOOL_TOSS := "res://art/sprites/tool/toss.png"            # 토스(불판 등)
+
+
+## 한 음식의 timing module에 어떤 도구를 보일지 결정 — primary_cooking_method 우선.
+## boil → pot_yangun, grill → grill, deepfry → deepfry, 기본 boil pot.
+static func timing_tool_for(food_id: StringName) -> String:
+	var fid := String(food_id)
+	# 음식별 명시 override (라면 양은냄비 / 갈비 그릴 / 콘도그 튀김기 등)
+	match fid:
+		"t1_002", "t1_008", "m_kimchi_jjigae", "m_doenjang_jjigae", "m_maeuntang", "t2_013":
+			return TOOL_POT_YANGUN  # 끓이기
+		"t2_012":
+			return TOOL_GRILL       # 갈비구이
+		"t1_007":
+			return TOOL_DEEPFRY     # 콘도그
+		"t1_006":
+			return TOOL_PANFRY      # 해물파전 (timing 단계라도 팬 그대로)
+		_:
+			return TOOL_POT_YANGUN
+
+
+## slice module에 보일 칼+도마 보조 — 도마는 항상 같은 art.
+static func slice_board() -> String:
+	return CUTTING_BOARD
+
+
+static func file_exists(path: String) -> bool:
+	if path == "":
+		return false
+	return ResourceLoader.exists(path)

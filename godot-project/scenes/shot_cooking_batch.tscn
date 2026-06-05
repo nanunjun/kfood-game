@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bcfm2shotb01"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_cooking_batch.gd" id="1_shotb"]
+
+[node name="ShotCookingBatch" type="Node"]
+script = ExtResource("1_shotb")

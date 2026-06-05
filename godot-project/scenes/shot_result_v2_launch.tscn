@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://brsv2shotlaunch"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_result_v2_launcher.gd" id="1_rsv2lnch"]
+
+[node name="ShotResultV2Launcher" type="Node"]
+script = ExtResource("1_rsv2lnch")

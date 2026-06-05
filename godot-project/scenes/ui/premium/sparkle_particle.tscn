@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://x6dcnvdyr0vs"]
+
+[ext_resource type="Script" path="res://scripts/ui/premium/sparkle_particle.gd" id="1_sp"]
+
+[node name="SparkleParticle" type="Node2D"]
+script = ExtResource("1_sp")

@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://b0hacon3oaamw"
+
+[deps]
+
+files=["res://data/recipe_xp.xp.translation", "res://data/recipe_xp.cum.translation", "res://data/recipe_xp.level.translation"]
+
+source_file="res://data/recipe_xp.csv"
+dest_files=["res://data/recipe_xp.xp.translation", "res://data/recipe_xp.cum.translation", "res://data/recipe_xp.level.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

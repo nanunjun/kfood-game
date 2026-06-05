@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bcfm2runner01"]
+
+[ext_resource type="Script" path="res://scripts/gameplay/cooking_module_runner.gd" id="1_runner"]
+
+[node name="CookingModuleRunner" type="Node2D"]
+script = ExtResource("1_runner")

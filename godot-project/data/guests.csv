@@ -1,9 +1,11 @@
-guest_id,name,vec,tol,line_enter,line_ok,line_bad,role
-junho,Junho,0.30|0.55|0.92|0.25|0.45,0.27,Make it nice and spicy today!,Now THAT'S a kick — love it!,Too mild for me honestly.,friend
-mina,Mina,0.90|0.45|0.35|0.40|0.45,0.31,I've got a serious sweet tooth!,Mmm sweet and perfect — love it!,Needs a little more sweetness.,friend
-riley,Riley,0.40|0.50|0.55|0.85|0.45,0.33,Give me something bright and tangy!,Whoa that zing is amazing!,Could use a sharper tang.,friend
-mrs_lee,Mrs. Lee,0.30|0.45|0.20|0.25|0.90,0.28,Keep it clean with deep savory flavor.,Just right — that deep savory touch.,It's missing that savory depth.,mentor
-seoyeon,Seoyeon,0.35|0.90|0.40|0.30|0.55,0.26,I want hearty home-style seasoning.,This is exactly the comfort I needed.,A bit underseasoned for me.,friend
-mystery_diner,Mystery Diner,0.50|0.50|0.50|0.45|0.55,0.22,A quiet guest takes a seat and watches closely.,They note something down and give a small nod.,They note something down and slip away.,evaluator
-blogger_daniel,Daniel Kim,0.40|0.55|0.55|0.40|0.60,0.26,Daniel Kim is here to review — smile for the photo!,Posting this right now — looks amazing!,Not sure I'd recommend this one honestly.,evaluator
-goldspoon,Golden Spoon Inspector,0.45|0.50|0.50|0.45|0.70,0.16,The Golden Spoon Inspector observes in silence.,A slow nod of approval. You have earned it.,Not yet at our standard. Keep refining.,evaluator
+guest_id,name,vec,tol,line_enter,line_ok,line_bad,role,favorite_flavors,disliked_flavors,reward_bonus,friendship_level_initial,mood_pool
+junho,Junho,0.30|0.55|0.92|0.25|0.45,0.27,Make it nice and spicy today!,Now THAT'S a kick — love it!,Too mild for me honestly.,friend,spicy|salty|hearty,sweet|bitter,1.20,0,hungry|happy|grumpy|easy|picky
+mina,Mina,0.90|0.45|0.35|0.40|0.45,0.31,I've got a serious sweet tooth!,Mmm sweet and perfect — love it!,Needs a little more sweetness.,friend,sweet|savory|oily,bitter|sour,1.15,0,happy|picky|easy|hungry|grumpy
+riley,Riley,0.40|0.50|0.55|0.85|0.45,0.33,Give me something bright and tangy!,Whoa that zing is amazing!,Could use a sharper tang.,friend,sour|fresh|umami,oily|bitter,1.25,0,easy|happy|picky|hungry|grumpy
+mrs_lee,Mrs. Lee,0.30|0.45|0.20|0.25|0.90,0.28,Keep it clean with deep savory flavor.,Just right — that deep savory touch.,It's missing that savory depth.,mentor,mild|umami|fermented|hearty,spicy|oily,1.30,0,easy|picky|happy|grumpy|hungry
+seoyeon,Seoyeon,0.35|0.90|0.40|0.30|0.55,0.26,I want hearty home-style seasoning.,This is exactly the comfort I needed.,A bit underseasoned for me.,friend,hearty|salty|umami|sweet,spicy|sour,1.20,0,happy|hungry|easy|picky|grumpy
+mother_01,Mother,0.30|0.70|0.40|0.20|0.85,0.30,Let's have something warm and home-style.,Just like home — wonderful work.,A little heavy for me today.,family,mild|sweet|hearty|umami,spicy|oily|bitter,1.35,0,easy|happy|picky|hungry|grumpy
+father_01,Father,0.85|0.50|0.80|0.85|0.45,0.28,Make it bold — bring the heat!,Now THAT hits the spot — bold and rich!,Needs more punch honestly.,family,spicy|salty|oily|savory|umami,bitter|sour,1.25,0,hungry|happy|grumpy|easy|picky
+mystery_diner,Mystery Diner,0.50|0.50|0.50|0.45|0.55,0.22,A quiet guest takes a seat and watches closely.,They note something down and give a small nod.,They note something down and slip away.,evaluator,umami|salty|mild,oily,1.50,0,picky|easy|grumpy
+blogger_daniel,Daniel Kim,0.40|0.55|0.55|0.40|0.60,0.26,Daniel Kim is here to review — smile for the photo!,Posting this right now — looks amazing!,Not sure I'd recommend this one honestly.,evaluator,savory|umami|spicy|sweet,bitter,1.50,0,picky|happy|easy
+goldspoon,Golden Spoon Inspector,0.45|0.50|0.50|0.45|0.70,0.16,The Golden Spoon Inspector observes in silence.,A slow nod of approval. You have earned it.,Not yet at our standard. Keep refining.,evaluator,umami|hearty|fermented|mild,oily|sweet,2.00,0,picky|grumpy|easy
