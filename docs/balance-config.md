@@ -1,6 +1,6 @@
 # Balance Config — MVP
 
-> 버전: **v0.7 (2026-06-04, supersedes v0.6)** · 작성자: game-designer
+> 버전: **v0.7.1 (2026-06-05, ADR-012 input-layer amend)** · 작성자: game-designer
 > Scope: **MVP (Tier 1~2, 음식 12개, 친구 1~2명) + ADR-005 4-stage 메커닉 + C-2 basic_pantry 정책 + M2 prerequisite D3 본격 BPM lock + Guest System 2.0 (ADR-009) + Result Screen 2.0 (ADR-010) + 8-Module Cooking Pipeline (ADR-011)**.
 > 상위 문서: [`systems/cooking-mechanics.md` v0.7](systems/cooking-mechanics.md), [`systems/cooking-modules-v1.md` v1.0](systems/cooking-modules-v1.md), [`systems/motion-spec.md` v0.1](systems/motion-spec.md), [`systems/mvp-food-selection.md` v2.2 §3.1](systems/mvp-food-selection.md), [`systems/guest-system-v2.md` v2.0](systems/guest-system-v2.md), [`systems/result-screen-v2.md` v2.0](systems/result-screen-v2.md), [`foods-database.csv`](foods-database.csv), [`data/dish_modules.csv`](../data/dish_modules.csv), [`store-distribution.md` v1.3](store-distribution.md), [`friends-system.md` v0.3 (deprecated by ADR-009)](friends-system.md), [`decisions.md` ADR-005 + ADR-007 + ADR-009 + ADR-010 + ADR-011](decisions.md#adr-005)
 >
@@ -803,22 +803,24 @@ Milestone reveal styles (UI 강도 ramp):
 
 ---
 
-## 15. 8-Module Cooking Pipeline wire (v0.7 신설 — ADR-011)
+## 15. 8-Module Cooking Pipeline wire (v0.7 신설 — ADR-011, v0.7.1 ADR-012 input amend)
 
-> Full spec: [`systems/cooking-modules-v1.md` v1.0](systems/cooking-modules-v1.md). 본 §15는 balance-config 관점 핵심 공식·키·sequence 매트릭스만 lock.
+> Full spec: [`systems/cooking-modules-v1.md` v1.1](systems/cooking-modules-v1.md) + [`systems/action-first-cooking-v1.md` v1.0](systems/action-first-cooking-v1.md). 본 §15는 balance-config 관점 핵심 공식·키·sequence 매트릭스만 lock.
+>
+> ⚠️ **ADR-012 input-layer amend (2026-06-05)**: §15.1 interaction 컬럼이 button/tap → action gesture(drag/tilt/swipe/flick)로 갱신. **output·핵심 수치·sequence·scoring 전부 무변경** — gesture만 변경. `stir_interaction_mode` default "tap_rhythm" → **"continuous_swipe"** 갱신 (§15.3).
 
-### 15.1 8 modules — interaction · output · 핵심 수치
+### 15.1 8 modules — interaction (action-first) · output · 핵심 수치
 
-| # | module | interaction | output | 핵심 수치 (Remote Config wire) |
+| # | module | interaction (ADR-012 action) | output | 핵심 수치 (Remote Config wire) |
 |:-:|--------|-------------|--------|-------------------------------|
-| 1 | **slice** | rhythm tap (BPM-driven) | `accuracy_prep ∈ [0,1]` | §6 perfect_window_ms=100 (LOCKED ±80) / good=200 / §7 BPM by cut style (다지기 140 / 채썰기 115 / 어슷 100 / 통썰기 70 / 송송 110 / 깍둑 90) |
-| 2 | **arrange** | drag/drop placement | `accuracy_arrange ∈ [0,1]` | `cooking.modules.arrange_correct_glow_ms = 250` (snap glow), wrong → bounce 350ms. 분모 = total_slots (2~5) |
-| 3 | **stir** | tap rhythm (MVP) / swipe circular (post-launch) | `accuracy_cook ∈ [0,1]` | `cooking.modules.stir_interaction_mode = "tap_rhythm"`. BPM = §7.1 footer `cook.bpm_by_action`(stir 100, slow 60, fast 110) |
-| 4 | **flip** | single perfect-window tap (MVP fallback per C-3) | `flip_score ∈ {1.0, 0.6, 0.0}` | C-3 lock: `cooking.modules.flip_required_foods = []` (post-launch `["t1_006"]`). perfect_width = §3.2 음식별 |
-| 5 | **timing** | gauge fill + perfect tap | `accuracy_timing ∈ {1.0, 0.6, 0.2, 0.0}` | §3.1 C-4 lock band distribution 0.10/0.45/0.45, §3.2 음식별 perfect_width 12 row |
-| 6 | **season** | 1-tap auto-pour (default) / marinade rhythm (sub) | default: `accuracy_season = 1.0` (시각 only) / marinade: `accuracy_prep` 가산 | ADR-007 정합. marinade variant = `prep_bpm=60` (불고기 MAR-00), 3 press tap |
-| 7 | **roll** | swipe motion (left → right) | `accuracy_roll ∈ [0,1]` | `cooking.modules.roll_swipe_speed_band_ms = [500, 1000]`. band 밖 → retry (점수 영향 0, FTUE 학습) |
-| 8 | **plate** | drag/drop + garnish placement | `plate_bonus ∈ {1.0, 0.6, 0.2}` | `cooking.modules.plate_bonus_levels = [1.0, 0.6, 0.2]` (적절 그릇+garnish / 적절 그릇만 / 잘못된 그릇). Result Screen 2.0 §14.1 row 4 wire (dish_bonus) |
+| 1 | **slice** | **vertical drag** knife through ingredient (pieces split) | `accuracy_prep ∈ [0,1]` | §6 perfect_window_ms=100 (LOCKED ±80) / good=200 → drag 위치 편차·속도 band 매핑 / §7 BPM by cut style = drag 속도 목표 (다지기 140 / 채썰기 115 / 어슷 100 / 통썰기 70 / 송송 110 / 깍둑 90) |
+| 2 | **arrange** | **press-drag-release** place ingredients into pattern | `accuracy_arrange ∈ [0,1]` | `cooking.modules.arrange_correct_glow_ms = 250` (settle glow), wrong → bounce 350ms. 분모 = total_slots (2~5) |
+| 3 | **stir** | **continuous circular swipe** (웍/그릇 churn) | `accuracy_cook ∈ [0,1]` | `cooking.modules.stir_interaction_mode = "continuous_swipe"` (ADR-012). 각속도 band = §7.1 footer `cook.bpm_by_action`(stir 100, slow 60, fast 110) |
+| 4 | **flip** | **directional flick** (swipe-up / rotation) | `flip_score ∈ {1.0, 0.6, 0.0}` | C-3 lock: `cooking.modules.flip_required_foods = []` (post-launch `["t1_006"]`). flick 방향+속도 band → 3-tier. perfect_width = §3.2 음식별 |
+| 5 | **timing** | **vertical drag on heat dial** (불 세기 지속 조절, overflow 관리) | `accuracy_timing ∈ {1.0, 0.6, 0.2, 0.0}` | §3.1 C-4 lock band distribution 0.10/0.45/0.45 → heat zone 유지율, §3.2 음식별 perfect_width 12 row → heat zone 폭 (값 무변경) |
+| 6 | **season** | **tilt seasoning bottle** (각도+유지 양 조절) | default: `accuracy_season = 1.0` (시각 only) / marinade: `accuracy_prep` 가산 | ADR-007 정합 (default = 가벼운 tilt = auto-pour 대체). marinade variant = tilt-and-massage, `prep_bpm=60` (불고기 MAR-00) |
+| 7 | **roll** | **forward drag bamboo mat + release timing** | `accuracy_roll ∈ [0,1]` | `cooking.modules.roll_swipe_speed_band_ms = [500, 1000]`. band 밖 → retry (점수 영향 0, FTUE 학습) |
+| 8 | **plate** | **drag food onto plate + garnish** (ADR-012 input 변경 없음 — 이미 action) | `plate_bonus ∈ {1.0, 0.6, 0.2}` | `cooking.modules.plate_bonus_levels = [1.0, 0.6, 0.2]` (적절 그릇+garnish / 적절 그릇만 / 잘못된 그릇). Result Screen 2.0 §14.1 row 4 wire (dish_bonus) |
 
 ### 15.2 Dish-to-Module Sequence Matrix (12 음식)
 
@@ -859,7 +861,7 @@ Milestone reveal styles (UI 강도 ramp):
 | 키 | 기본값 | 타입 | 설명 |
 |----|--------|------|------|
 | `cooking.modules.enabled_set` | `["slice","arrange","stir","flip","timing","season","roll","plate"]` | string[] | 8 module id lock (no add, no remove per ADR-011) |
-| `cooking.modules.stir_interaction_mode` | `"tap_rhythm"` | string enum | MVP = "tap_rhythm" / post-launch alt = "swipe_circular" |
+| `cooking.modules.stir_interaction_mode` | `"continuous_swipe"` | string enum | ADR-012: MVP = "continuous_swipe" (연속 원형 churn) / 폐기 "tap_rhythm" (박자 tap, 사용자 원칙 위배) / post-launch alt = "swipe_circular_segmented" |
 | `cooking.modules.flip_required_foods` | `[]` | string[] | C-3 lock alias. MVP 빈 배열 (해물파전 single tap fallback). post-launch `["t1_006"]` 활성화 |
 | `cooking.modules.roll_swipe_speed_band_ms` | `[500, 1000]` | int[] | Roll module swipe 속도 [min, max] ms. band 밖 → retry |
 | `cooking.modules.plate_bonus_levels` | `[1.0, 0.6, 0.2]` | float[] | Plate module 보너스 3-tier (적절 그릇+garnish / 그릇만 / 잘못 그릇) |
@@ -874,11 +876,12 @@ Milestone reveal styles (UI 강도 ramp):
 | **P2** | arrange, flip | 3~4 음식 — MVP fallback 활용 |
 | **P3** | roll | 김밥 1개 — signature single, 간소 polish 충분 |
 
-### 15.5 ADR-005 / ADR-007 정합 (재확인)
+### 15.5 ADR-005 / ADR-007 / ADR-012 정합 (재확인)
 
 - **ADR-005 4-stage meta**: **무변경**. 8 module = Stage 2A (Slice / Season marinade) / Stage 2B (Stir / Flip / 부분적 Method) / Stage 2C (Timing) / 추가 (Arrange / Roll / Plate)의 low-level primitive.
-- **ADR-007 basic_pantry**: **무변경**. Season module default = "basic_pantry 1-tap auto-pour" (Scene 2 진입 시 자동 rack). 양념 "고르기" 행위 X 정합.
-- **rhythm_proto.gd 7-phase**: 본 ADR-011로 supersede. migration map은 `cooking-modules-v1.md` §5. knead dead code 제거.
+- **ADR-007 basic_pantry**: **무변경**. Season module default = "basic_pantry 가벼운 tilt = auto-pour 대체" (Scene 2 진입 시 자동 rack, 시각 only). 양념 "고르기" 행위 X 정합.
+- **ADR-012 action-first**: **input-layer amend only**. §15.1 interaction gesture만 button/tap → action(drag/tilt/swipe/flick). output·핵심 수치·sequence(§15.2)·scoring 전부 무변경. `stir_interaction_mode` "continuous_swipe" 갱신.
+- **rhythm_proto.gd 7-phase**: 본 ADR-011로 supersede. migration map은 `cooking-modules-v1.md` §5. knead dead code 제거. ADR-012 action input은 cooking_module_runner.gd에 TouchGestureRecognizer 공통 유틸로 통합 (godot-dev Sprint M3).
 
 ### 15.6 사용자 verbatim 검증
 
@@ -891,6 +894,7 @@ Milestone reveal styles (UI 강도 ramp):
 ---
 
 ## 12. 변경 이력
+- **2026-06-05 v0.7.1** (ADR-012 input-layer amend, supersede 아님) — **§15.1 interaction 컬럼 action-first 갱신** (slice vertical drag / arrange press-drag-release / stir continuous swipe / flip directional flick / timing heat dial / season tilt / roll forward drag + release / plate 무변경). `cooking.modules.stir_interaction_mode` default `"tap_rhythm"` → **`"continuous_swipe"`** (§15.3). §15.5 ADR-012 정합 항 추가. **output signal·핵심 수치·sequence(§15.2)·scoring·4-factor·★ 임계 전부 무변경** — input gesture만 교체. 상세 = `systems/action-first-cooking-v1.md` v1.0. ADR-012 동시 lock.
 - **2026-06-04 v0.7** (supersedes v0.6) — **8-Module Cooking Pipeline wire (M-1 ~ M-6)**. §15 신설 (8 module × BPM/window/threshold lock + dish-to-module sequence matrix 12 row + Remote Config 키 6종 + polish 우선순위 P0~P3). `data/dish_modules.csv` 신설 (12 row, pipe-separated module_sequence). ADR-011 동시 lock. ADR-005 4-stage meta 무변경 (8 module = low-level primitive). ADR-007 basic_pantry 정합 (Season default 1-tap auto-pour). rhythm_proto.gd 7-phase token supersede (knead 제거 + Arrange/Plate enum 추가, godot-dev Sprint M3 권고). 사용자 verbatim 검증 3건 (specific Korean dish 느낌 / avoid per-dish minigame / reuse modules).
 - **2026-06-04 v0.6** (supersedes v0.5) — **Result Screen 2.0 wire (R-1 ~ R-6)**. §14 신설 (6 row breakdown + 4-level emotion reaction + Recipe XP 12 음식 × Lv 1~10 + New Record (food, guest) pair + Milestone reveal toast/banner/overlay + Remote Config 키 10종 신설). `data/recipe_xp.csv` 신설 (12 row T1/T1-mid/T2 3종 curve). `data/reaction_templates.csv` 신설 (44 row = 8 selectable + 3 evaluators × 4 emotion levels). mood_badge 재활용 (asset 0 추가). 사용자 verbatim 검증 ("Mina loved the spicy kick" persona 불일치 → Junho × 김치찌개 happy로 재해석 / "Junho liked it but wanted more savory" → Junho × 김밥 easy 62% okay band 일치, placeholder `{missing_favorite}` 으로 흡수). pure display layer — cooking mechanic 무영향. ADR-010 동시 lock.
 - **2026-06-04 v0.5** (supersedes v0.4) — **Guest System 2.0 wire (G-1 ~ G-5)**. §13 신설 (compat 공식 W_BASE=50 + W_FAV=12 + W_DIS=18 lock + 5 mood × 2 multiplier 매트릭스 + reward_multiplier curve 5 tier + friendship 0~10 + milestone 3/7/10 + daily mood rotation algorithm + Remote Config 키 9종 신설). `friends.like_bonus_pct` / `friends.dislike_penalty_pct` / `friends.preference_affect_stars` 3 키 deprecated (ADR-009 supersede). 점수 vs 보상 분리 정책 lock (compat는 코인에만 영향, ★ 4-factor 무변경). 검증 예시 5종 (Junho×김치찌개 93% / Mina×김밥 62% / Mrs.Lee×잔치국수 93% — 사용자 verbatim 목표 92%·63% 일치).

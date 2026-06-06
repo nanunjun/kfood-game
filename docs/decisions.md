@@ -17,6 +17,7 @@
 | **009** | **Guest System 2.0 — 12 flavor × 7 selectable guests × mood × friendship (supersedes Guest 1.0 + friends-system v0.3 axis 모델)** | **Accepted** | **2026-06-04** |
 | **010** | **Result Screen 2.0 — 6 row breakdown + 4 emotion + recipe XP + new record + milestone reveal (pure display layer, mechanic 무영향, ADR-009 후속)** | **Accepted** | **2026-06-04** |
 | **011** | **8-Module Cooking Pipeline — Slice/Arrange/Stir/Flip/Timing/Season/Roll/Plate 8 reusable modules로 12 음식 sequence 표현 (avoid per-dish minigame)** | **Accepted** | **2026-06-04** |
+| **012** | **Action-First Cooking Interaction — 8 module input-layer 재설계 (tap/hold/button → drag/tilt/swipe/flick). 추상 button mechanic → 실제 조리 동작 시뮬레이션. ADR-011 input-layer amendment (scoring/sequence/progression 무변경)** | **Accepted** | **2026-06-05** |
 
 > **ADR-001 backfill 권장**: 재래시장 다점포 메커닉 결정은 `systems/cooking-mechanics.md` §2 + `CHANGELOG.md`에 기록됐으나 ADR 형식 미작성. 필요 시 사후 backfill.
 
@@ -1097,5 +1098,159 @@ ADR-009로 Guest System 2.0 (12 flavor × 7 guest × 5 mood × friendship 0~10)�
 - ADR-005 (4-stage 메커닉) — high-level meta-stage 무변경, 8 module은 low-level primitive
 - ADR-007 (basic_pantry) — Season module default 정합
 - ADR-008 — rhythm_proto.gd 7-phase token 본 ADR로 supersede (knead 제거)
+
+---
+
+## ADR-012: Action-First Cooking Interaction — 8 module input-layer 재설계
+
+- **Status**: ✅ **Accepted**
+- **Date**: 2026-06-05
+- **Deciders**: 사용자 (사양 명시 verbatim) → game-designer (spec lock)
+- **Type**: **[ADR-011](#adr-011) input-layer amendment** (supersede 아님 — 8 module 구성 / scoring / sequence / progression 무변경, input gesture만 재설계)
+- **상위 트리거**: 사용자 verbatim:
+  > "Do not design minigames. Design cooking actions. The player should perform a cooking action. The cooking action itself becomes the gameplay. Every cooking module should mimic a real cooking action. The mechanic should emerge from the cooking process itself. Never start with 'What button mechanic should we use?' Start with 'What is the real cooking action?' Then build gameplay around that action."
+
+### Context
+
+ADR-011은 8 reusable module로 12 음식 sequence를 표현하도록 lock했으나, 각 module의 interaction이 **추상 button/puck mechanic**으로 정의됨:
+
+- slice = beat tap (자동 칼 위아래 + 도마 닿기 직전 tap)
+- season = 1-tap auto-pour button
+- roll = swipe/hold button
+- timing = 정지 meter perfect-window tap
+- stir = tap rhythm (좌/우 박자 tap)
+- flip = single perfect-window tap
+
+→ 사용자 평가: 이것은 **"button pressing"이지 "cooking"이 아니다**. 플레이어가 "ADD를 눌렀다"를 느끼지 "양념을 더했다"를 느끼지 못함.
+
+**WRONG → CORRECT 원칙**:
+
+| | WRONG (button) | CORRECT (action) |
+|---|---|---|
+| season | Tap Button | tilt seasoning bottle, control amount, particles fall |
+| slice | Beat Tap | move knife through ingredient, pieces split |
+| roll | Hold Button | roll bamboo mat forward, control pressure/timing |
+| timing | Timing Bar (stop meter) | control stove heat, prevent overflow |
+| plate | (이미 drag) | drag food onto plate, arrange presentation |
+
+**Player feeling target**:
+- "I added seasoning" NOT "I pressed ADD"
+- "I rolled gimbap" NOT "I held a button"
+- "I cut carrots" NOT "I tapped a beat"
+- "I controlled the heat" NOT "I stopped a meter"
+
+### Decision
+
+#### 1. 8 module input gesture를 action-first로 재설계 (구성·scoring 무변경)
+
+| module | before (ADR-011 button) | after (ADR-012 action) | gesture |
+|--------|-------------------------|------------------------|---------|
+| **slice** | rhythm tap | move knife through ingredient, pieces split | vertical drag |
+| **arrange** | drag/drop snap | place ingredients into pattern (색·순서) | press-drag-release |
+| **stir** | tap rhythm | continuous wok/bowl motion, churn | continuous circular swipe |
+| **flip** | single tap | flip pancake / rotate corndog | directional flick |
+| **timing** | stop a meter | control stove heat, prevent overflow | vertical drag (heat dial) |
+| **season** | 1-tap auto-pour | tilt seasoning bottle, control amount | tilt + hold |
+| **roll** | hold button | roll bamboo mat forward, release timing | forward drag + release |
+| **plate** | drag/drop + garnish | (이미 action — 무변경) | drag + place |
+
+#### 2. Score emerges from action (4-factor 무변경)
+
+각 action의 결과 state(**under / perfect / over**)가 기존 output signal(`accuracy_prep` / `accuracy_arrange` / `accuracy_cook` / `flip_score` / `accuracy_timing` / `accuracy_season` / `accuracy_roll` / `plate_bonus`)으로 **결정론적 매핑**. 입력→점수 **변환 함수만** 재정의. 4-factor 가중치(25/20/20/35) / ★ 임계(30/60/90) / `module_completed(score)` signal contract 전부 무변경. 상세 매핑 표 = [`action-first-cooking-v1.md` §6](systems/action-first-cooking-v1.md).
+
+#### 3. Korean technique = action identity
+
+- **slice**: cut style 6종이 서로 다른 drag 동작 (다지기 짧고 빠른 반복 drag / 채썰기 길고 균일 drag / 어슷썰기 대각 drag).
+- **season**: 양념 종류별 다른 tilt (고춧가루 톡톡 / 간장 긴 줄기 / 참기름 drizzle / 양념재우기 tilt-massage).
+- **음식별 hero action**이 조리 정체성 전달 (김밥=roll forward drag / 갈비=좁은 heat zone / 불고기=marinade tilt-massage).
+
+#### 4. ADR-011 / ADR-005 / ADR-007 정합 (no supersede)
+
+- **ADR-011**: 8 module 구성 / dish_modules.csv sequence / reuse 분포 / scoring **무변경**. interaction 컬럼만 amend.
+- **ADR-005**: 4-stage meta **무변경**. Knife indicator(자동 칼 tap) input만 deprecated → 손가락 drag. 가중 평균 공식 / Skip auto-perfect 무변경.
+- **ADR-007**: basic_pantry **무변경**. Season default = 가벼운 tilt(auto-pour 대체, 시각 only). 양념 "고르기" 행위 X 유지.
+
+#### 5. deprecated (input gesture only, mechanic deprecation 아님)
+
+- ADR-005 Knife indicator (자동 위아래 + tap) → slice vertical drag
+- ADR-011 stir "tap rhythm" → continuous swipe (Remote Config `stir_interaction_mode = "continuous_swipe"`)
+- ADR-011 flip "single window tap" → directional flick
+- ADR-011 timing "정지 meter perfect tap" → heat dial 지속 조절
+
+> 이 4개는 output signal·scoring·점수 분포 전부 동일. input gesture만 교체.
+
+### Alternatives Considered
+
+| 대안 | 평가 |
+|------|------|
+| A. ADR-011 button mechanic 유지 | **Reject** (사용자 verbatim 명시 회피). "button pressing"이지 "cooking" 아님 |
+| B. 음식별 unique action minigame 신설 | Reject. 사용자 verbatim "Do not design minigames". ADR-011 8-module reuse 원칙 위배 |
+| C. **8 module input-layer만 action으로 재설계 (scoring/sequence/progression 무변경)** | **Accept** — 사용자 원칙 정확 충족 + ADR-011 framework 보존 + scoring 안정성 유지 |
+| D. scoring도 action 기반으로 재설계 (4-factor 폐기) | Reject. progression/economy/recipe XP ripple 폭증. 입력만 바꿔도 "cooking 느낌" 충족 |
+
+### Consequences
+
+✅ **Positive**:
+- **"cooking 느낌" 달성** — 모든 module이 실제 한식 조리 동작 모방. "I cut / I seasoned / I rolled / I controlled heat".
+- **scoring 안정성** — 4-factor / ★ 임계 / signal contract 무변경 → progression/economy/balance 전부 ripple 0.
+- **sequence 무변경** — dish_modules.csv 12 음식 sequence 동일. 코드 0건 추가.
+- **Korean identity 강화** — cut style이 손가락 동작으로 학습됨 (다지기 vs 채썰기 = 다른 drag).
+- **구현 난이도 관리 가능** — easy 3 / medium 5 / hard 0. 물리 엔진 불필요, Transform anim + drag sampling 수준.
+
+⚠️ **Negative**:
+- **input 인프라 신설** — TouchGestureRecognizer 공통 유틸 (drag path / tilt / flick velocity / 각속도). godot-dev Sprint M3.
+- **mobile latency/정밀도** — continuous swipe 각속도 sampling, flick velocity threshold가 기기별 편차. alpha 검증 필요.
+- **FTUE 재설계** — gesture 학습(drag-cut / tilt / heat dial)이 tap보다 onboarding step 부담 ↑. ui-designer.
+- **art-director 영향** — slice sprite split anim 방식 (shader mask vs 2-piece), heat dial UI. art-style lock 후.
+
+🔄 **Follow-ups**:
+- game-designer (본 sprint): `action-first-cooking-v1.md` 신설 + `cooking-modules-v1.md` v1.1 cross-ref + balance-config `stir_interaction_mode` 갱신 + ADR-012 신설
+- godot-dev (Sprint M3): TouchGestureRecognizer 공통 유틸 + 8 module action input 구현 (우선순위 slice → timing → plate → stir → season → arrange → flip → roll)
+- ui-designer: gesture FTUE 재설계 (drag-cut / tilt / heat dial / flick / forward-roll 학습) + heat dial UI 컴포넌트 + arrange vs plate 혼동 방지
+- art-director (art-style lock 후): slice split anim 방식 + heat dial/불꽃 시각 + season 입자 emit
+- qa-tester (M3 alpha): action 체감 인지율 ("cooking 느낌" survey) + gesture 정밀도/latency 검증 + flick velocity 기기별 band
+
+### Open Tasks
+
+#### 1순위 — game-designer (본 sprint resolved)
+- [x] 8 module action-first 설계 (real action / input gesture / visual sim / 3 states / score emergence / Korean technique)
+- [x] 신규 설계 3개 (arrange place-into-pattern / stir continuous swipe / flip directional flick)
+- [x] score 매핑 (action 결과 → output signal, 4-factor 무변경 audit)
+- [x] button → action 전환표 + 구현 난이도 estimate
+- [x] godot-dev 구현 우선순위 권고 (slice 1순위 — 10/12 음식)
+
+#### 2순위 — godot-dev (Sprint M3)
+- [ ] TouchGestureRecognizer 공통 유틸 (drag path / tilt 각도 / flick velocity / continuous swipe 각속도)
+- [ ] slice drag-cut (sprite split anim + cut 위치/속도/개수 scoring)
+- [ ] timing heat dial (zone 유지율 + overflow 게이지)
+- [ ] stir continuous swipe (각속도 적분 → 회전 수)
+- [ ] flip directional flick (velocity vector + C-3 fallback)
+- [ ] season tilt + roll forward drag + arrange place
+- [ ] Remote Config `stir_interaction_mode` default "continuous_swipe" 갱신
+
+#### 3순위 — ui-designer
+- [ ] gesture FTUE 재설계 (6-step → action 학습)
+- [ ] heat dial UI 컴포넌트 (다이얼/노브 + overflow 게이지)
+- [ ] arrange(raw 재료) vs plate(완성 음식) 혼동 방지 cue
+
+#### 4순위 — art-director (art-style lock 후)
+- [ ] slice sprite split anim (shader mask vs 2-piece)
+- [ ] heat dial 불꽃/끓음 강도 시각 + overflow
+- [ ] season 양념 입자 emit (가루/액체/drizzle)
+
+#### 5순위 — qa-tester (M3 alpha)
+- [ ] "cooking 느낌" 인지율 (button vs action 체감 차이 survey)
+- [ ] gesture 정밀도/latency 기기별 검증
+- [ ] flick velocity threshold 음식별 band 적정성
+
+### 관련 문서
+- [`systems/action-first-cooking-v1.md` v1.0](systems/action-first-cooking-v1.md) — full spec (본 ADR이 lock하는 핵심 spec)
+- [`systems/cooking-modules-v1.md` v1.1](systems/cooking-modules-v1.md) — 8 module 구성 (interaction action-first cross-ref)
+- [`balance-config.md` v0.7 §15](balance-config.md) — module BPM/window/threshold (stir_interaction_mode 갱신)
+- [`cooking-mechanics.md` v0.7](systems/cooking-mechanics.md) — 4-stage 룰 (scoring 무변경)
+- [`data/dish_modules.csv`](../data/dish_modules.csv) — 12 음식 × sequence (무변경)
+- ADR-011 (8-module) — 본 ADR이 input-layer amend (구성/scoring/sequence 무변경)
+- ADR-005 (4-stage) — Knife indicator input만 deprecated, meta 무변경
+- ADR-007 (basic_pantry) — Season default 정합
 
 

@@ -16,6 +16,7 @@ extends Panel
 signal picked(guest_id: String)
 
 const FlavorTagBadgeScript := preload("res://scripts/ui/components/flavor_tag_badge.gd")
+const FlavorIconChipScript := preload("res://scripts/ui/components/flavor_icon_chip.gd")
 const MoodBadgeScript := preload("res://scripts/ui/components/mood_badge.gd")
 const RewardBonusBadgeScript := preload("res://scripts/ui/components/reward_bonus_badge.gd")
 const GlossyButtonScript := preload("res://scripts/ui/premium/glossy_button.gd")
@@ -59,7 +60,10 @@ func _rebuild() -> void:
 	for c in get_children():
 		c.queue_free()
 	_ribbon = null
-	custom_minimum_size = Vector2(510, 680)
+	# Critical #6: card trimmed 680 -> 600. The verbose 2-line flavor rows + friendship
+	# text block were removed (icon-only chips + ring), so the card no longer needs the
+	# extra 80px that was causing bottom-row clipping in the 2-col scroll grid.
+	custom_minimum_size = Vector2(510, 600)
 	var reward_calc := get_node_or_null("/root/RewardCalc")
 	var compat_col: Color = reward_calc.compat_color(_compat) if reward_calc else Color(0.85, 0.80, 0.70)
 	# Premium drop-shadow card base (CP-34)
@@ -81,30 +85,11 @@ func _rebuild() -> void:
 	compat_sub.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(compat_sub)
 
-	# --- friendship stars (top-right) ---
+	# --- friendship ring gauge (top-right) — simplified from star string + verbose text ---
+	# Critical #6: single compact heart-ring gauge instead of 5 ASCII stars + "Friendship N/10"
 	var sm := get_node_or_null("/root/SaveManager")
 	var fr_level: int = sm.friendship_of(String(_guest.get("id", ""))) if sm else 0
-	var stars: int = clampi(int(floor(float(fr_level) / 2.0)), 0, 5)
-	var stars_lbl := Label.new()
-	stars_lbl.text = "*".repeat(stars) + "-".repeat(5 - stars)
-	stars_lbl.position = Vector2(custom_minimum_size.x - 220, 24)
-	stars_lbl.size = Vector2(200, 36)
-	stars_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	stars_lbl.add_theme_font_size_override("font_size", 32)
-	stars_lbl.add_theme_color_override("font_color", Color(0.96, 0.74, 0.22))
-	stars_lbl.add_theme_color_override("font_outline_color", Color(0.50, 0.30, 0.05))
-	stars_lbl.add_theme_constant_override("outline_size", 3)
-	stars_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(stars_lbl)
-	var fr_lbl := Label.new()
-	fr_lbl.text = "Friendship %d/10" % fr_level
-	fr_lbl.position = Vector2(custom_minimum_size.x - 220, 60)
-	fr_lbl.size = Vector2(200, 22)
-	fr_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	fr_lbl.add_theme_font_size_override("font_size", 16)
-	fr_lbl.add_theme_color_override("font_color", Color(0.55, 0.42, 0.30))
-	fr_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(fr_lbl)
+	_add_friendship_ring(fr_level)
 
 	# --- avatar 240x240 (center) with CP-36 idle breathing ---
 	var gid := String(_guest.get("id", ""))
@@ -197,28 +182,26 @@ func _rebuild() -> void:
 	role_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(role_lbl)
 
-	# --- Likes (1~3 tags) ---
+	# --- preference chips (icon-only, noise-reduced) ---
+	# Critical #6: one tidy row — heart prefix + Likes chips, then x prefix + Avoids
+	# chips. Flavor word text dropped (icon disc only) to cut the 10-element clutter.
 	var likes: Array = (_guest.get("favorite_flavors", []) as Array).slice(0, 3)
-	_add_flavor_row("Likes", likes, "like", 458)
-	# --- Avoids (1~2 tags) ---
 	var avoids: Array = (_guest.get("disliked_flavors", []) as Array).slice(0, 2)
-	_add_flavor_row("Avoids", avoids, "dislike", 522)
+	_add_pref_row(likes, avoids, 470)
 
-	# --- reward bonus band (enlarged) ---
-	var band: RewardBonusBadge = RewardBonusBadgeScript.new()
-	band.position = Vector2(16, 588)
-	band.size = Vector2(custom_minimum_size.x - 32, 44)
-	band.custom_minimum_size = Vector2(custom_minimum_size.x - 32, 44)
-	add_child(band)
-	band.setup(_compat, _guest)
-
-	# --- CTA button (Glossy CP-33) ---
+	# --- CTA button (Glossy CP-33) with the reward multiplier folded INTO the label ---
+	# Critical #6: the separate RewardBonusBadge band ("guest 1.20 x compat 1.30")
+	# was pure visual noise. The total multiplier now rides on the CTA so the card
+	# loses one whole element while keeping the reward signal where it matters.
+	var reward_calc2 := get_node_or_null("/root/RewardCalc")
+	var rmult: float = reward_calc2.bonus_multiplier(_compat) if reward_calc2 else 1.0
+	var rtotal: float = rmult * float(_guest.get("reward_bonus", 1.0))
 	var cta_root = GlossyButtonScript.new()
-	cta_root.size = Vector2(custom_minimum_size.x - 32, 40)
-	cta_root.custom_minimum_size = Vector2(custom_minimum_size.x - 32, 40)
-	cta_root.position = Vector2(16, 638)
+	cta_root.size = Vector2(custom_minimum_size.x - 32, 96)
+	cta_root.custom_minimum_size = Vector2(custom_minimum_size.x - 32, 96)
+	cta_root.position = Vector2(16, 488)
 	add_child(cta_root)
-	cta_root.setup("Cook for %s  >" % nm, compat_col.darkened(0.05), 22, 18)
+	cta_root.setup("Cook for %s   ·   %.2fx ₩" % [nm, rtotal], compat_col.darkened(0.05), 30, 24)
 	# When the inner button fires, emit picked.
 	cta_root.call_deferred("set", "_gid_for_callback", gid)
 	# We can't easily connect deferred — instead use a small wrapper
@@ -242,25 +225,103 @@ func _wire_glossy_cta(cta: Control, gid: String) -> void:
 		btn.pressed.connect(func() -> void: picked.emit(gid))
 
 
-func _add_flavor_row(prefix: String, flavors: Array, mode: String, y: float) -> void:
-	var lbl := Label.new()
-	lbl.text = prefix
-	lbl.position = Vector2(20, y)
-	lbl.size = Vector2(96, 56)
-	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	lbl.add_theme_font_size_override("font_size", 20)
-	lbl.add_theme_color_override("font_color", Color(0.45, 0.32, 0.20))
-	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(lbl)
-	var x: float = 118.0
-	for fid in flavors:
-		var badge: FlavorTagBadge = FlavorTagBadgeScript.new()
-		badge.position = Vector2(x, y)
-		badge.size = Vector2(120, 56)
-		badge.custom_minimum_size = Vector2(120, 56)
-		add_child(badge)
-		badge.setup(String(fid), mode)
-		x += 124.0
+# Critical #6: compact friendship ring gauge (top-right). One small heart-disc with
+# a progress arc band + "N/10" micro caption — replaces 5 ASCII stars + verbose line.
+func _add_friendship_ring(fr_level: int) -> void:
+	var ring := Panel.new()
+	var ring_sz: float = 76.0
+	ring.position = Vector2(custom_minimum_size.x - ring_sz - 22.0, 18.0)
+	ring.size = Vector2(ring_sz, ring_sz)
+	# track ring
+	var tsb := StyleBoxFlat.new()
+	tsb.bg_color = Color(0.95, 0.55, 0.58, 0.18)
+	tsb.set_corner_radius_all(int(ring_sz / 2.0))
+	tsb.set_border_width_all(6)
+	tsb.border_color = Color(0.95, 0.55, 0.58, 0.30)
+	ring.add_theme_stylebox_override("panel", tsb)
+	ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(ring)
+	# inner heart disc, brightness scaled by friendship level
+	var disc := Panel.new()
+	var disc_sz: float = ring_sz - 18.0
+	disc.position = Vector2(9, 9)
+	disc.size = Vector2(disc_sz, disc_sz)
+	var fill_t: float = clampf(float(fr_level) / 10.0, 0.0, 1.0)
+	var dsb := StyleBoxFlat.new()
+	dsb.bg_color = Color(0.80, 0.42, 0.46).lerp(Color(0.98, 0.32, 0.40), fill_t)
+	dsb.set_corner_radius_all(int(disc_sz / 2.0))
+	dsb.set_border_width_all(2)
+	dsb.border_color = Color(1, 1, 1, 0.85)
+	disc.add_theme_stylebox_override("panel", dsb)
+	disc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ring.add_child(disc)
+	# heart glyph
+	var heart := Label.new()
+	heart.text = "<3"
+	heart.set_anchors_preset(Control.PRESET_FULL_RECT)
+	heart.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	heart.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	heart.add_theme_font_size_override("font_size", 24)
+	heart.add_theme_color_override("font_color", Color.WHITE)
+	heart.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	disc.add_child(heart)
+	# N/10 micro caption under the ring
+	var cap := Label.new()
+	cap.text = "%d/10" % fr_level
+	cap.position = Vector2(ring.position.x - 12.0, ring.position.y + ring_sz - 2.0)
+	cap.size = Vector2(ring_sz + 24.0, 22)
+	cap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	cap.add_theme_font_size_override("font_size", 16)
+	cap.add_theme_color_override("font_color", Color(0.55, 0.42, 0.30))
+	cap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(cap)
+
+
+# Critical #6: single tidy preference row — heart prefix + Likes icon chips, gap,
+# then x prefix + Avoids icon chips. Icon-only discs (no flavor words) cut clutter.
+func _add_pref_row(likes: Array, avoids: Array, y: float) -> void:
+	var chip_sz: float = 52.0
+	var x: float = 24.0
+	# heart prefix
+	var hl := Label.new()
+	hl.text = "<3"
+	hl.position = Vector2(x, y)
+	hl.size = Vector2(40, chip_sz)
+	hl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	hl.add_theme_font_size_override("font_size", 26)
+	hl.add_theme_color_override("font_color", Color(0.90, 0.36, 0.42))
+	hl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(hl)
+	x += 44.0
+	for fid in likes:
+		var chip: FlavorIconChip = FlavorIconChipScript.new()
+		chip.position = Vector2(x, y)
+		chip.size = Vector2(chip_sz, chip_sz)
+		chip.custom_minimum_size = Vector2(chip_sz, chip_sz)
+		add_child(chip)
+		chip.setup(String(fid), "like")
+		x += chip_sz + 10.0
+	# separator gap
+	x += 18.0
+	# x prefix for avoids
+	var xl := Label.new()
+	xl.text = "x"
+	xl.position = Vector2(x, y)
+	xl.size = Vector2(28, chip_sz)
+	xl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	xl.add_theme_font_size_override("font_size", 26)
+	xl.add_theme_color_override("font_color", Color(0.55, 0.45, 0.38))
+	xl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(xl)
+	x += 32.0
+	for fid in avoids:
+		var chip2: FlavorIconChip = FlavorIconChipScript.new()
+		chip2.position = Vector2(x, y)
+		chip2.size = Vector2(chip_sz, chip_sz)
+		chip2.custom_minimum_size = Vector2(chip_sz, chip_sz)
+		add_child(chip2)
+		chip2.setup(String(fid), "dislike")
+		x += chip_sz + 10.0
 
 
 func _rebuild_ribbon() -> void:

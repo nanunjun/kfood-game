@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bshotafw201"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_action_first_w2.gd" id="1_shotafw2"]
+
+[node name="ShotActionFirstW2" type="Node"]
+script = ExtResource("1_shotafw2")

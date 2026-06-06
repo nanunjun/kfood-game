@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bgifframes001"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_module_gif_frames.gd" id="1_gif"]
+
+[node name="ShotModuleGifFrames" type="Node"]
+script = ExtResource("1_gif")

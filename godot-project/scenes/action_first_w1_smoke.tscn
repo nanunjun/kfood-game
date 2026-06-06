@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://baf1w1smoke01"]
+
+[ext_resource type="Script" path="res://scripts/dev/action_first_w1_smoke.gd" id="1_afw1"]
+
+[node name="ActionFirstW1Smoke" type="Node"]
+script = ExtResource("1_afw1")

@@ -118,7 +118,13 @@
       "Bash('C:/Users/JS Park/Downloads/Godot_v4.6.3-stable_win64.exe/Godot_v4.6.3-stable_win64.exe' --headless --quit-after 600 --path 'C:/Projects/kfood-game/godot-project' res://scenes/cooking_runner_integration_smoke.tscn)",
       "Bash('C:/Users/JS Park/Downloads/Godot_v4.6.3-stable_win64.exe/Godot_v4.6.3-stable_win64.exe' --headless --quit-after 2400 --path 'C:/Projects/kfood-game/godot-project' res://scenes/cooking_runner_integration_smoke.tscn)",
       "Bash('C:/Users/JS Park/Downloads/Godot_v4.6.3-stable_win64.exe/Godot_v4.6.3-stable_win64.exe' --headless --quit-after 4800 --path 'C:/Projects/kfood-game/godot-project' res://scenes/cooking_runner_integration_smoke.tscn)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash([ -f \"$GODOT\" ])",
+      "Bash(where Godot)",
+      "Bash(powershell -NoProfile -Command \"Get-Command godot -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source\")",
+      "Bash(\"/c/Users/JS Park/Downloads/Godot_v4.6.3-stable_win64.exe/Godot_v4.6.3-stable_win64_console.exe\" --path godot-project --quit-after 2000 res://scenes/shot_module_gif_frames.tscn)",
+      "Bash(py -c ' *)"
     ]
   }
 }

@@ -1,13 +1,16 @@
 # Cooking Modules v1 — 8 Reusable Modules + Dish-to-Module Matrix
 
-> 버전: **v1.0 (2026-06-04)** · 작성자: game-designer
-> Status: **Accepted** · ADR-011 lock
-> 상위 문서: [`decisions.md` ADR-005 / ADR-007 / ADR-011](../decisions.md), [`cooking-mechanics.md` v0.7](cooking-mechanics.md), [`motion-spec.md` v0.1](motion-spec.md), [`balance-config.md` v0.7](../balance-config.md)
+> 버전: **v1.1 (2026-06-05, supersedes v1.0)** · 작성자: game-designer
+> Status: **Accepted** · ADR-011 lock + **ADR-012 action-first input-layer amendment**
+> 상위 문서: [`decisions.md` ADR-005 / ADR-007 / ADR-011 / ADR-012](../decisions.md), [`action-first-cooking-v1.md` v1.0](action-first-cooking-v1.md), [`cooking-mechanics.md` v0.7](cooking-mechanics.md), [`motion-spec.md` v0.1](motion-spec.md), [`balance-config.md` v0.7](../balance-config.md)
+>
+> ⚠️ **v1.1 갱신 ([ADR-012](../decisions.md#adr-012))**: 각 module §1.x interaction에 **action-first cross-ref** 추가 (button/tap → drag/tilt/swipe/flick). 본 문서의 module 구성(8개) / sequence / reuse 분포 / output state / scoring 전부 **무변경** — interaction "어떻게 입력하는가"만 action-first로 amend. 상세 action 설계는 [`action-first-cooking-v1.md`](action-first-cooking-v1.md).
 >
 > **목표 (사용자 verbatim)**:
 > - "Players should feel they are cooking a specific Korean dish."
 > - "Avoid creating unique minigames per dish."
 > - "Reuse modules."
+> - **(ADR-012)** "The player should perform a cooking action. The cooking action itself becomes the gameplay."
 
 ---
 
@@ -35,6 +38,8 @@
 | success metric | tap accuracy %, Perfect 비율 |
 | Korean feel | **CUT-01 다지기 / CUT-02 채썰기 / CUT-03 어슷썰기 / CUT-04 통썰기 / CUT-05 송송썰기 / CUT-06 깍둑썰기** — 한식 cutting 6종 명명 표면. 다지기(마늘 minced) vs 어슷썰기(파 diagonal) 같은 한식 고유 표현이 visual variation으로 노출 |
 
+> 🔪 **action-first ([ADR-012](../decisions.md#adr-012))**: rhythm tap → **vertical drag knife through ingredient** — 손가락이 재료를 통과하면 조각이 물리적으로 갈라짐. cut style 6종 = 6가지 다른 drag 동작. [상세 §3.1](action-first-cooking-v1.md#31-slice--자르기-drag-knife-through-ingredient).
+
 **적용**: 라면 송송 / 떡볶이 어슷 / 김밥 통썰기 / 김치볶음밥 깍둑 / 해물파전 송송 / 잔치국수 송송 / 비빔밥 채썰기 / 잡채 채썰기 / 갈비 다지기 / 순두부 통썰기 (총 **10/12**)
 
 **Korean variation layer** (mechanic 동일, 시각만 변주):
@@ -53,6 +58,8 @@
 | success metric | placement accuracy %, 시간 (선택) |
 | Korean feel | **김밥 5색 정렬 (단무지·당근·시금치·계란·소시지)** / **비빔밥 6색 hue 배치** — 한식 색감 정렬 미학 (오방색) 직접 표면 |
 
+> 🍱 **action-first ([ADR-012](../decisions.md#adr-012))**: snap-to-slot → **press-drag-release place ingredients into pattern** — raw 재료를 집어 김/그릇 안에 색·순서 맞춰 안착 (자석처럼 settle). plate와 차별: arrange=조리 전 재료를 음식 구조에, plate=조리 후 완성품을 그릇에. [상세 §3.2 / §4.1](action-first-cooking-v1.md#32-arrange--정렬-place-ingredients-into-pattern).
+
 **적용**: 김밥 / 비빔밥 / 잡채 (toss 전 채소 정렬) / 잔치국수 (고명 정렬) — 총 **4/12**
 
 ### 1.3 Stir — 휘젓기 (swipe loop or tap rhythm)
@@ -66,6 +73,8 @@
 | success metric | tap accuracy %, 횟수 완료율 |
 | Korean feel | **김치볶음밥 wok stir** (medium-fast 100 BPM) / **비빔밥 bibim** (90 BPM circular feel, 고추장 색 spread) / **잡채 toss** (당면+채소 entangle) |
 
+> 🥘 **action-first ([ADR-012](../decisions.md#adr-012))**: tap rhythm(박자 좌/우 tap) **폐기** → **continuous circular swipe** — 손가락으로 웍/그릇 위를 끊김 없이 원을 그리며 churn. 박자 tap 아닌 연속 동작 = "휘젓는 손맛". wok(빠른 작은 원)/bibim(느린 큰 원)/toss(좌우 swipe). [상세 §3.3 / §4.2](action-first-cooking-v1.md#33-stir--휘젓기-continuous-wokbowl-motion).
+
 **적용**: 김치볶음밥 / 비빔밥 / 잡채 / 떡볶이 (졸이기 stir) / 불고기 (양념 코팅 stir) — 총 **5/12**
 
 ### 1.4 Flip — 뒤집기 (single perfect-window tap)
@@ -78,6 +87,8 @@
 | output state | `flip_score ∈ {1.0, 0.6, 0.0}` (Perfect / Good / Miss). Stage 2C `accuracy_timing` 입력 |
 | success metric | perfect tap rate |
 | Korean feel | **해물파전 뒤집기** (post-launch full mechanic — MVP 단일 탭 fallback per C-3 lock) / **콘도그 회전** (dip + flip rotation) / **갈비구이 양면 grill** |
+
+> 🍳 **action-first ([ADR-012](../decisions.md#adr-012))**: single tap → **directional flick** — swipe-up flick(전 뒤집기) / 회전 swipe(콘도그). flick **방향+속도**가 결과 결정, 단일 tap 아님. 음식이 공중 회전 → 반대면 착지. C-3 lock 유지 (MVP 해물파전 flick 단일 수행 fallback). [상세 §3.4 / §4.3](action-first-cooking-v1.md#34-flip--뒤집기-directional-flick).
 
 **적용**: 해물파전 (post-launch full / MVP single) / 콘도그 (dip+flip sub-step) / 갈비구이 (양면 grill) — 총 **3/12** (MVP는 사실상 1/12 full; 2/12 sub-fold)
 
@@ -94,6 +105,8 @@
 | success metric | PERFECT 비율 |
 | Korean feel | **끓이기 (라면 9s / 떡볶이 13s / 잔치국수 12s / 순두부 14s)** / **볶기 (김치볶음밥 10s / 잡채 16s / 불고기 16s)** / **굽기 (갈비 18s perfect 0.04 좁음 = "타이밍 핵심")** / **튀기기 (콘도그 8s)** |
 
+> 🔥 **action-first ([ADR-012](../decisions.md#adr-012))**: 정지 meter stop-tap → **control stove heat (heat dial 지속 조절)** — 불 다이얼을 위↕아래 drag하여 불 세기 실시간 조절, cook_time 동안 적정 heat zone 유지. 너무 세면 넘침(overflow)/탐. perfect_width = heat zone 폭(값 무변경). [상세 §3.5](action-first-cooking-v1.md#35-timing--조리-시간-control-stove-heat).
+
 **적용**: 12/12 (전 음식 — 끓이기 4 / 볶기 4 / 굽기 1 / 튀기기 1 / 부치기 1 / 비비기 1 — 비비기는 Stir 후 brief timing snap)
 
 ### 1.6 Season — 양념 (1-tap auto-pour or marinade rhythm)
@@ -106,6 +119,8 @@
 | output state | default: 시각 only, `accuracy_season = 1.0` 자동 / marinade variant: `accuracy_prep` 가산 (Slice와 동일 채점) |
 | success metric | tap accuracy (marinade variant), 시각 ambience (default) |
 | Korean feel | **basic_pantry 5종 자동 제공** (ADR-007 lock — "한국 가정 부엌 상시 비치" 정서) / **양념재우기 = 불고기 마사지 정서** (한국 가정 "양념 손맛" 표현) |
+
+> 🧂 **action-first ([ADR-012](../decisions.md#adr-012))**: 1-tap ADD button → **tilt seasoning bottle** — 양념 통을 기울여(tilt 각도) 유지 시간으로 양 조절, 입자/액체가 떨어짐. default 음식 = 가벼운 tilt(auto-pour 대체, 시각 only, accuracy 무영향, ADR-007 정합). marinade(불고기) = tilt-and-massage 정밀. 양념별 다른 tilt (고춧가루 톡톡 / 간장 줄기 / 참기름 drizzle). [상세 §3.6 / §5.2](action-first-cooking-v1.md#36-season--양념-tilt-seasoning-bottle).
 
 **적용**: 12/12 시각 ambience (전 음식 — basic_pantry rack은 Scene 2 진입 시 자동 표시) + **marinade variant 1/12 (불고기)** + 추가 "양념 hero" 음식 5 (떡볶이 고추장 / 비빔밥 고추장 / 갈비 양념 / 잡채 간장 / 해물파전 간장 — 시각 강조만, mechanic 동일)
 
@@ -122,6 +137,8 @@
 | success metric | swipe speed accuracy, retry 횟수 |
 | Korean feel | **김밥 말기** — 한식 visual signature ("롤이 잘 말리는 만족감"). 동작 = 손목 회전 + 압력의 짧은 ceremony |
 
+> 🍙 **action-first ([ADR-012](../decisions.md#adr-012))**: simple swipe → **forward drag bamboo mat + release timing** — 김발을 앞으로 밀어 올려 김밥이 점진적으로 말림, drag 속도+놓는(release) 타이밍이 모양 품질 결정. 너무 빠르면 터짐/헐거움. 속도 band 무변경(500~1000ms). [상세 §3.7](action-first-cooking-v1.md#37-roll--말기-roll-bamboo-mat-forward).
+
 **적용**: 김밥 (단독) — 총 **1/12** (가장 specialized module)
 
 > 향후 만두 / 호떡 등 추가 시 reuse 가능 — 본 sprint는 김밥 1개로 specialized 유지.
@@ -136,6 +153,8 @@
 | output state | `plate_bonus ∈ {1.0, 0.6, 0.2}` (적절 그릇 + 모든 garnish / 적절 그릇만 / 잘못된 그릇) — display layer only (Result Screen 2.0 §14.1 row 4 wire) |
 | success metric | grcid match + garnish placement |
 | Korean feel | **음식별 시그니처 그릇** — 떡볶이=빨간 분식 접시 / 잔치국수=흰 사발 / 순두부=검은 뚝배기 / 비빔밥=놋그릇 / 갈비=긴 grill 플레이트 / 김밥=원형 도마 cut layout. 한식 plating identity 마지막 sealing |
+
+> 🍽 **action-first ([ADR-012](../decisions.md#adr-012))**: **이미 action 기반 — input 변경 없음**. drag food onto plate + 고명 placement. 8 module 중 유일하게 ADR-012 input redesign 비대상. [상세 §3.8](action-first-cooking-v1.md#38-plate--담기-drag-food-onto-plate-arrange).
 
 **적용**: 12/12 (전 음식 — universal terminal step)
 
@@ -367,6 +386,8 @@ Plate module은 mechanic 1종이지만 **음식별 그릇·garnish가 dish ident
 
 ## 8. 관련 문서
 
+- [ADR-012](../decisions.md#adr-012) — Action-First Cooking Interaction (본 문서 v1.1 input-layer amend)
+- [action-first-cooking-v1.md v1.0](action-first-cooking-v1.md) — 8 module action-first 상세 설계 (gesture / visual sim / 3 states / score emergence)
 - [ADR-005](../decisions.md#adr-005) — 4-stage 메커닉 (high-level meta)
 - [ADR-007](../decisions.md#adr-007) — basic_pantry (Season default 정합)
 - [ADR-011](../decisions.md#adr-011) — 8-Module Cooking Pipeline (본 spec의 정식 ADR)

@@ -373,11 +373,23 @@ func _build_module_params(mod_id: String) -> Dictionary:
 			else:
 				params["slot_count"] = 4
 		"stir":
-			params["tap_count"] = 6
-			params["bpm"] = 105.0
+			# ADR-012: continuous circular swipe. variant = 음식별 stir 동작
+			# (wok=빠른 작은 원 / bibim=느린 큰 원 / toss=좌우 swipe). 회전 목표 turns.
+			# (legacy tap_count/bpm는 모듈이 무시 — 무변경 안전.)
+			match String(_menu.get("id", "")):
+				"t1_005":            params["variant"] = "wok"     # 김치볶음밥
+				"t2_008":            params["variant"] = "bibim"   # 비빔밥
+				"t2_010":            params["variant"] = "toss"    # 잡채 당면
+				_:                   params["variant"] = "default"
+			params["target_turns"] = 3.0
 		"flip":
-			params["window_open_ms"] = 2200.0
-			params["window_width_ms"] = 700.0
+			# ADR-012: directional flick. variant = 음식별 flip 방향
+			# (pajeon=swipe-up / corndog=회전 / galbi=좌우).
+			match String(_menu.get("id", "")):
+				"t1_006":            params["variant"] = "pajeon"  # 해물파전 swipe-up
+				"t1_007":            params["variant"] = "corndog" # 콘도그 회전
+				"t2_012":            params["variant"] = "galbi"   # 갈비 좌우
+				_:                   params["variant"] = "default"
 	return params
 
 
