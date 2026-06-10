@@ -59,6 +59,16 @@ func _default_data() -> Dictionary:
 		# data/recipe_xp.csv; level is derived (not stored).
 		"recipe_xp": {},
 		"player_char": "",
+		# Player-Chef Integration (2026-06-08): 플레이어가 선택한 본인 셰프 아바타 성별.
+		# "" = 미선택(최초 진입 시 gender select 화면), "f" = 여 셰프, "m" = 남 셰프.
+		# 신규 1필드 — 기존 save는 _merge()로 backward-compatible(필드 없으면 default "" 유지).
+		# scoring/economy/progression 무관 — 순수 visual 선택.
+		"player_chef_gender": "",
+		# Player-Name Personalization (2026-06-08): 플레이어가 직접 입력한 본인 셰프 이름.
+		# "" = 미입력(gender select 직후 name entry 화면). guest 7명 이름과 분리된 순수 visual 필드.
+		# 신규 1필드 — 기존 save는 _merge()로 backward-compatible(필드 없으면 default "" 유지 → name entry 1회).
+		# scoring/CSV/economy/progression 무관 — host 라벨 표시에만 사용.
+		"player_name": "",
 		"settings": {"haptics": true, "volume": 1.0, "subtitle_kr": false},
 	}
 
@@ -246,6 +256,73 @@ func add_recipe_xp(food_id: String, xp_delta: int) -> int:
 	data["recipe_xp"] = xp
 	_save()
 	return nv
+
+
+# --- player chef avatar (성별 선택, visual only) ---
+## 선택된 플레이어 셰프 성별: "f"/"m", 미선택 시 "". scoring/economy 무관.
+func player_chef_gender() -> String:
+	return String(data.get("player_chef_gender", ""))
+
+
+## 플레이어가 gender select에서 셰프 성별을 골랐는지(최초 1회 게이트용).
+func has_chosen_chef() -> bool:
+	var g: String = player_chef_gender()
+	return g == "f" or g == "m"
+
+
+## 셰프 성별 저장 ("f"/"m"). 잘못된 값은 무시. 재선택(설정)도 이 경로로.
+func set_player_chef_gender(gender: String) -> void:
+	if gender != "f" and gender != "m":
+		return
+	data["player_chef_gender"] = gender
+	_save()
+
+
+# --- player name (입력 개인화, visual only) ---
+const PLAYER_NAME_MAX: int = 12
+const PLAYER_NAME_FALLBACK: String = "My Chef"
+
+## 입력값을 표시용 셰프 이름으로 정규화: trim + 내부 공백 squash + 최대 길이 clamp.
+## 빈/공백뿐인 값은 ""을 반환(저장 측에서 fallback 처리). scoring/CSV 무관 — 순수 표시.
+static func sanitize_player_name(raw: String) -> String:
+	var s: String = raw.strip_edges()
+	if s == "":
+		return ""
+	# 내부 연속 공백을 단일 공백으로 squash (탭/개행도 공백 취급).
+	s = s.replace("\t", " ").replace("\n", " ").replace("\r", " ")
+	while s.find("  ") != -1:
+		s = s.replace("  ", " ")
+	s = s.strip_edges()
+	if s.length() > PLAYER_NAME_MAX:
+		s = s.substr(0, PLAYER_NAME_MAX).strip_edges()
+	return s
+
+
+## 저장된 플레이어 셰프 이름. 미입력 시 "". host 라벨 표시에만 사용.
+func player_name() -> String:
+	return String(data.get("player_name", ""))
+
+
+## 표시용 이름: 입력값 있으면 그대로, 없으면 fallback("My Chef"). UI host 라벨용.
+func player_name_display() -> String:
+	var n: String = player_name()
+	return n if n != "" else PLAYER_NAME_FALLBACK
+
+
+## 플레이어가 셰프 이름을 입력했는지(최초 1회 게이트용). trim 후 비어있지 않아야 true.
+func has_player_name() -> bool:
+	return player_name() != ""
+
+
+## 셰프 이름 저장. trim/길이 정규화 후 저장. 정규화 결과가 빈 값이면 저장하지 않음(false).
+## 재입력(설정)도 이 경로로. 반환: 저장 성공 여부.
+func set_player_name(raw: String) -> bool:
+	var clean: String = sanitize_player_name(raw)
+	if clean == "":
+		return false
+	data["player_name"] = clean
+	_save()
+	return true
 
 
 # --- settings ---

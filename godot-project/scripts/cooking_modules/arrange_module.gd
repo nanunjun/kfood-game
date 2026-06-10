@@ -14,20 +14,30 @@
 ## SCORING 무변경 (§6.1 / §3.4): placement 정확도 = correct_count / slot_count → accuracy_prep
 ## ∈ [0,1]. 기존 tap-match placement 점수와 1:1 동일한 [0,100] score를 그대로
 ## `module_completed(score)` 로 emit — runner contract / MODULE_TO_FACTOR("arrange"->prep) 동일.
+## 5-Layer Composition (2026-06-06): standalone ingredient sprite만 사용 (geometric color
+## swatch 제거). "placing real ingredients" — carrot_julienne / green_onion_julienne /
+## egg_cooked / rice_bowl / kimchi_chopped 등 실제 재료를 슬롯에 배치한다. 색블록 금지.
 extends "res://scripts/cooking_modules/base_module.gd"
 
-const ArtRegistry := preload("res://scripts/gameplay/art_registry.gd")
 const TouchGesture := preload("res://scripts/cooking_modules/touch_gesture.gd")
 
 const DEFAULT_SLOT_COUNT: int = 5
-const COLORS: Array[Color] = [
-	Color(0.92, 0.32, 0.22),  # red — carrot/kimchi
-	Color(0.96, 0.84, 0.32),  # yellow — egg
-	Color(0.46, 0.78, 0.34),  # green — spinach/scallion
-	Color(0.94, 0.94, 0.92),  # white — rice/radish
-	Color(0.36, 0.22, 0.16),  # brown — beef/seaweed
-	Color(0.85, 0.40, 0.70),  # pink — pickled
+
+# 실제 standalone ingredient — 색블록 대신 sprite로 배치. [name, state] (oeunsaek 오방색 매핑).
+const REAL_INGREDIENTS: Array = [
+	["carrot", "julienne"],       # 주황/빨강
+	["egg", "cooked"],            # 노랑
+	["green_onion", "julienne"],  # 초록
+	["rice_bowl", ""],            # 흰
+	["kimchi", "chopped"],        # 적색(고명)
+	["beef", "cooked"],           # 갈색(고기)
 ]
+# 슬롯 힌트/매칭 시각용 보조 색(테두리 only — 채움 블록 아님).
+const HINT_COLORS: Array[Color] = [
+	Color(0.92, 0.46, 0.22), Color(0.96, 0.84, 0.32), Color(0.46, 0.78, 0.34),
+	Color(0.96, 0.95, 0.90), Color(0.86, 0.26, 0.20), Color(0.50, 0.36, 0.24),
+]
+const COLORS: Array[Color] = HINT_COLORS   # 호환 alias (이전 참조 보존)
 
 const ING_SIZE: float = 150.0
 const SLOT_SIZE: float = 160.0
@@ -52,23 +62,41 @@ var _glow_slot_idx: int = -1
 
 func _module_start(params: Dictionary) -> void:
 	_attach_cooking_bg(700.0)
-	_slot_count = clampi(int(params.get("slot_count", DEFAULT_SLOT_COUNT)), 2, 6)
+	# §8.1 shopping→arrange (gimbap VS): vs_available_slots가 있으면 그 수만큼만 filling 슬롯
+	#   생성(시장에서 누락한 재료 = 빈 김밥). 없으면 기존 slot_count(일반 dish 무변경).
+	if params.has("vs_available_slots"):
+		_slot_count = clampi(int(params.get("vs_available_slots", DEFAULT_SLOT_COUNT)), 2, 6)
+	else:
+		_slot_count = clampi(int(params.get("slot_count", DEFAULT_SLOT_COUNT)), 2, 6)
 	# 6색이면 방사형(비빔밥), 그 외 띠(김밥/국수 고명).
 	_shape = "radial" if _slot_count >= 6 else "band"
 	_build_header("Arrange", "Drag each ingredient into its matching slot.")
 
-	# 음식 hero — 상단 (무엇을 arrange하는지 인지).
+	# Cooking Realism Fix (2026-06-07, HR3): 완성 dish를 action zone 위에 크게 깔면
+	# (1) 최종 음식 조기 노출 (HR3 위반) (2) "giant background dish art"로 슬롯을 덮는다.
+	# → 작은 우상단 reference chip로 축소 (무엇을 만드는지만 안내, play area는 슬롯이 주인공).
 	var food_id: StringName = StringName(String(params.get("food_id", "")))
 	var food_img: String = ArtRegistry.food(food_id)
 	if ArtRegistry.file_exists(food_img):
+		var chip_size: float = 150.0
+		var ref_lbl := Label.new()
+		ref_lbl.text = "Target"
+		ref_lbl.position = Vector2(1080.0 - chip_size - 36.0, 300.0)
+		ref_lbl.size = Vector2(chip_size, 28.0)
+		ref_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		ref_lbl.add_theme_font_size_override("font_size", 22)
+		ref_lbl.add_theme_color_override("font_color", Color(0.55, 0.42, 0.28))
+		ref_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(ref_lbl)
 		var hero := TextureRect.new()
 		hero.texture = load(food_img)
-		hero.position = Vector2(390, 250)
-		hero.size = Vector2(300, 300)
 		hero.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		hero.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		hero.position = Vector2(1080.0 - chip_size - 36.0, 330.0)
+		hero.size = Vector2(chip_size, chip_size)
 		hero.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		hero.modulate = Color(1, 1, 1, 0.82)
+		hero.modulate = Color(1, 1, 1, 0.92)
+		hero.z_index = L2_BASE
 		add_child(hero)
 
 	_build_slots()
@@ -101,20 +129,40 @@ func _build_slots() -> void:
 		var slot := Panel.new()
 		slot.position = c - Vector2(SLOT_SIZE, SLOT_SIZE) * 0.5
 		slot.size = Vector2(SLOT_SIZE, SLOT_SIZE)
+		# 색블록 제거 → subtle target ring (거의 투명 bg + 점선 느낌 테두리).
 		var sb := StyleBoxFlat.new()
-		sb.bg_color = Color(0.86, 0.78, 0.66, 0.55)
+		sb.bg_color = Color(1.0, 0.98, 0.92, 0.10)
 		sb.set_corner_radius_all(24 if _shape == "band" else 80)
-		sb.set_border_width_all(4)
-		sb.border_color = COLORS[i % COLORS.size()].darkened(0.1)
+		sb.set_border_width_all(3)
+		sb.border_color = Color(COLORS[i % COLORS.size()], 0.55)
 		slot.add_theme_stylebox_override("panel", sb)
 		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		slot.z_index = L2_BASE
 		add_child(slot)
-		# 색 힌트 dot (이 슬롯에 어떤 색이 와야 하는지).
-		var dot := ColorRect.new()
-		dot.color = Color(COLORS[i % COLORS.size()], 0.35)
-		dot.size = Vector2(SLOT_SIZE * 0.5, SLOT_SIZE * 0.5)
-		dot.position = (Vector2(SLOT_SIZE, SLOT_SIZE) - dot.size) * 0.5
-		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		# 힌트 — 이 슬롯에 올 실제 재료 ghost sprite(반투명). 색블록 제거.
+		var dot: Control
+		var hint_spec: Array = REAL_INGREDIENTS[i % REAL_INGREDIENTS.size()]
+		var hint_path: String = ArtRegistry.get_ingredient(String(hint_spec[0]), String(hint_spec[1]))
+		if hint_path != "":
+			var ghost := TextureRect.new()
+			# expand_mode를 texture 할당 전에 — 1024px 최소크기 박힘 방지.
+			ghost.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			ghost.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			ghost.custom_minimum_size = Vector2.ZERO
+			ghost.texture = load(hint_path)
+			ghost.size = Vector2(SLOT_SIZE * 0.72, SLOT_SIZE * 0.72)
+			ghost.position = (Vector2(SLOT_SIZE, SLOT_SIZE) - ghost.size) * 0.5
+			ghost.modulate = Color(1, 1, 1, 0.30)
+			ghost.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			dot = ghost
+		else:
+			# 재료 sprite 미존재 시에만 최소 색 dot(테두리 식별).
+			var dot_fb := ColorRect.new()
+			dot_fb.color = Color(HINT_COLORS[i % HINT_COLORS.size()], 0.28)
+			dot_fb.size = Vector2(SLOT_SIZE * 0.5, SLOT_SIZE * 0.5)
+			dot_fb.position = (Vector2(SLOT_SIZE, SLOT_SIZE) - dot_fb.size) * 0.5
+			dot_fb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			dot = dot_fb
 		slot.add_child(dot)
 		# magnet glow (평소 숨김, drag로 근접 시 표시).
 		var glow := Panel.new()
@@ -134,63 +182,74 @@ func _build_slots() -> void:
 func _slot_centers() -> Array:
 	var centers: Array = []
 	if _shape == "radial":
-		# 6색 방사형 — 비빔밥 그릇 둘레.
+		# 6색 방사형 — 비빔밥 그릇 둘레. action zone 중앙(816) 약간 아래.
 		var cx: float = 540.0
-		var cy: float = 860.0
-		var r: float = 250.0
+		var cy: float = 900.0
+		var r: float = 230.0
 		for i in range(_slot_count):
 			var a: float = -PI * 0.5 + float(i) / float(_slot_count) * TAU
 			centers.append(Vector2(cx + cos(a) * r, cy + sin(a) * r))
 	else:
-		# 5색 가로 띠 — 김밥/고명.
+		# 5색 가로 띠 — 김밥/고명. action zone 중앙.
 		var gap: float = 30.0
 		var total: float = float(_slot_count) * SLOT_SIZE + float(_slot_count - 1) * gap
 		var x0: float = (1080.0 - total) * 0.5 + SLOT_SIZE * 0.5
-		var y: float = 760.0
+		var y: float = 900.0
 		for i in range(_slot_count):
 			centers.append(Vector2(x0 + float(i) * (SLOT_SIZE + gap), y))
 	return centers
 
 
-func _build_ingredients(food_id: StringName) -> void:
-	# 재료를 하단 트레이에 색 섞어 배치 (색-슬롯 매칭을 플레이어가 판단).
+func _build_ingredients(_food_id: StringName) -> void:
+	# 5-layer: 실제 standalone ingredient sprite를 하단 트레이에 배치 (색블록 제거).
+	# 슬롯 i = REAL_INGREDIENTS[i] 와 매칭. token은 진짜 재료 sprite.
 	var order: Array = range(_slot_count)
 	order.shuffle()
-	var cut_path: String = ArtRegistry.prep_cut(food_id)
-	var has_cut: bool = ArtRegistry.file_exists(cut_path)
 	var gap: float = 24.0
 	var total: float = float(_slot_count) * ING_SIZE + float(_slot_count - 1) * gap
 	var x0: float = (1080.0 - total) * 0.5 + ING_SIZE * 0.5
 	var y: float = 1440.0
 	for i in range(_slot_count):
-		var color_id: int = int(order[i])
+		var color_id: int = int(order[i])   # = ingredient index (슬롯 색/재료 매칭 id 유지)
 		var home := Vector2(x0 + float(i) * (ING_SIZE + gap), y)
 		var token := Control.new()
 		token.size = Vector2(ING_SIZE, ING_SIZE)
 		token.position = home - token.size * 0.5
 		token.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		token.z_index = 10
-		# 색 배경 (색-매칭 단서).
-		var bg := Panel.new()
-		bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-		var bsb := StyleBoxFlat.new()
-		bsb.bg_color = COLORS[color_id % COLORS.size()]
-		bsb.set_corner_radius_all(24)
-		bsb.shadow_size = 5
-		bsb.shadow_color = Color(0, 0, 0, 0.28)
-		bg.add_theme_stylebox_override("panel", bsb)
-		bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		token.add_child(bg)
-		# cut sprite icon (있으면) — hero ingredient(color 0)에 우선, 나머진 색만.
-		if has_cut and color_id == 0:
+		token.z_index = L3_INGREDIENT
+		var spec: Array = REAL_INGREDIENTS[color_id % REAL_INGREDIENTS.size()]
+		var ing_path: String = ArtRegistry.get_ingredient(String(spec[0]), String(spec[1]))
+		if ing_path != "":
+			# 실제 재료 sprite — 색블록 없이 그대로. 살짝 둥근 그림자 받침만.
+			var pad := Panel.new()
+			pad.set_anchors_preset(Control.PRESET_FULL_RECT)
+			var psb := StyleBoxFlat.new()
+			psb.bg_color = Color(1, 1, 1, 0.0)
+			psb.shadow_size = 6
+			psb.shadow_color = Color(0, 0, 0, 0.22)
+			psb.set_corner_radius_all(20)
+			pad.add_theme_stylebox_override("panel", psb)
+			pad.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			token.add_child(pad)
 			var icon := TextureRect.new()
-			icon.texture = load(cut_path)
-			icon.position = Vector2(14, 14)
-			icon.size = Vector2(ING_SIZE - 28, ING_SIZE - 28)
+			icon.texture = load(ing_path)
+			icon.set_anchors_preset(Control.PRESET_FULL_RECT)
 			icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			token.add_child(icon)
+		else:
+			# 재료 sprite 미존재 시에만 fallback 색 칩(테두리). 색블록 최소화.
+			var bg := Panel.new()
+			bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+			var bsb := StyleBoxFlat.new()
+			bsb.bg_color = HINT_COLORS[color_id % HINT_COLORS.size()]
+			bsb.set_corner_radius_all(24)
+			bsb.shadow_size = 5
+			bsb.shadow_color = Color(0, 0, 0, 0.28)
+			bg.add_theme_stylebox_override("panel", bsb)
+			bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			token.add_child(bg)
 		add_child(token)
 		_ingredients.append({
 			"node": token, "color_id": color_id, "home": home,
@@ -222,8 +281,8 @@ func _on_drag_started(pos: Vector2) -> void:
 		var node: Control = _ingredients[_dragging_idx]["node"]
 		node.z_index = 30
 		_drag_offset = node.position + node.size * 0.5 - pos
-		# 집어올림 — 살짝 확대.
-		node.scale = Vector2(1.12, 1.12)
+		# 집어올림 — selected만 1.15x 확대.
+		node.scale = Vector2(1.15, 1.15)
 
 
 func _on_drag_updated(pos: Vector2, _vel: Vector2) -> void:
@@ -319,21 +378,21 @@ func _settle_into_slot(ing_idx: int, slot_idx: int) -> void:
 	var tw := node.create_tween()
 	tw.tween_property(node, "position", target, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.parallel().tween_property(node, "scale", Vector2(0.86, 0.86), 0.16)
-	# 슬롯 시각 — 정확하면 색 채움 + 보더 녹색, 틀리면 비뚤(살짝 회전)+빨강.
+	# 슬롯 시각 — soft tint만(채움 색블록 아님). 위에 얹힌 실제 재료 sprite가 주인공.
 	var slot: Panel = _slots[slot_idx]["node"]
 	var ssb := slot.get_theme_stylebox("panel") as StyleBoxFlat
 	if ssb:
 		if ok:
-			ssb.bg_color = COLORS[color_id % COLORS.size()].lightened(0.1)
+			ssb.bg_color = Color(0.30, 0.70, 0.32, 0.22)
 			ssb.border_color = Color(0.30, 0.70, 0.32)
 		else:
-			ssb.bg_color = COLORS[color_id % COLORS.size()].darkened(0.15)
+			ssb.bg_color = Color(0.82, 0.30, 0.24, 0.20)
 			ssb.border_color = Color(0.82, 0.30, 0.24)
 	if not ok:
 		# 비뚤어진 느낌 — 살짝 기울임.
 		node.rotation = deg_to_rad(randf_range(-10.0, 10.0))
-	# dot 숨김 (채워짐).
-	var dot: ColorRect = _slots[slot_idx]["dot"]
+	# ghost hint 숨김 (실제 재료가 채워짐). ghost는 TextureRect 또는 ColorRect.
+	var dot: Control = _slots[slot_idx]["dot"]
 	if is_instance_valid(dot):
 		dot.visible = false
 	_safe_feedback(RhythmJudge.GOOD if ok else RhythmJudge.MISS, slot_center)
@@ -370,3 +429,46 @@ func _finalize() -> void:
 	# §6.1 — placement 정확도 = correct / total × 100. 기존 tap-match 점수와 1:1 동일.
 	var score: float = float(_correct_count) / float(maxi(1, _slot_count)) * 100.0
 	_finish(score)
+
+
+# === Gimbap Vertical Slice — arrange→roll consequence getters (design §8.3) ===
+# runner가 module_completed 후 읽어 roll의 tilt offset으로 전달한다(좌우 filling 균형).
+# 점수 도메인 무관 — 순수 consequence 신호. 일반 dish runner는 이 getter를 호출하지 않는다.
+
+## arrange balance [0,1] — 정답 재료가 좌/우 슬롯에 얼마나 대칭으로 안착했는지.
+## 한쪽으로 몰리면(좌측만 채움) 낮음 → roll이 그쪽으로 비뚤어짐. 1.0 = 좌우 균등.
+func get_arrange_balance() -> float:
+	var left_ok: int = 0
+	var right_ok: int = 0
+	var mid: float = 540.0
+	for i in range(_slots.size()):
+		var s: Dictionary = _slots[i]
+		if not bool(s.get("filled", false)):
+			continue
+		var cx: float = float((s.get("center", Vector2.ZERO) as Vector2).x)
+		if cx < mid:
+			left_ok += 1
+		else:
+			right_ok += 1
+	var total: int = left_ok + right_ok
+	if total <= 1:
+		return 1.0   # 표본 부족 — 중립(불균형 단정 불가).
+	var balance: float = 1.0 - absf(float(left_ok - right_ok)) / float(total)
+	return clampf(balance, 0.0, 1.0)
+
+
+## arrange bias 방향 — +1(좌측에 더 몰림 → roll 좌측 기울기) / -1(우측). balance가 1이면 무의미.
+func get_arrange_bias_dir() -> float:
+	var left_ok: int = 0
+	var right_ok: int = 0
+	var mid: float = 540.0
+	for i in range(_slots.size()):
+		var s: Dictionary = _slots[i]
+		if not bool(s.get("filled", false)):
+			continue
+		var cx: float = float((s.get("center", Vector2.ZERO) as Vector2).x)
+		if cx < mid:
+			left_ok += 1
+		else:
+			right_ok += 1
+	return 1.0 if left_ok >= right_ok else -1.0

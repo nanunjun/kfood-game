@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://b8mrcboard02x"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_menu_recipe_locked.gd" id="1_mrl"]
+
+[node name="ShotMenuRecipeLocked" type="Node"]
+script = ExtResource("1_mrl")

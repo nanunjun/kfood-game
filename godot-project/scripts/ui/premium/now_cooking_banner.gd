@@ -69,11 +69,14 @@ func _rebuild() -> void:
 		var tex: Texture2D = load(_thumb_path) as Texture2D
 		if tex != null:
 			var t := TextureRect.new()
+			# expand_mode를 texture 할당 전에 — 1024px 최소크기 박힘 방지(거대 thumb가 화면 덮는 버그).
+			t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			t.custom_minimum_size = Vector2.ZERO
+			t.clip_contents = true
 			t.texture = tex
 			t.position = Vector2(4, 4)
 			t.size = Vector2(52, 52)
-			t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			t.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			thumb_frame.add_child(t)
 	# "NOW COOKING" label (tiny caption)

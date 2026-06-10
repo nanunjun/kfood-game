@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bgvssmoke0b01"]
+
+[ext_resource type="Script" path="res://scripts/dev/gimbap_vs_smoke.gd" id="1_gvss"]
+
+[node name="GimbapVsSmoke" type="Node"]
+script = ExtResource("1_gvss")

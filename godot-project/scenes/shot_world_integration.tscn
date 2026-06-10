@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://b7kutgg3oo8lb"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_world_integration.gd" id="1_wi"]
+
+[node name="ShotWorldIntegration" type="Node"]
+script = ExtResource("1_wi")

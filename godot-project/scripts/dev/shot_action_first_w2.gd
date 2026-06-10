@@ -210,36 +210,37 @@ func _slot_for_color(slots: Array, color_id: int) -> int:
 # =============================================================================
 func _stage_roll() -> void:
 	var hint := _inst.get("_hint") as Label
-	# roll_progress를 강제 세팅하고 module의 _apply_roll_visual을 직접 호출.
+	# TWO-FINGER: 좌·우 진행을 균등 세팅하고 module의 _apply_roll_visual을 직접 호출.
 	var set_roll := func(p: float) -> void:
-		_inst.set("_roll_progress", p)
+		_inst.set("_left_progress", p)
+		_inst.set("_right_progress", p)
 		_inst.call("_apply_roll_visual")
 
 	# f00 idle — 김 + 밥 + 재료 평평하게 펼쳐짐.
 	set_roll.call(0.0)
-	if is_instance_valid(hint): hint.text = "Push the mat forward ↑"
+	if is_instance_valid(hint): hint.text = "Use two fingers to push both sides evenly"
 	await _snap()
-	# f01 김발 밀기 시작 — 살짝 말림.
+	# f01 양손 밀기 시작 — 살짝 말림.
 	set_roll.call(0.25)
-	if is_instance_valid(hint): hint.text = "Keep pushing forward…"
+	if is_instance_valid(hint): hint.text = "Roll evenly from both edges"
 	await _snap()
 	# f02 절반 말림 — 재료 빨려듦.
 	set_roll.call(0.5)
-	if is_instance_valid(hint): hint.text = "Almost there…"
+	if is_instance_valid(hint): hint.text = "Perfect Balance!"
 	await _snap()
 	# f03 거의 다 말림.
 	set_roll.call(0.72)
-	if is_instance_valid(hint): hint.text = "Almost there…"
+	if is_instance_valid(hint): hint.text = "Tight roll!"
 	await _snap()
-	# f04 sweet zone 진입 — round! release NOW.
+	# f04 sweet zone 진입 — round, balanced.
 	set_roll.call(0.9)
 	_sparkle_at(Vector2(540, 1000), 200.0)
-	if is_instance_valid(hint): hint.text = "★ Round! Release NOW ★"
+	if is_instance_valid(hint): hint.text = "Perfect Balance!"
 	await _snap()
 	# f05 release → 단단한 원통 settle.
 	set_roll.call(0.92)
 	_sparkle_at(Vector2(540, 1000), 240.0)
-	if is_instance_valid(hint): hint.text = "Tight, round roll!"
+	if is_instance_valid(hint): hint.text = "Tight roll!"
 	await _snap()
 	# f06 완성 settle.
 	await _snap()

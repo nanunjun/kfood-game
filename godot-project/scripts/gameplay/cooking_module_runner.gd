@@ -20,8 +20,10 @@
 extends Node2D
 
 const MenuDB := preload("res://scripts/gameplay/menu_db.gd")
+const ArtRegistry := preload("res://scripts/gameplay/art_registry.gd")
 const MarketBG := preload("res://scripts/ui/market_bg.gd")
 const CookingBackgroundScript := preload("res://scripts/ui/cooking_background.gd")
+const KitchenBackgroundScript := preload("res://scripts/ui/kitchen_background.gd")
 const PlateModuleScript := preload("res://scripts/cooking_modules/plate_module.gd")
 # Premium V1
 const NowCookingBannerScript := preload("res://scripts/ui/premium/now_cooking_banner.gd")
@@ -128,10 +130,14 @@ func load_sequence(food_id: String) -> Array:
 func _build_chrome() -> void:
 	_layer = CanvasLayer.new()
 	add_child(_layer)
-	# D3 (Critical Issue #8): replace awning-bleeding MarketBG with the clean shared
-	# CookingBackground so the kitchen-surface feel reads. Awning is intentionally NOT
-	# drawn for cooking + result; it stays on menu_select / guest_select / etc.
-	var bg = CookingBackgroundScript.new()
+	# World-integration (2026-06-08): 환경 art가 화면 전체를 채우도록 fill_screen=true.
+	# 기존(width-cover 하단정렬)은 상단 절반이 beige wall-연장 void였다 → action이 빈 공간에 떴다.
+	# 이제 한식 주방 world가 화면을 가득 채우고 그 위에 cooking action이 얹힌다 (beige void 박멸).
+	# level market(home/noryangjin/market/gwangjang) → 환경 art는 공유 helper로 매핑.
+	var bg = KitchenBackgroundScript.new()
+	bg.fill_screen = true
+	bg.dish_anchor_y = 900.0
+	bg.env_key = _env_key_for_market(String(_level.get("market", "home")))
 	_layer.add_child(bg)
 	_info = Label.new()
 	_info.position = Vector2(40, 60)
@@ -158,6 +164,15 @@ func _build_chrome() -> void:
 	_layer.add_child(_module_host)
 	# Premium: small guest mini-avatar at bottom-left of the cooking surface (peeking watcher)
 	_build_guest_mini()
+	# Player-Chef host (2026-06-08): "요리하는 나" 셰프(cook)를 화면 우하단에 작게 — 손님 mini가
+	# 좌하단(먹는 쪽)에 있으니 역할 분리로 우하단(요리하는 쪽)에 배치. world BG 위 layer.
+	# mouse_filter IGNORE라 활성 모듈 입력과 충돌하지 않는다. visual only.
+	_build_chef_cook_host()
+
+
+## level market → KitchenBackground env art key (공유 매핑 사용 — home/noryangjin/market/gwangjang 지원).
+func _env_key_for_market(market: String) -> String:
+	return KitchenBackgroundScript.env_key_for_market(market)
 
 
 # Bottom-left guest mini-avatar (CH-01~05 placeholder = colored circle + initial).
@@ -238,6 +253,75 @@ func _build_guest_mini() -> void:
 	IdleHelper.attach(av, 1.04, 2.0)
 
 
+# Player-Chef cook host: 화면 우하단에 선택한 셰프(cook)를 작게 표시 (요리하는 쪽).
+# SaveManager 성별을 읽어 ArtRegistry.get_protagonist로 해석. 미선택/미존재 시 silent skip.
+func _build_chef_cook_host() -> void:
+	var path := _chef_host_path("cook")
+	if path == "":
+		return
+	var holder := Control.new()
+	holder.position = Vector2(896, 1772)
+	holder.size = Vector2(160, 140)
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_layer.add_child(holder)
+	var frame := Panel.new()
+	frame.position = Vector2(0, 0)
+	frame.size = Vector2(120, 120)
+	var fsb := StyleBoxFlat.new()
+	fsb.bg_color = Color(0.99, 0.96, 0.89)
+	fsb.set_corner_radius_all(60)
+	fsb.set_border_width_all(4)
+	fsb.border_color = Color(0.93, 0.72, 0.30)
+	fsb.shadow_size = 8
+	fsb.shadow_color = Color(0, 0, 0, 0.40)
+	fsb.shadow_offset = Vector2(0, 4)
+	frame.add_theme_stylebox_override("panel", fsb)
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frame.clip_contents = true  # 원형 프레임 안으로 chef bust crop
+	holder.add_child(frame)
+	var host := TextureRect.new()
+	host.texture = load(path)
+	host.set_anchors_preset(Control.PRESET_FULL_RECT)
+	host.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	host.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	host.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frame.add_child(host)
+	# 캡션 — Player-Name Personalization (2026-06-08): 입력명("Chef" 고정 라벨 제거).
+	var cap := Label.new()
+	cap.text = _chef_display_name()
+	cap.position = Vector2(-32, 122)
+	cap.size = Vector2(184, 28)
+	cap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	cap.add_theme_font_size_override("font_size", 20)
+	cap.add_theme_color_override("font_color", Color(0.99, 0.92, 0.78))
+	cap.add_theme_color_override("font_outline_color", Color(0.20, 0.10, 0.04))
+	cap.add_theme_constant_override("outline_size", 3)
+	cap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.add_child(cap)
+	var IdleHelper := preload("res://scripts/ui/premium/character_idle_animator.gd")
+	IdleHelper.attach(frame, 1.04, 2.2)
+
+
+## 플레이어 입력 셰프 이름(표시용). 미입력/legacy fallback은 "My Chef". guest 이름과 분리.
+func _chef_display_name() -> String:
+	var sm := get_node_or_null("/root/SaveManager")
+	if sm and sm.has_method("player_name_display"):
+		return sm.player_name_display()
+	return "Chef"
+
+
+## 선택한 셰프 아바타 경로(emotion)를 SaveManager 성별로 해석. 미선택/미존재 시 "".
+func _chef_host_path(emotion: String) -> String:
+	var sm := get_node_or_null("/root/SaveManager")
+	if sm == null or not sm.has_method("player_chef_gender"):
+		return ""
+	var gender: String = sm.player_chef_gender()
+	if gender != "f" and gender != "m":
+		return ""
+	var path := ArtRegistry.get_protagonist(gender, emotion)
+	return path if (path != "" and ResourceLoader.exists(path)) else ""
+
+
 func _level_banner() -> void:
 	var txt := "Lv %d" % int(_level.get("level", 1))
 	if _is_evaluator:
@@ -295,6 +379,9 @@ func _start_request() -> void:
 	face.add_theme_stylebox_override("panel", sb)
 	face.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_module_host.add_child(face)
+	# Player-Chef host (think): 주문을 받고 "어떻게 만들까" 고민하는 셰프 — 가이드/튜토리얼 톤.
+	# 요청 화면 좌측에 배치. _clear_module_host()로 모듈 시작 시 함께 정리된다(_module_host 자식).
+	_build_chef_request_host()
 	_info.position = Vector2(40, 620)
 	_info.text = "%s: \"%s\"\n\nLet's make %s (%s)." % [
 		_guest.get("name", "Guest"), _guest.get("line_enter", "Surprise me!"),
@@ -304,6 +391,45 @@ func _start_request() -> void:
 	_info.position = Vector2(40, 60)
 	_info.text = ""
 	_run_next_module()
+
+
+# Player-Chef request host: 요청 화면에서 "think" 셰프를 좌측에 — 주문을 받고 레시피를
+# 고민하는 톤(가이드/튜토리얼). _module_host 자식이라 모듈 시작 시 함께 정리된다.
+func _build_chef_request_host() -> void:
+	var path := _chef_host_path("think")
+	if path == "":
+		return
+	var frame := Panel.new()
+	frame.position = Vector2(70, 360)
+	frame.size = Vector2(220, 220)
+	var fsb := StyleBoxFlat.new()
+	fsb.bg_color = Color(0.99, 0.96, 0.89)
+	fsb.set_corner_radius_all(110)
+	fsb.set_border_width_all(5)
+	fsb.border_color = Color(0.93, 0.72, 0.30)
+	fsb.shadow_size = 10
+	fsb.shadow_color = Color(0, 0, 0, 0.32)
+	fsb.shadow_offset = Vector2(0, 5)
+	frame.add_theme_stylebox_override("panel", fsb)
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frame.clip_contents = true  # 원형 프레임 안으로 chef bust crop
+	_module_host.add_child(frame)
+	var host := TextureRect.new()
+	host.texture = load(path)
+	host.set_anchors_preset(Control.PRESET_FULL_RECT)
+	host.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	host.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	host.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frame.add_child(host)
+	var cap := Label.new()
+	cap.text = "Hmm, how to cook this..."
+	cap.position = Vector2(-30, 224)
+	cap.size = Vector2(280, 30)
+	cap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	cap.add_theme_font_size_override("font_size", 22)
+	cap.add_theme_color_override("font_color", Color(0.45, 0.30, 0.16))
+	cap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_module_host.add_child(cap)
 
 
 # --- module dispatch ---
@@ -344,6 +470,8 @@ func _build_module_params(mod_id: String) -> Dictionary:
 		"step_total": _step_total,
 		"menu": _menu,
 		"module_id": mod_id,
+		# runner가 이미 KitchenBackground를 깔았으므로 module 자체 bg 생략 (chrome 가림 방지).
+		"skip_bg": true,
 	}
 	# Per-module tweaks (CSV-driven would land in a v2 dish_modules.csv schema column).
 	match mod_id:
@@ -355,6 +483,13 @@ func _build_module_params(mod_id: String) -> Dictionary:
 				params["marinade_bpm"] = 60.0
 			else:
 				params["mode"] = "simple"
+			# P0 #3 (2026-06-07): seasoning param dish-explicit -- gochujang(paste dollop) vs
+			# gochugaru(powder). bibimbap=dollop, sundubu=powder, tteokbokki=gochujang.
+			match String(_menu.get("id", "")):
+				"t2_008":   params["seasoning"] = "gochujang"
+				"t1_003":   params["seasoning"] = "gochujang"
+				"t2_013":   params["seasoning"] = "gochugaru"
+				_:          pass
 		"timing":
 			# 갈비구이 (t2_012) is a tight grill window per the matrix notes.
 			if String(_menu.get("id", "")) == "t2_012":

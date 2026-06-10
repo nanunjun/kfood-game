@@ -26,6 +26,13 @@ func _ready() -> void:
 		var l := Label.new()
 		l.visible = false
 		l.z_index = 2
+		# BUGFIX (2026-06-07): pooled judgement popups (PERFECT/GOOD/MISS) live on this
+		# layer-50 CanvasLayer — ABOVE every screen including the result-screen sticky CTA
+		# (layer 15). Label's DEFAULT mouse_filter is STOP, so a popup left over the CTA band
+		# after a module's final _safe_feedback() ate clicks on Cook Again / Choose Other
+		# Guest / Back to Menu (the reported "can't proceed / can't go back" block). These
+		# popups are pure visual juice and must NEVER receive input — force IGNORE.
+		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		l.add_theme_font_size_override("font_size", 56)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_layer.add_child(l)

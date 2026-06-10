@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://dmwenenvvs3ek"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_player_name.gd" id="1_spn"]
+
+[node name="ShotPlayerName" type="Node"]
+script = ExtResource("1_spn")

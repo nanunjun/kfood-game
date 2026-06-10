@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bklr3ndk5xy53"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_result_rebuild.gd" id="1_rsv3rb"]
+
+[node name="ShotResultRebuild" type="Node"]
+script = ExtResource("1_rsv3rb")

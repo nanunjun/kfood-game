@@ -1,0 +1,13 @@
+food_id,name_en,name_ko,badge_id,badge_title,mastery_level,master_fact_ref
+t1_002,Ramyeon,라면,goldspoon_ramyeon,Golden Spoon: Ramyeon Master,7,culture_fact
+t1_004,Gimbap,김밥,goldspoon_gimbap,Golden Spoon: Gimbap Master,7,culture_fact
+t2_008,Bibimbap,비빔밥,goldspoon_bibimbap,Golden Spoon: Bibimbap Master,7,culture_fact
+m_kimchi_jjigae,Kimchi Stew,김치찌개,goldspoon_kimchi_stew,Golden Spoon: Kimchi Stew Master,7,culture_fact
+t2_012,Galbi-gui,갈비구이,goldspoon_galbi,Golden Spoon: Galbi Master,7,culture_fact
+t2_010,Japchae,잡채,goldspoon_japchae,Golden Spoon: Japchae Master,7,culture_fact
+t1_003,Tteokbokki,떡볶이,goldspoon_tteokbokki,Golden Spoon: Tteokbokki Master,7,culture_fact
+t2_013,Sundubu Jjigae,순두부찌개,goldspoon_sundubu,Golden Spoon: Sundubu Jjigae Master,7,culture_fact
+t1_006,Haemul Pajeon,해물파전,goldspoon_pajeon,Golden Spoon: Haemul Pajeon Master,7,culture_fact
+t1_007,Korean Corn Dog,한국식 콘도그,goldspoon_corndog,Golden Spoon: Corn Dog Master,7,culture_fact
+t1_008,Janchi Guksu,잔치국수,goldspoon_janchi,Golden Spoon: Janchi Guksu Master,7,culture_fact
+t1_005,Kimchi Fried Rice,김치볶음밥,goldspoon_kimchi_rice,Golden Spoon: Kimchi Fried Rice Master,7,culture_fact

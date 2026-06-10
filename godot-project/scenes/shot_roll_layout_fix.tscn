@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://b070aleooj7uq"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_roll_layout_fix.gd" id="1_rlfix"]
+
+[node name="ShotRollLayoutFix" type="Node"]
+script = ExtResource("1_rlfix")

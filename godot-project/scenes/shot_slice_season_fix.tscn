@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bt5tjx1gq1num"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_slice_season_fix.gd" id="1_ssf"]
+
+[node name="ShotSliceSeasonFix" type="Node"]
+script = ExtResource("1_ssf")

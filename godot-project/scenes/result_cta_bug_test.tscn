@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://b1lhjxj4p0465"]
+
+[ext_resource type="Script" path="res://scripts/dev/result_cta_bug_test.gd" id="1_ctatest"]
+
+[node name="ResultCtaBugTest" type="Node"]
+script = ExtResource("1_ctatest")

@@ -15,20 +15,30 @@
 ## 도메인 [0,100] 동일, `module_completed(score)` contract 동일.
 ##   perfect_at  → ideal heat zone 중심 (다이얼 0~1 위치).
 ##   perfect_width → ideal heat zone 폭 (갈비 0.10 좁음 등 음식별 12 row 무변경).
+## 5-Layer Composition (2026-06-06): base vessel(L2) + food raw→cooked(L3 progressive swap)
+## + flame/bubbles/steam/heat-glow(L5). pot/dolsot/noodle_bowl/grill_pan + noodle_raw→
+## noodle_cooked / tofu_cubed / beef_raw→beef_cooked. standalone sprite runtime 합성.
 extends "res://scripts/cooking_modules/base_module.gd"
 
-const ArtRegistry := preload("res://scripts/gameplay/art_registry.gd")
 const TouchGesture := preload("res://scripts/cooking_modules/touch_gesture.gd")
 
 const DURATION_DEFAULT_MS: float = 3500.0
 const PERFECT_AT_DEFAULT: float = 0.85
 const PERFECT_WIDTH_DEFAULT: float = 0.18
 
-# heat dial 화면 geometry (세로 슬라이더). drag로 손잡이를 위↕아래.
-const DIAL_X: float = 150.0
-const DIAL_TOP: float = 1020.0
-const DIAL_H: float = 560.0          # 위(0)=강불 ... 아래(1)=약불? → heat 매핑은 아래 참고
-const KNOB_R: float = 56.0
+# P0 #4 — stew dish: broth 안에 재료가 잠겨 끓는다. dish_id → 잠긴 submerged 재료(들).
+# 순두부찌개(t2_013): 순두부(tofu) base + 김치(kimchi) 부분 잠김 (dry pile 금지).
+const STEW_SUBMERGED := {
+	"t2_013": [["kimchi", "chopped"], ["tofu", "cubed"]],
+}
+
+# vessel = action zone 중앙 (≤65%W/42%H). food은 이 안에만.
+const VESSEL_RECT := Rect2(280, 540, 520, 480)
+# heat dial 화면 geometry (세로 슬라이더) — vessel 왼쪽, CONTROL/action 경계까지.
+const DIAL_X: float = 130.0
+const DIAL_TOP: float = 600.0
+const DIAL_H: float = 480.0          # 위(0)=강불 ... 아래(1)=약불? → heat 매핑은 아래 참고
+const KNOB_R: float = 52.0
 
 var _start_ms: float = 0.0
 var _duration_ms: float = DURATION_DEFAULT_MS
@@ -54,6 +64,9 @@ var _overflow_bar: ColorRect = null
 var _bubbles: Array = []
 var _gesture = null   # TouchGestureRecognizer (preloaded TouchGesture)
 var _knob_drag: bool = false
+# L3 food raw→cooked cross-fade (heat zone-hold이 쌓일수록 cooked로 변함).
+var _food_raw: TextureRect = null
+var _food_cooked: TextureRect = null
 
 
 func _module_start(params: Dictionary) -> void:
@@ -64,19 +77,25 @@ func _module_start(params: Dictionary) -> void:
 	_perfect_at = float(params.get("perfect_at", PERFECT_AT_DEFAULT))
 	_perfect_w = float(params.get("perfect_width", PERFECT_WIDTH_DEFAULT))
 
-	# 음식별 조리 도구 (pot / grill / deepfry).
+	# L2 — 음식별 base vessel (pot / dolsot / noodle_bowl / grill_pan). action zone 중앙.
 	var food_id: StringName = StringName(String(params.get("food_id", "")))
-	var tool_path: String = ArtRegistry.timing_tool_for(food_id)
-	if ArtRegistry.file_exists(tool_path):
-		_attach_dish_shadow(Vector2(640, 900), 480.0)
+	var vessel_path: String = ArtRegistry.cooking_vessel_for(food_id)
+	if vessel_path != "":
+		_attach_dish_shadow(Vector2(VESSEL_RECT.position.x + VESSEL_RECT.size.x * 0.5,
+			VESSEL_RECT.position.y + VESSEL_RECT.size.y * 0.66), 460.0)
 		var tool_tex := TextureRect.new()
-		tool_tex.texture = load(tool_path)
-		tool_tex.position = Vector2(380, 560)
-		tool_tex.size = Vector2(520, 520)
-		tool_tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		tool_tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		tool_tex.texture = load(vessel_path)
+		Composition.fit_texture_rect(tool_tex, VESSEL_RECT)
 		tool_tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		tool_tex.z_index = L2_BASE
 		add_child(tool_tex)
+
+	# L3 — food raw→cooked cross-fade. 냄비 안. zone-hold가 쌓일수록 cooked 드러남.
+	_build_food_sprites(food_id)
+
+	# P0 #4 (2026-06-07): stew dish(순두부 t2_013)는 broth + 김치/두부 잠김 연출.
+	# "stew = 재료가 국물 안에 잠겨 끓는다 (위에 dry로 올리는 게 아님)".
+	_build_stew_extras(food_id)
 
 	# 불꽃 (procedural Polygon2D — 냄비 아래). heat에 따라 scale.
 	_build_flame()
@@ -86,6 +105,9 @@ func _module_start(params: Dictionary) -> void:
 	_build_overflow_bar()
 	# 세로 heat dial + ideal zone band.
 	_build_dial()
+	# L5 — 끓는 김 (steam). 냄비 입구 위.
+	_attach_steam(Vector2(VESSEL_RECT.position.x + VESSEL_RECT.size.x * 0.5,
+		VESSEL_RECT.position.y + 30.0), 3)
 
 	# heat % readout.
 	_pct_lbl = Label.new()
@@ -126,10 +148,12 @@ func _module_start(params: Dictionary) -> void:
 func _build_flame() -> void:
 	# 불꽃 = 외곽(주황) + 코어(노랑) 2겹 Polygon2D. pivot은 바닥(불 밑동).
 	# z_index를 양수로 — CookingBackground(Control) 위에 그려지게. 냄비 밑동에서 솟아오름.
+	# 불꽃 = vessel 밑동에서 솟아오름 (heat glow). vessel 아래 중앙.
 	var flame_holder := Node2D.new()
 	flame_holder.name = "FlameHolder"
-	flame_holder.position = Vector2(640, 1120)
-	flame_holder.z_index = 5
+	flame_holder.position = Vector2(VESSEL_RECT.position.x + VESSEL_RECT.size.x * 0.5,
+		VESSEL_RECT.position.y + VESSEL_RECT.size.y - 10.0)
+	flame_holder.z_index = L2_BASE - 1   # vessel 뒤(밑동에서 핥는 느낌)
 	add_child(flame_holder)
 	_flame = Polygon2D.new()
 	_flame.polygon = PackedVector2Array([
@@ -146,30 +170,111 @@ func _build_flame() -> void:
 	flame_holder.add_child(_flame_core)
 
 
+## L3 — food raw + cooked standalone sprite를 같은 rect에 겹쳐 둠. cooked는 처음 투명,
+## zone-hold가 쌓일수록 fade-in(끓어 익는 느낌). 냄비 안 중앙.
+func _build_food_sprites(food_id: StringName) -> void:
+	var sem: Array = ArtRegistry.timing_food_for(food_id)   # [name, before, after]
+	var raw_path: String = ArtRegistry.get_ingredient(String(sem[0]), String(sem[1]))
+	var cooked_path: String = ArtRegistry.get_ingredient(String(sem[0]), String(sem[2]))
+	# food은 vessel 안쪽(58%)에만 — 냄비 위로 안 넘침. ingredient clamp.
+	var food_rect: Rect2 = Composition.rect_inside(VESSEL_RECT, 0.58, -24.0)
+	if raw_path != "":
+		_food_raw = TextureRect.new()
+		_food_raw.texture = load(raw_path)
+		Composition.fit_texture_rect(_food_raw, food_rect)
+		_food_raw.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_food_raw.z_index = L3_INGREDIENT
+		add_child(_food_raw)
+	if cooked_path != "":
+		_food_cooked = TextureRect.new()
+		_food_cooked.texture = load(cooked_path)
+		Composition.fit_texture_rect(_food_cooked, food_rect)
+		_food_cooked.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_food_cooked.modulate = Color(1, 1, 1, 0.0)
+		_food_cooked.z_index = L3_INGREDIENT + 1
+		add_child(_food_cooked)
+
+
 func _build_bubbles() -> void:
-	# 냄비 안 부글부글 — 작은 흰 원들이 heat에 따라 떠오름 (alpha/scale 변조).
+	# 냄비 안 부글부글 — 작은 흰 원들이 heat에 따라 떠오름. vessel 안쪽에만 spawn.
+	var inner: Rect2 = Composition.rect_inside(VESSEL_RECT, 0.55, -20.0)
 	for i in range(6):
 		var b := ColorRect.new()
 		b.color = Color(1, 1, 1, 0.5)
-		b.size = Vector2(28, 28)
-		b.position = Vector2(440.0 + randf_range(0, 380), 640.0 + randf_range(0, 120))
+		b.size = Vector2(24, 24)
+		b.position = Vector2(inner.position.x + randf_range(0, inner.size.x),
+			inner.position.y + randf_range(0, inner.size.y * 0.6))
 		b.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		b.z_index = L3_INGREDIENT + 2
 		add_child(b)
 		_bubbles.append(b)
 
 
+## P0 #4 — stew broth + submerged 재료. stew dish에서만 (그 외 dish 무변경).
+##   1) 국물(broth) — vessel 안쪽 빨간/주황 반투명 fill (boiling stew 표면).
+##   2) submerged 재료(김치/두부) — broth 표면에 부분 잠김(아래쪽 broth로 가려짐).
+## dry pile(위에 올림) 금지 — 재료가 국물 안에 있어야 한다.
+func _build_stew_extras(food_id: StringName) -> void:
+	var fid: String = String(food_id)
+	if not STEW_SUBMERGED.has(fid):
+		return
+	# broth fill — vessel 안쪽(60%) rect, raw food 위(L3_INGREDIENT+0.5)로 살짝 덮어 "잠긴" 느낌.
+	var broth_rect: Rect2 = Composition.rect_inside(VESSEL_RECT, 0.60, -16.0)
+	var broth := ColorRect.new()
+	broth.name = "StewBroth"
+	broth.color = Color(0.74, 0.22, 0.12, 0.55)   # 매운 stew 국물 (gochugaru 베이스)
+	broth.position = Vector2(broth_rect.position.x, broth_rect.position.y + broth_rect.size.y * 0.28)
+	broth.size = Vector2(broth_rect.size.x, broth_rect.size.y * 0.72)
+	broth.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	broth.z_index = L3_INGREDIENT + 1   # raw food(=tofu) 위로 — 국물에 잠긴 느낌
+	add_child(broth)
+	# submerged 재료 토큰 — broth 표면을 가로질러 흩뿌림. 아래 절반은 broth로 가려져 "잠김".
+	var submerged: Array = STEW_SUBMERGED[fid]
+	var idx: int = 0
+	for entry in submerged:
+		var ing_path: String = ArtRegistry.get_ingredient(String(entry[0]), String(entry[1]))
+		if ing_path == "":
+			idx += 1
+			continue
+		var n: int = 3
+		for i in range(n):
+			var tok := TextureRect.new()
+			tok.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			tok.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			tok.custom_minimum_size = Vector2.ZERO
+			tok.texture = load(ing_path)
+			tok.size = Vector2(110, 110)
+			var bx: float = broth_rect.position.x + broth_rect.size.x * (0.18 + 0.62 * float(i) / float(maxi(1, n - 1)))
+			# 토큰 y: broth 표면 부근 — 일부만 위로 나오고 아래는 broth(z 위)로 가려짐.
+			var by: float = broth.position.y + randf_range(-30.0, 20.0) + float(idx) * 40.0
+			tok.position = Vector2(bx - 55.0, by - 70.0)
+			tok.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			tok.z_index = L3_INGREDIENT   # broth(z+1)가 아래쪽을 덮음 → 부분 잠김
+			tok.rotation = deg_to_rad(randf_range(-18.0, 18.0))
+			add_child(tok)
+		idx += 1
+
+
+# overflow 게이지 geometry (vessel 우측에 hug). _apply_heat_visual과 공유.
+const OVERFLOW_X: float = 832.0      # VESSEL 오른쪽 가장자리 옆
+const OVERFLOW_TOP: float = 600.0
+const OVERFLOW_H: float = 420.0
+
 func _build_overflow_bar() -> void:
-	# 국물 차오름 게이지 (불 셀수록 risk ↑) — 냄비 우측 세로 바.
-	var track := ColorRect.new()
-	track.color = Color(0, 0, 0, 0.16)
-	track.size = Vector2(40, 520)
-	track.position = Vector2(960, 560)
+	# 국물 차오름 게이지 (불 셀수록 risk ↑) — 냄비 우측 rounded 세로 바.
+	var track := Panel.new()
+	var tsb := StyleBoxFlat.new()
+	tsb.bg_color = Color(0.20, 0.14, 0.10, 0.35)
+	tsb.set_corner_radius_all(18)
+	track.add_theme_stylebox_override("panel", tsb)
+	track.size = Vector2(36, OVERFLOW_H)
+	track.position = Vector2(OVERFLOW_X, OVERFLOW_TOP)
 	track.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(track)
 	_overflow_bar = ColorRect.new()
 	_overflow_bar.color = Color(0.85, 0.30, 0.18, 0.85)
-	_overflow_bar.size = Vector2(40, 0)
-	_overflow_bar.position = Vector2(960, 1080)   # 아래에서 위로 차오름
+	_overflow_bar.size = Vector2(36, 0)
+	_overflow_bar.position = Vector2(OVERFLOW_X, OVERFLOW_TOP + OVERFLOW_H)  # 아래에서 위로
 	_overflow_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_overflow_bar)
 
@@ -288,9 +393,9 @@ func _apply_heat_visual() -> void:
 			b.scale = Vector2.ONE * (0.6 + _heat * 0.9)
 	# overflow bar (아래→위 차오름).
 	if is_instance_valid(_overflow_bar):
-		var oh: float = _overflow * 520.0
+		var oh: float = _overflow * OVERFLOW_H
 		_overflow_bar.size.y = oh
-		_overflow_bar.position.y = 1080.0 - oh
+		_overflow_bar.position.y = OVERFLOW_TOP + OVERFLOW_H - oh
 		_overflow_bar.color = Color(0.85, 0.30, 0.18, 0.5 + _overflow * 0.45)
 	# knob/flame tint when overflowing (위험 신호).
 	if is_instance_valid(_pct_lbl):
@@ -311,6 +416,13 @@ func _update_hold_fill(elapsed: float) -> void:
 	# 진행 대비 zone 유지율 → 막대 폭.
 	var ratio: float = _zone_hold_ms / maxf(elapsed, 1.0)
 	_fill.size.x = clampf(ratio, 0.0, 1.0) * 840.0
+	# L3 raw→cooked cross-fade — 시간(끓인 누적)에 비례해 cooked 드러남.
+	if is_instance_valid(_food_cooked):
+		var cook_prog: float = clampf(_zone_hold_ms / maxf(_duration_ms * 0.7, 1.0), 0.0, 1.0)
+		_food_cooked.modulate.a = cook_prog
+	if is_instance_valid(_food_raw):
+		var cook_prog2: float = clampf(_zone_hold_ms / maxf(_duration_ms * 0.7, 1.0), 0.0, 1.0)
+		_food_raw.modulate.a = 1.0 - cook_prog2 * 0.85
 
 
 func _finalize_timing() -> void:
@@ -335,7 +447,8 @@ func _finalize_timing() -> void:
 		score = 0.0                                                              # 방치: 0
 	score = clampf(score * (1.0 - burn_pen * 0.4), 0.0, 100.0)
 	var j := RhythmJudge.PERFECT if score >= 80.0 else (RhythmJudge.GOOD if score >= 40.0 else RhythmJudge.MISS)
-	_safe_feedback(j, Vector2(640, 900))
+	_safe_feedback(j, Vector2(VESSEL_RECT.position.x + VESSEL_RECT.size.x * 0.5,
+		VESSEL_RECT.position.y + VESSEL_RECT.size.y * 0.5))
 	if is_instance_valid(_pct_lbl):
 		if score >= 80.0:
 			_pct_lbl.text = "Perfect simmer!"

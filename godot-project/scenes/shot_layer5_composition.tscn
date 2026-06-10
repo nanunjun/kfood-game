@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://blayer5comp01"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_layer5_composition.gd" id="1_layer5"]
+
+[node name="ShotLayer5" type="Node"]
+script = ExtResource("1_layer5")

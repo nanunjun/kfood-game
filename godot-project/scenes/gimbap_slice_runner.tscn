@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bgimbapvs0a01"]
+
+[ext_resource type="Script" path="res://scripts/gameplay/gimbap_slice_runner.gd" id="1_gvsrun"]
+
+[node name="GimbapSliceRunner" type="Node2D"]
+script = ExtResource("1_gvsrun")

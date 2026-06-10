@@ -45,7 +45,8 @@ const DISTRACTOR_POOL := [
 var _food: FoodDefinition
 var _layer: CanvasLayer
 var _bg: TextureRect
-var _acc_prep: float = 0.0fvar _acc_method: float = 0.0
+var _acc_prep: float = 0.0
+var _acc_method: float = 0.0
 var _acc_timing: float = 0.0
 
 

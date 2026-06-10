@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://b6r1puf51ue3r"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_roll_two_finger.gd" id="1_r2f"]
+
+[node name="ShotRollTwoFinger" type="Node"]
+script = ExtResource("1_r2f")

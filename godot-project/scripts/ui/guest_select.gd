@@ -14,6 +14,7 @@ extends Control
 
 const MenuDB := preload("res://scripts/gameplay/menu_db.gd")
 const MarketBG := preload("res://scripts/ui/market_bg.gd")
+const KitchenBackgroundScript := preload("res://scripts/ui/kitchen_background.gd")
 const GuestCardV2Script := preload("res://scripts/ui/components/guest_card_v2.gd")
 
 ## Set by menu_select before scene change.
@@ -21,11 +22,21 @@ static var pending_menu_id: String = "m_kimchi_jjigae"
 
 
 func _ready() -> void:
-	add_child(MarketBG.new())  # Korean traditional-market backdrop
-
 	var menu: Dictionary = MenuDB.get_menu(pending_menu_id)
 	if menu.is_empty():
 		menu = MenuDB.get_menu("t1_002")
+
+	# World-integration (2026-06-08): flat 베이지 procedural MarketBG → 실제 한식 주방 환경 art.
+	# menu→cooking 흐름 전체가 같은 따뜻한 world를 공유 (이 화면만 beige void면 일관성 깨짐).
+	# 음식의 unlock level→market→L1/L3/L5 BG. scrim 0.16 = 카드 가독성용 얇은 막.
+	var gs_lvl: int = int(menu.get("unlock_level", 1))
+	var gs_lv_data: Dictionary = MenuDB.get_level(gs_lvl)
+	var bg = KitchenBackgroundScript.new()
+	bg.fill_screen = true
+	bg.dish_anchor_y = 700.0
+	bg.scrim_alpha = 0.16
+	bg.env_key = KitchenBackgroundScript.env_key_for_market(String(gs_lv_data.get("market", "home")))
+	add_child(bg)
 
 	# --- title ---
 	var title := Label.new()

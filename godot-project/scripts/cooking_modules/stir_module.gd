@@ -15,18 +15,23 @@
 ## SCORING 무변경 (§6.1): 회전 수 × 속도 일관성 → accuracy(cook factor) ∈ [0,1]. 기존 stir
 ## rhythm-tap 평균이 만들던 도메인과 동일한 [0,100] score를 그대로 `module_completed(score)`
 ## 로 emit — runner contract / MODULE_TO_FACTOR("stir"->cook) 동일.
+## 5-Layer Composition (2026-06-06): base vessel(L2) + cooked food(L3) + active tool(L4) +
+## steam/stir-trail(L5). frying_pan/pot/dolsot/mixing_bowl + kimchi_cooked/noodle_cooked/
+## beef_cooked/tofu_cubed + ladle/spatula/spoon/chopsticks. standalone sprite runtime 합성.
 extends "res://scripts/cooking_modules/base_module.gd"
 
-const ArtRegistry := preload("res://scripts/gameplay/art_registry.gd")
 const TouchGesture := preload("res://scripts/cooking_modules/touch_gesture.gd")
+# ArtRegistry / CookingFX 는 base_module(CookingModule)에서 상속.
 
 const TWO_PI: float = TAU
 
 # 회전 목표(바퀴 수). 적정 stir = TARGET_TURNS 바퀴를 안정적 속도로.
 const TARGET_TURNS_DEFAULT: float = 3.0
 
-# stir 중심 (웍/그릇 중앙) — 화면 1080x1920 기준.
-const STIR_CENTER := Vector2(540, 1000)
+# stir 중심 (웍/그릇 중앙) — ACTION zone 중앙 (화면 1080x1920 기준).
+const STIR_CENTER := Vector2(540, 816)
+# 웍/팬 vessel rect (action zone 중앙, ≤65%W/42%H). food/token은 이 안에만.
+const VESSEL_RECT := Rect2(180, 560, 720, 500)
 
 # variant → 목표 반경/각속도 band/원 모양 힌트.
 #   wok   : 빠른 작은 원 (김치볶음밥) — 작은 반경, 빠른 각속도.
@@ -64,6 +69,14 @@ var _gesture = null   # TouchGestureRecognizer (preloaded TouchGesture)
 var _count_lbl: Label = null
 var _season_col: Color = Color(0.86, 0.30, 0.20)
 
+# P0 #1 (2026-06-07): season이 stir보다 먼저 오는 red-sauce dish는 stir 시작 시점에 이미
+# 양념이 묻어 있어야 한다 (떡볶이 = 떡이 빨간 고추장 양념에 졸여지는 중). 초기 sauce coat 비율.
+# (그 외 dish는 0.0 → 기존과 동일. scoring 무관 순수 시각.)
+const INITIAL_SAUCE_COAT := {
+	"t1_003": 0.7,   # 떡볶이 — 고추장 양념(season)이 stir 전에 끝남 → 떡이 이미 빨갛게 코팅
+	"t2_014": 0.55,  # 불고기 — marinade(season)가 stir 전 → 고기 양념 코팅
+}
+
 
 func _module_start(params: Dictionary) -> void:
 	_attach_cooking_bg(1000.0)
@@ -77,51 +90,54 @@ func _module_start(params: Dictionary) -> void:
 	_build_header("Stir", "%s — keep the finger moving without lifting." % _variant["label"])
 
 	var food_id: StringName = StringName(String(params.get("food_id", "")))
-	_attach_dish_shadow(Vector2(540, 1060), 560.0)
+	_attach_dish_shadow(Vector2(STIR_CENTER.x, VESSEL_RECT.position.y + VESSEL_RECT.size.y * 0.62), 540.0)
 
-	# 웍/팬 LOCK art (stirfry.png) — stir 중심 아래.
-	var tool_path: String = ArtRegistry.TOOL_STIRFRY
-	if ArtRegistry.file_exists(tool_path):
+	# L2 — 음식별 base vessel (frying_pan / pot / dolsot / mixing_bowl). action zone 중앙.
+	var vessel_path: String = ArtRegistry.cooking_vessel_for(food_id)
+	if vessel_path != "":
 		var wok_tex := TextureRect.new()
-		wok_tex.texture = load(tool_path)
-		wok_tex.position = Vector2(140, 720)
-		wok_tex.size = Vector2(800, 600)
-		wok_tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		wok_tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		wok_tex.texture = load(vessel_path)
+		Composition.fit_texture_rect(wok_tex, VESSEL_RECT)
 		wok_tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		wok_tex.z_index = L2_BASE
 		add_child(wok_tex)
 	else:
 		var wok := Panel.new()
-		wok.position = Vector2(240, 880)
-		wok.size = Vector2(600, 360)
+		wok.position = VESSEL_RECT.position
+		wok.size = VESSEL_RECT.size
 		var wsb := StyleBoxFlat.new()
 		wsb.bg_color = Color(0.22, 0.20, 0.21)
-		wsb.set_corner_radius_all(180)
+		wsb.set_corner_radius_all(int(VESSEL_RECT.size.y * 0.5))
 		wok.add_theme_stylebox_override("panel", wsb)
 		wok.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		wok.z_index = L2_BASE
 		add_child(wok)
 
-	# 음식 완성 hero (food_img) — 웍 안 중앙. stir 진행에 따라 churn(회전)·sheen.
-	var food_img: String = ArtRegistry.food(food_id)
-	if ArtRegistry.file_exists(food_img):
+	# L3 — cooked food standalone, vessel 안에만 (vessel의 64% 안쪽 rect, ingredient clamp).
+	var sem: Array = ArtRegistry.stir_food_for(food_id)   # [name, cooked_state]
+	var food_path: String = ArtRegistry.get_ingredient(String(sem[0]), String(sem[1]))
+	if food_path != "":
+		var food_rect: Rect2 = Composition.rect_inside(VESSEL_RECT, 0.62, -20.0)
 		_food_hero = TextureRect.new()
-		_food_hero.texture = load(food_img)
-		_food_hero.position = Vector2(STIR_CENTER.x - 230, STIR_CENTER.y - 160)
-		_food_hero.size = Vector2(460, 320)
-		_food_hero.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		_food_hero.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		_food_hero.texture = load(food_path)
+		Composition.fit_texture_rect(_food_hero, food_rect)
 		_food_hero.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_food_hero.pivot_offset = Vector2(230, 160)
 		_food_hero.modulate = Color(0.96, 0.96, 0.96, 0.95)
+		_food_hero.z_index = L3_INGREDIENT
 		add_child(_food_hero)
 
-	# churn 재료 토큰 (orbit하는 작은 ingredient cut sprites 또는 색 토큰).
+	# churn 재료 토큰 (orbit하는 작은 standalone ingredient sprite).
 	_build_ingredient_tokens(food_id)
 
-	# 주걱/뒤집개 (procedural) — 손가락 따라 원을 그림.
-	_spoon = _build_spoon()
-	_spoon.position = STIR_CENTER + Vector2(0, -float(_variant["radius"]))
-	_spoon.visible = false
+	# P0 #1 — red-sauce dish는 stir 시작부터 양념 코팅 visible (season이 stir 전에 끝났으므로).
+	_apply_initial_sauce_coat(String(food_id))
+
+	# L4 — active tool standalone (spatula / spoon / chopsticks). 손가락 따라 원을 그림.
+	# 시작부터 visible — vessel 위 대각선 대기(무슨 도구로 stir하는지 즉시 인지).
+	_spoon = _build_spoon(food_id)
+	_spoon.position = STIR_CENTER + Vector2(float(_variant["radius"]) * 0.5, -float(_variant["radius"]) * 0.5)
+	_spoon.rotation = deg_to_rad(18.0)
+	_spoon.visible = true
 	add_child(_spoon)
 
 	# 진행 표시 (회전 수 + 상태).
@@ -134,7 +150,7 @@ func _module_start(params: Dictionary) -> void:
 	add_child(_count_lbl)
 	_update_count_lbl()
 
-	_attach_steam(Vector2(540, 900), 3)
+	_attach_steam(Vector2(STIR_CENTER.x, VESSEL_RECT.position.y + 40.0), 3)
 
 	# 입력 인식기 — 화면 전체 continuous drag.
 	_gesture = TouchGesture.new()
@@ -161,22 +177,26 @@ func _infer_variant(food_id: String) -> String:
 # --- 재료 churn 토큰 ---
 
 func _build_ingredient_tokens(food_id: StringName) -> void:
-	# cut sprite 있으면 mini 복제, 없으면 색 토큰. orbit 반경 안에 흩뿌림.
-	var cut_path: String = ArtRegistry.prep_cut(food_id)
-	var has_cut: bool = ArtRegistry.file_exists(cut_path)
+	# 5-layer: cooked standalone ingredient mini 복제, 없으면 색 토큰. orbit 반경 안에 흩뿌림.
+	var sem: Array = ArtRegistry.stir_food_for(food_id)
+	var ing_path: String = ArtRegistry.get_ingredient(String(sem[0]), String(sem[1]))
+	var has_ing: bool = ing_path != ""
 	var token_cols := [
 		Color(0.92, 0.32, 0.22), Color(0.96, 0.84, 0.32), Color(0.46, 0.78, 0.34),
 		Color(0.94, 0.92, 0.86), Color(0.36, 0.22, 0.16), Color(0.85, 0.40, 0.55),
 	]
 	var n: int = 7
+	var tok_size := Vector2(92, 92)   # mini orbit token (token clamp).
 	for i in range(n):
 		var token: Control
-		if has_cut:
+		if has_ing:
 			var t := TextureRect.new()
-			t.texture = load(cut_path)
-			t.size = Vector2(96, 96)
+			# expand_mode를 texture 할당 전에 IGNORE_SIZE로 — 1024px 최소크기 박힘 방지.
 			t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			t.custom_minimum_size = Vector2.ZERO
+			t.texture = load(ing_path)
+			t.size = tok_size
 			token = t
 		else:
 			var c := ColorRect.new()
@@ -184,22 +204,37 @@ func _build_ingredient_tokens(food_id: StringName) -> void:
 			c.size = Vector2(72, 72)
 			token = c
 		token.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		token.z_index = 6
-		# orbit 초기 위치 — 중심 둘레 흩뿌림.
+		token.z_index = L3_INGREDIENT + 2
+		# orbit 초기 위치 — 중심 둘레 흩뿌림. radius를 vessel 안쪽으로 clamp (경계 안 넘게).
+		var max_r: float = minf(VESSEL_RECT.size.x, VESSEL_RECT.size.y) * 0.30
 		var phase: float = float(i) / float(n) * TWO_PI
-		var r: float = float(_variant["radius"]) * randf_range(0.35, 0.85)
+		var r: float = minf(float(_variant["radius"]), max_r) * randf_range(0.30, 0.72)
 		var off := Vector2(cos(phase), sin(phase)) * r
-		token.position = STIR_CENTER + off - token.size * 0.5
+		token.position = STIR_CENTER + off - tok_size * 0.5
 		add_child(token)
 		_ingredients.append({
-			"node": token, "phase": phase, "radius": r, "size": token.size,
+			"node": token, "phase": phase, "radius": r, "size": tok_size,
 		})
 
 
-func _build_spoon() -> Node2D:
-	# 주걱 — 손잡이(갈색) + 둥근 머리(나무색). 손가락 위치로 따라옴.
+## L4 active tool standalone (spatula / spoon / chopsticks / ladle), 미존재 시 procedural 주걱.
+func _build_spoon(food_id: StringName) -> Node2D:
 	var spoon := Node2D.new()
-	spoon.z_index = 50
+	spoon.z_index = L4_TOOL
+	var tool_path: String = ArtRegistry.active_tool_for(food_id, "spatula")
+	if tool_path != "":
+		var tex := TextureRect.new()
+		# expand_mode를 texture 할당 전에 — 1024px 최소크기 박힘 방지(거대 도구 버그).
+		tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		tex.custom_minimum_size = Vector2.ZERO
+		tex.texture = load(tool_path)
+		tex.size = Vector2(170, 250)
+		tex.position = Vector2(-85, -190)   # 손잡이 위, 머리 아래(stir 중심 쪽)
+		tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		spoon.add_child(tex)
+		return spoon
+	# procedural fallback — 주걱.
 	var handle := Polygon2D.new()
 	handle.polygon = PackedVector2Array([
 		Vector2(-12, -140), Vector2(12, -140), Vector2(14, 30), Vector2(-14, 30),
@@ -287,6 +322,26 @@ func _on_drag_released(_info: Dictionary) -> void:
 		_finalize_stir()
 
 
+# --- P0 #1: red-sauce dish 초기 양념 코팅 (season → stir 순서 반영) ---
+
+func _apply_initial_sauce_coat(food_id: String) -> void:
+	if not INITIAL_SAUCE_COAT.has(food_id):
+		return
+	var coat: float = float(INITIAL_SAUCE_COAT[food_id])
+	_spread = coat
+	_sheen = coat * 0.5
+	# 음식 hero를 양념색 쪽으로 미리 tint (빨간 고추장 코팅).
+	if is_instance_valid(_food_hero):
+		var tint: Color = Color(1, 1, 1).lerp(_season_col.lightened(0.18), coat * 0.7)
+		_food_hero.modulate = Color(tint.r, tint.g, tint.b, 0.97)
+	# orbit 토큰(떡 조각)도 양념색으로.
+	for ing in _ingredients:
+		var node: Control = ing["node"]
+		if is_instance_valid(node) and node is TextureRect:
+			var tint2: Color = Color(1, 1, 1).lerp(_season_col.lightened(0.10), coat * 0.7)
+			node.modulate = Color(tint2.r, tint2.g, tint2.b, 1.0)
+
+
 # --- churn visual: 재료가 회전 따라 orbit + sheen + 양념 spread ---
 
 func _apply_churn(ang_speed: float) -> void:
@@ -311,6 +366,9 @@ func _apply_churn(ang_speed: float) -> void:
 		var tint: Color = Color(1, 1, 1).lerp(_season_col.lightened(0.4), _spread * 0.45)
 		var sheen_boost: float = 1.0 + _sheen * 0.12
 		_food_hero.modulate = Color(tint.r * sheen_boost, tint.g * sheen_boost, tint.b * sheen_boost, 0.97)
+	# L5 — stir motion trail (주걱 자취). 빠를수록 자주.
+	if ang_speed > 1.5:
+		CookingFX.stir_trail(self, STIR_CENTER, float(_variant["radius"]) * 0.8, _prev_angle)
 
 
 func _update_count_lbl() -> void:

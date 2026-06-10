@@ -1,0 +1,13 @@
+food_id,name_en,name_ko,food_fact,ingredient_fact,cooking_tip,culture_fact
+t1_002,Ramyeon,라면,"Korea's #1 comfort food, slurped at 3am.","Gochugaru: sun-dried Korean chili flakes.","Cook noodles 30s short for the perfect chew.","An egg cracked in = instant Korean upgrade."
+t1_004,Gimbap,김밥,"The picnic roll every Korean kid grew up on.","Danmuji: bright yellow pickled radish crunch.","Brush the seaweed with sesame oil for shine.","Mom-made gimbap means a school field trip."
+t2_008,Bibimbap,비빔밥,"A rainbow bowl you mix into one bite.","Gochujang: fermented red chili paste, sweet-spicy.","Mix from the bottom so every grain gets sauce.","Five colors = five elements, balance in a bowl."
+m_kimchi_jjigae,Kimchi Stew,김치찌개,"The bubbling pot that warms a cold day.","Aged kimchi: older means deeper, tangier flavor.","Older kimchi creates a richer, sour broth.","Shared from one pot is Korean jeong (정)."
+t2_012,Galbi-gui,갈비구이,"The star of any Korean BBQ table.","Short ribs marinated in soy, pear, and garlic.","Grated pear tenderizes the beef naturally.","Grilling at the table is a shared celebration."
+t2_010,Japchae,잡채,"Glassy noodles that shine at every party.","Dangmyeon: chewy noodles made from sweet potato.","Toss noodles in sesame oil so they never clump.","No Korean holiday feast is complete without it."
+t1_003,Tteokbokki,떡볶이,"Chewy rice cakes in sweet-spicy red sauce.","Tteok: pillowy rice cakes, soft and bouncy.","Simmer the sauce till it coats every cake.","The #1 street snack outside every Korean school."
+t2_013,Sundubu Jjigae,순두부찌개,"Silky tofu stew that arrives still bubbling.","Sundubu: uncurdled tofu, soft as custard.","Crack a raw egg in the boiling pot to finish.","Served in a hot stone pot to stay piping hot."
+t1_006,Haemul Pajeon,해물파전,"A crispy seafood pancake for rainy days.","Buchu and squid give it the sea-and-green crunch.","High heat makes the edges crackly-crisp.","Koreans crave pajeon when the rain falls."
+t1_007,Korean Corn Dog,한국식 콘도그,"The viral cheese-pull street snack.","Mozzarella: the stretch that broke the internet.","Roll in sugar right after frying while hot.","A modern Korean twist that went global on social."
+t1_008,Janchi Guksu,잔치국수,"Warm noodle soup served at celebrations.","Somyeon: thin wheat noodles in clear broth.","Rinse noodles in cold water for a clean bite.","Janchi means feast; once a wedding-day dish."
+t1_005,Kimchi Fried Rice,김치볶음밥,"Leftover rice and kimchi, fried into magic.","Kimchi: fermented cabbage, Korea's soul food.","Use day-old rice so it fries up loose, not mushy.","The classic fridge-cleanout meal in every home."

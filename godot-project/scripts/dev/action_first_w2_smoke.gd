@@ -6,7 +6,7 @@
 ##   3) 내부 score 함수가 다양한 gesture quality 입력에 대해 [0,100] 반환 + 단조성 sanity.
 ##        stir   : _compute_stir_score (회전 수 × 속도 일관성)
 ##        arrange: _finalize (correct/total × 100)
-##        roll   : _compute_roll_score(progress, burst)  (roll 완성도 + release timing)
+##        roll   : _compute_roll_score(left_p, right_p, pressure, smooth)  (two-finger balance)
 ##        flip   : _compute_flip_score(turns, dir_ok) + _speed_to_turns + _direction_accuracy
 ##   4) MODULE_TO_FACTOR 매핑 무변경 (stir→cook, arrange→prep, roll→prep, flip→cook).
 ##   5) gesture quality → output signal 변환 (속도/회전/방향이 점수 도메인으로 정상 사상).
@@ -130,30 +130,43 @@ func _test_score_domain_arrange() -> void:
 		inst.queue_free()
 
 
-# 3c) roll _compute_roll_score 도메인 — roll 완성도 + release timing.
+# 3c) roll _compute_roll_score 도메인 — TWO-FINGER 새 공식 (40 balance / 25 pressure /
+#     20 distance / 15 smooth). 신규 signature: (left_p, right_p, pressure_metric, smooth_metric).
 func _test_score_domain_roll() -> void:
-	print("\n[3c] roll _compute_roll_score(progress, burst) domain [0,100]")
+	print("\n[3c] roll _compute_roll_score(left_p, right_p, pressure, smooth) domain [0,100]")
 	var inst = RollMod.new()
 	get_tree().root.add_child(inst)
 	inst.start(_params("t1_004", {}))
 	await get_tree().process_frame
+	# perfect = 균등 두 손가락(sweet zone) + 동시 pressure + smooth.
+	# crooked = 좌우 차 큼. loose = push 낮음. burst = push 과다. rough = smooth 낮음.
 	var cases := [
-		{"name": "under-rolled (0.3)", "p": 0.3, "burst": false},
-		{"name": "ideal sweet (0.9)", "p": 0.9, "burst": false},
-		{"name": "over-rolled (1.15)", "p": 1.15, "burst": false},
-		{"name": "burst (fast)", "p": 0.9, "burst": true},
+		{"name": "perfect (0.92/0.92, p1, s1)", "l": 0.92, "r": 0.92, "pr": 1.0, "sm": 1.0},
+		{"name": "crooked (0.95/0.45)",          "l": 0.95, "r": 0.45, "pr": 0.9, "sm": 0.8},
+		{"name": "loose (0.30/0.30)",            "l": 0.30, "r": 0.30, "pr": 0.6, "sm": 0.8},
+		{"name": "burst (1.18/1.18)",            "l": 1.18, "r": 1.18, "pr": 0.9, "sm": 0.7},
+		{"name": "rough (0.90/0.90, s0.1)",      "l": 0.90, "r": 0.90, "pr": 0.9, "sm": 0.1},
 	]
-	var s_under: float = -1.0
-	var s_ideal: float = -1.0
+	var s_perfect: float = -1.0
+	var s_crooked: float = -1.0
+	var s_loose: float = -1.0
 	var s_burst: float = -1.0
+	var s_rough: float = -1.0
 	for c in cases:
-		var sc: float = inst._compute_roll_score(float(c["p"]), bool(c["burst"]))
+		var sc: float = inst._compute_roll_score(float(c["l"]), float(c["r"]),
+				float(c["pr"]), float(c["sm"]))
 		_ok("roll '%s' in [0,100] (=%.1f)" % [c["name"], sc], sc >= 0.0 and sc <= 100.0)
-		if c["name"].begins_with("under"): s_under = sc
-		elif c["name"].begins_with("ideal"): s_ideal = sc
+		if c["name"].begins_with("perfect"): s_perfect = sc
+		elif c["name"].begins_with("crooked"): s_crooked = sc
+		elif c["name"].begins_with("loose"): s_loose = sc
 		elif c["name"].begins_with("burst"): s_burst = sc
-	_ok("roll ideal > under-rolled", s_ideal > s_under)
-	_ok("roll burst capped (< ideal)", s_burst < s_ideal)
+		elif c["name"].begins_with("rough"): s_rough = sc
+	# 새 공식 sanity — perfect가 모든 failure mode보다 높아야 한다 (contract 도메인 유지).
+	_ok("roll perfect high (>=90)", s_perfect >= 90.0)
+	_ok("roll perfect > crooked (좌우 balance 40%)", s_perfect > s_crooked)
+	_ok("roll perfect > loose (distance/pressure)", s_perfect > s_loose)
+	_ok("roll perfect > burst (over-pressure)", s_perfect > s_burst)
+	_ok("roll perfect > rough (smooth 15%)", s_perfect > s_rough)
 	inst.queue_free()
 
 

@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://c3mfigvk5476b"
+
+[deps]
+
+files=["res://data/learning_facts.name.translation", "res://data/learning_facts.name.translation", "res://data/learning_facts.food.translation", "res://data/learning_facts.ingredient.translation", "res://data/learning_facts.cooking.translation", "res://data/learning_facts.culture.translation"]
+
+source_file="res://data/learning_facts.csv"
+dest_files=["res://data/learning_facts.name.translation", "res://data/learning_facts.name.translation", "res://data/learning_facts.food.translation", "res://data/learning_facts.ingredient.translation", "res://data/learning_facts.cooking.translation", "res://data/learning_facts.culture.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

@@ -21,6 +21,39 @@ func _ready() -> void:
 	# 2.5 * 2 = 5 friendship
 	_assert("friendship[junho] = 5 (projected from intimacy 2.5)", sm.friendship_of("junho"), 5)
 	_assert("friendship[mina] = 8 (projected from intimacy 4.0)", sm.friendship_of("mina"), 8)
+	# Player-Chef Integration (2026-06-08): 기존 save(player_chef_gender 필드 없음)가 backward-
+	# compatible하게 로드되는지 — _merge로 default "" 유지 + has_chosen_chef()=false.
+	_assert("player_chef_gender backward-compat default ''", sm.player_chef_gender(), "")
+	_assert("has_chosen_chef() false on legacy save", sm.has_chosen_chef(), false)
+	# Player-Name Personalization (2026-06-08): legacy save(player_name 필드 없음)가 backward-
+	# compatible하게 로드 — _merge로 default "" 유지 → has_player_name()=false → name entry 1회 진입.
+	_assert("player_name backward-compat default ''", sm.player_name(), "")
+	_assert("has_player_name() false on legacy save", sm.has_player_name(), false)
+	_assert("player_name_display fallback 'My Chef'", sm.player_name_display(), "My Chef")
+	# 기존 progression 무변경 확인 (level/money/stock 보존).
+	_assert("legacy level preserved (3)", int(sm.data.get("level", 0)), 3)
+	_assert("legacy money preserved (12000)", int(sm.data.get("money", 0)), 12000)
+	# set + reload round-trip: 선택 저장 후 has_chosen_chef true.
+	sm.set_player_chef_gender("m")
+	sm.callv("_load", [])
+	_assert("player_chef_gender persists across reload ('m')", sm.player_chef_gender(), "m")
+	_assert("has_chosen_chef() true after select", sm.has_chosen_chef(), true)
+	# invalid gender ignored.
+	sm.set_player_chef_gender("x")
+	_assert("invalid gender ignored (stays 'm')", sm.player_chef_gender(), "m")
+	# Player-Name: set + reload round-trip + trim/squash/length sanitization.
+	sm.set_player_name("  Bob  ")
+	sm.callv("_load", [])
+	_assert("player_name trimmed + persists ('Bob')", sm.player_name(), "Bob")
+	_assert("has_player_name() true after input", sm.has_player_name(), true)
+	_assert("player_name_display returns input ('Bob')", sm.player_name_display(), "Bob")
+	# blank/whitespace input rejected (returns false, value unchanged).
+	var blank_ok = sm.set_player_name("   ")
+	_assert("blank name rejected (returns false)", blank_ok, false)
+	_assert("blank input keeps prior name ('Bob')", sm.player_name(), "Bob")
+	# length clamp to 12 + internal whitespace squash.
+	sm.set_player_name("Super  Long   Chef  Name  Here")
+	_assert("name clamped to 12 chars", sm.player_name().length() <= 12, true)
 	# clean up
 	sm.reset_progress()
 	print("=== done ===")

@@ -13,21 +13,59 @@
 ##
 ## SCORING 무변경 (§6.1 / §3.6): default=1.0(×90), marinade=tap 평균. 출력 score 도메인
 ## [0,100] 동일, `module_completed(score)` contract 동일.
+## 5-Layer Composition (2026-06-06): base vessel(L2) + dish food(L3) + seasoning_bottle(L4)
+## + seasoning particles(L5). abstract color block 제거 — 실제 seasoning_bottle sprite로
+## 기울여 양념을 뿌린다. standalone sprite runtime 합성.
 extends "res://scripts/cooking_modules/base_module.gd"
 
-const ArtRegistry := preload("res://scripts/gameplay/art_registry.gd")
 const TouchGesture := preload("res://scripts/cooking_modules/touch_gesture.gd")
+
+
+## _BrothMask — bowl 안쪽 broth surface에만 깔리는 soft 타원 mask (그릇 rim 절대 안 덮음).
+## 사각 ColorRect는 그릇 rim 위로 하드 모서리가 보여 sticker처럼 됐다. 이 Control은 rect 안에
+## radial-faded 타원을 _draw로 그려 broth 표면처럼 자연스럽게 붉어진다. vessel/rim/배경 보존.
+class _BrothMask extends Control:
+	var broth_color: Color = Color(0.82, 0.18, 0.12, 0.0):
+		set(v):
+			broth_color = v
+			queue_redraw()
+
+	func _draw() -> void:
+		if broth_color.a <= 0.001:
+			return
+		var c := Vector2(size.x * 0.5, size.y * 0.5)
+		var rx: float = size.x * 0.47
+		var ry: float = size.y * 0.43
+		# 단일 타원 polygon — 균일 alpha (겹침 알파 누적 없음 = 음식 위 solid red lid 방지).
+		# broth만 semi-transparent하게 redder, 면·계란은 broth 너머로 그대로 read. 그릇 rim은
+		# 타원이 안쪽이라 안 덮음(vessel 보존). 가장자리는 한 단계 옅은 ring으로 soft fade.
+		var segs: int = 48
+		# 가장자리 soft halo 먼저(살짝 큰 타원, 더 옅게) → 그 위에 메인 pool. 이 순서라야
+		# 중앙은 메인 균일 alpha만, rim 쪽은 halo 옅은 띠만 보여 알파 누적/solid red lid가 없다.
+		var halo := PackedVector2Array()
+		for i in range(segs):
+			var ang2: float = TAU * float(i) / float(segs)
+			halo.append(c + Vector2(cos(ang2) * rx * 1.07, sin(ang2) * ry * 1.07))
+		draw_colored_polygon(halo, Color(broth_color.r, broth_color.g, broth_color.b, broth_color.a * 0.45))
+		# 메인 broth pool (균일 alpha — 면·계란이 broth 너머로 그대로 보임).
+		var pts := PackedVector2Array()
+		for i in range(segs):
+			var ang: float = TAU * float(i) / float(segs)
+			pts.append(c + Vector2(cos(ang) * rx, sin(ang) * ry))
+		draw_colored_polygon(pts, Color(broth_color.r, broth_color.g, broth_color.b, broth_color.a))
 
 const MARINADE_BPM: float = 60.0
 const MARINADE_TAPS: int = 3
 const LEAD_IN_MS: float = 900.0
 
 # 양념 종류 → 입자 색 + 낙하 스타일 (§5.2).
+# applicator: "bottle" = 양념병 tilt(가루·줄기·drizzle) / "dollop" = paste 한 덩이 spoon으로 얹기.
+# P0 #3 (2026-06-07): gochujang은 paste dollop (병/가루 아님 — 비빔밥 정답). gochugaru는 가루 bottle.
 const SEASONING_STYLES := {
-	"gochugaru":  {"col": Color(0.82, 0.18, 0.12), "style": "powder",  "label": "Chili flakes"},
-	"soy":        {"col": Color(0.30, 0.18, 0.08), "style": "stream",  "label": "Soy sauce"},
-	"sesame_oil": {"col": Color(0.92, 0.78, 0.28), "style": "drizzle", "label": "Sesame oil"},
-	"gochujang":  {"col": Color(0.78, 0.20, 0.15), "style": "powder",  "label": "Gochujang"},
+	"gochugaru":  {"col": Color(0.82, 0.18, 0.12), "style": "powder",  "applicator": "bottle", "label": "Chili flakes", "sprite": ""},
+	"soy":        {"col": Color(0.30, 0.18, 0.08), "style": "stream",  "applicator": "bottle", "label": "Soy sauce", "sprite": ""},
+	"sesame_oil": {"col": Color(0.92, 0.78, 0.28), "style": "drizzle", "applicator": "bottle", "label": "Sesame oil", "sprite": ""},
+	"gochujang":  {"col": Color(0.78, 0.20, 0.15), "style": "paste",   "applicator": "dollop", "label": "Gochujang", "sprite": "gochujang_dollop"},
 }
 
 var _mode: String = "simple"
@@ -39,7 +77,23 @@ var _bottle: Node2D = null
 var _bottle_home: Vector2 = Vector2.ZERO
 var _food_hero: TextureRect = null
 var _gesture = null   # TouchGestureRecognizer (preloaded TouchGesture)
-var _style: Dictionary = SEASONING_STYLES["gochujang"]
+
+# Seasoning tint layer-bug fix (2026-06-08) — vessel/tool/bg는 절대 물들이지 않는다.
+#   _food_hero (VesselSprite/dish-with-bowl 단일 이미지)는 그릇을 포함하므로 여기에
+#   modulate를 걸면 bowl까지 빨갛게 = 버그. tint 대상을 명시적으로 분리:
+#     _food_content : FoodContentSprite  — 그릇 없는 음식 내용물(content_only asset 있을 때만).
+#                     tint 허용 node. 없으면 null → overlay/particle fallback.
+#     _season_overlay: SeasoningOverlay  — dish-with-bowl 단일 이미지에서 bowl 안쪽에만
+#                     깔리는 semi-transparent red broth mask (그릇 rim 제외). 단일 image
+#                     modulate 금지의 안전한 대체. content_only가 없을 때 사용.
+#   _tint_target = 실제로 색을 입힐 node(content sprite 또는 overlay). vessel(_food_hero)이
+#   content_only를 가진 경우엔 _food_hero 전체 modulate를 절대 하지 않는다.
+var _food_content: TextureRect = null   # FoodContentSprite (tint OK)
+var _season_overlay: _BrothMask = null  # SeasoningOverlay (bowl 안 broth mask, tint OK)
+var _vessel_only: bool = false          # _food_hero가 vessel(그릇 포함) 단일 이미지인가
+# 기본 양념 style = bottle 가루(gochugaru). seasoning param 미지정 dish는 양념병 연출.
+# gochujang dollop은 seasoning="gochujang"을 명시한 dish(비빔밥·떡볶이)에서만 (P0 #3: silent dollop 방지).
+var _style: Dictionary = SEASONING_STYLES["gochugaru"]
 var _particles_holder: Control = null
 
 # simple-mode pour 누적 상태.
@@ -60,8 +114,10 @@ func _module_start(params: Dictionary) -> void:
 	if seas != "" and SEASONING_STYLES.has(seas):
 		_style = SEASONING_STYLES[seas]
 	_particles_holder = Control.new()
+	_particles_holder.name = "SeasoningParticles"   # L5 입자/aroma — vessel과 무관(tint 0).
 	_particles_holder.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_particles_holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_particles_holder.z_index = L5_VFX   # L5 — seasoning 입자는 항상 위
 	if _mode == "marinade":
 		_start_marinade(params)
 	else:
@@ -81,42 +137,99 @@ func _module_start(params: Dictionary) -> void:
 # --- simple mode (tilt + hold) ---
 
 func _start_simple() -> void:
-	_build_header("Season", "Tilt the bottle over the food until it's just right.")
+	# applicator에 맞춘 howto (dollop=spoon paste / bottle=tilt). 자세한 gesture = bottom band.
+	if String(_style.get("applicator", "bottle")) == "dollop":
+		_build_header("Season", "Add seasoning to the dish")
+		_build_instruction_band("Spoon the %s paste onto the food" % String(_style.get("label", "sauce")), "↓")
+	else:
+		_build_header("Season", "Add seasoning to the dish")
+		_build_instruction_band("Tilt the %s bottle over the food" % String(_style.get("label", "")), "↧")
 
-	# 음식 hero (양념 받을 대상).
+	# 음식 hero (양념 받을 대상) — action zone 중앙 (dish hero clamp ≤70%W/45%H).
 	var food_id_s: StringName = StringName(String(_params.get("food_id", "")))
 	var food_img: String = ArtRegistry.food(food_id_s)
+	var content_img: String = ArtRegistry.food_content_only(food_id_s)
+	var food_rect: Rect2 = Composition.rect_in_zone(
+		Composition.ZONE_ACTION, Composition.CLAMP_DISH_HERO, Vector2(0.5, 0.5))
 	if ArtRegistry.file_exists(food_img):
+		# VesselSprite — dish-with-bowl 단일 이미지(그릇 포함). 절대 modulate하지 않는다.
 		_food_hero = TextureRect.new()
+		_food_hero.name = "VesselSprite"
 		_food_hero.texture = load(food_img)
-		_food_hero.position = Vector2(300, 980)
-		_food_hero.size = Vector2(480, 480)
-		_food_hero.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		_food_hero.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		Composition.fit_texture_rect(_food_hero, food_rect)
 		_food_hero.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_food_hero.pivot_offset = Vector2(240, 240)
+		_food_hero.z_index = L3_INGREDIENT
 		add_child(_food_hero)
-		_attach_dish_shadow(Vector2(540, 1440), 420.0)
+		_attach_dish_shadow(Vector2(540, food_rect.position.y + food_rect.size.y * 0.85), 440.0)
+		# tint 대상 분리 — content_only asset이 있으면 그릇 없는 내용물만 그 위에 올려 tint.
+		if ArtRegistry.file_exists(content_img):
+			# FoodContentSprite — 그릇 없는 음식 내용물. tint는 여기만 (vessel 보존).
+			_food_content = TextureRect.new()
+			_food_content.name = "FoodContentSprite"
+			_food_content.texture = load(content_img)
+			Composition.fit_texture_rect(_food_content, food_rect)
+			_food_content.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			_food_content.z_index = L3_INGREDIENT + 1
+			add_child(_food_content)
+			_vessel_only = false
+		else:
+			# dish-with-bowl 단일 이미지 — 전체 image tint 금지. bowl 안쪽에만 깔리는
+			# SeasoningOverlay(semi-transparent red broth mask, 그릇 rim 제외)로 표현.
+			_vessel_only = true
+			_build_season_overlay(food_rect)
 
-	# 양념병 (procedural) — 위쪽, drag로 기울여 음식 위에서 뿌림.
+	# 양념병 — upper-right에 음식 향해 기울인 채 대기. drag로 더 기울여 뿌림.
+	# action zone 중앙(864) 위쪽-우측에 대기 — food을 향해 angled (어떤 양념/동작인지 즉시 인지).
 	_bottle = _build_bottle()
-	_bottle_home = Vector2(540, 760)
+	_bottle_home = Vector2(760, 620)
 	_bottle.position = _bottle_home
+	_bottle.rotation = deg_to_rad(28.0)   # food 향해 기울임 (즉시 인지).
 	add_child(_bottle)
+	# simple mode 실시간 hint = instruction band (별도 _hint label 제거 — 일관 위치).
+	_hint = null
 
-	_hint = Label.new()
-	_hint.position = Vector2(40, 1560)
-	_hint.size = Vector2(1000, 70)
-	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_hint.add_theme_font_size_override("font_size", 40)
-	_hint.add_theme_color_override("font_color", Color(0.45, 0.32, 0.18))
-	_hint.text = "%s — tilt to pour" % _style["label"]
-	add_child(_hint)
+
+## SeasoningOverlay — dish-with-bowl 단일 이미지(라면 t1_002 등)에서 vessel 전체를 물들이지
+## 않기 위한 안전 대체. food_rect 안쪽(bowl rim 제외) 중앙 타원 영역에만 semi-transparent
+## red broth mask를 깔아 broth/내용물만 붉어 보이게 한다. 그릇 rim/배경은 건드리지 않는다.
+## 처음엔 알파 0 (양념 전엔 색 변화 0) → pour 양에 따라 _apply_food_tint가 알파를 올림.
+func _build_season_overlay(food_rect: Rect2) -> void:
+	# bowl 안쪽 broth 영역 = food_rect의 ~52% 중앙(rim·테두리 제외). broth surface는 살짝 위.
+	var inner: Rect2 = Composition.rect_inside(food_rect, 0.52, -food_rect.size.y * 0.06)
+	_season_overlay = _BrothMask.new()
+	_season_overlay.name = "SeasoningOverlay"
+	_season_overlay.position = inner.position
+	_season_overlay.size = inner.size
+	_season_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# z = vessel 바로 위, particles(L5) 아래. broth 표면처럼 보이게.
+	_season_overlay.z_index = L3_INGREDIENT + 1
+	# 시작 알파 0 (양념 전엔 broth 색 변화 0). soft 타원 — 그릇 rim 절대 안 덮음.
+	_season_overlay.broth_color = Color(_style["col"].r, _style["col"].g, _style["col"].b, 0.0)
+	add_child(_season_overlay)
 
 
 func _build_bottle() -> Node2D:
+	# P0 #3: gochujang은 paste dollop applicator (양념병 아님). spoon + gochujang_dollop sprite.
+	if String(_style.get("applicator", "bottle")) == "dollop":
+		return _build_dollop_applicator()
 	var bottle := Node2D.new()
-	bottle.z_index = 40
+	bottle.z_index = L4_TOOL
+	# L4 — seasoning_bottle standalone sprite. 있으면 procedural 대신 사용.
+	var path: String = ArtRegistry.get_tool("seasoning_bottle")
+	if path != "":
+		var tex := TextureRect.new()
+		# expand_mode를 texture 할당 전에 — 1024px 최소크기 박힘 방지(거대 병 버그). ≤38%H.
+		tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		tex.custom_minimum_size = Vector2.ZERO
+		tex.texture = load(path)
+		tex.size = Vector2(220, 400)
+		# origin이 병 입구(아래) 근처 오도록 — 기울이면 입구에서 쏟아짐.
+		tex.position = Vector2(-110, -56)
+		tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bottle.add_child(tex)
+		return bottle
+	# procedural fallback (sprite 미존재).
 	# Node2D는 origin(0,0) 기준 회전 — pivot_offset 불필요 (Control 전용 속성).
 	# body
 	var body := Polygon2D.new()
@@ -148,6 +261,56 @@ func _build_bottle() -> Node2D:
 	lbl.color = Color(0.98, 0.94, 0.86, 0.9)
 	bottle.add_child(lbl)
 	return bottle
+
+
+## P0 #3 — gochujang dollop applicator: spoon(L4 tool) + gochujang_dollop paste blob.
+## 양념병 tilt가 아니라 paste 한 덩이를 spoon으로 음식 위에 얹는다 (비빔밥 정답 연출).
+func _build_dollop_applicator() -> Node2D:
+	var holder := Node2D.new()
+	holder.z_index = L4_TOOL
+	# spoon (L4 tool standalone). 미존재 시 procedural 작은 숟가락.
+	var spoon_path: String = ArtRegistry.get_tool("spoon")
+	if spoon_path != "":
+		var stex := TextureRect.new()
+		stex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		stex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		stex.custom_minimum_size = Vector2.ZERO
+		stex.texture = load(spoon_path)
+		stex.size = Vector2(180, 300)
+		stex.position = Vector2(-90, -150)
+		stex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		holder.add_child(stex)
+	else:
+		var handle := Polygon2D.new()
+		handle.polygon = PackedVector2Array([
+			Vector2(-12, -150), Vector2(12, -150), Vector2(14, 40), Vector2(-14, 40),
+		])
+		handle.color = Color(0.62, 0.42, 0.24)
+		holder.add_child(handle)
+	# gochujang dollop paste blob — spoon 머리(아래)에 얹힌 한 덩이. drag로 음식에 떨어뜨림.
+	var dollop_sprite: String = String(_style.get("sprite", ""))
+	var dollop_path: String = ArtRegistry.get_ingredient(dollop_sprite) if dollop_sprite != "" else ""
+	if dollop_path != "":
+		var dtex := TextureRect.new()
+		dtex.name = "DollopBlob"
+		dtex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		dtex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		dtex.custom_minimum_size = Vector2.ZERO
+		dtex.texture = load(dollop_path)
+		dtex.size = Vector2(140, 140)
+		dtex.position = Vector2(-70, 30)
+		dtex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		holder.add_child(dtex)
+	else:
+		# procedural paste blob (sprite 미존재 placeholder).
+		var blob := Polygon2D.new()
+		blob.polygon = PackedVector2Array([
+			Vector2(-50, 70), Vector2(0, 40), Vector2(50, 70), Vector2(56, 110),
+			Vector2(0, 130), Vector2(-56, 110),
+		])
+		blob.color = _style.get("col", Color(0.78, 0.20, 0.15))
+		holder.add_child(blob)
+	return holder
 
 
 # --- gesture: tilt + hold pour (simple) / tilt-massage (marinade) ---
@@ -206,37 +369,54 @@ func _on_drag_released(_info: Dictionary) -> void:
 		_finalize_simple()
 
 
+## Seasoning tint — broth/food surface만 붉어지게. vessel/tool/bg는 절대 건드리지 않는다.
+## (layer-bug fix 2026-06-08) 이전엔 _food_hero(dish-with-bowl 단일 이미지) 전체에 modulate를
+## 걸어 bowl까지 빨갛게 됐다. 이제 tint 대상은 content-only sprite 또는 SeasoningOverlay뿐이며,
+## vessel을 포함한 _food_hero에는 절대 modulate하지 않는다.
 func _apply_food_tint() -> void:
-	if not is_instance_valid(_food_hero):
-		return
-	# 부은 양에 따라 음식 표면이 양념색 쪽으로 + 윤기(살짝 밝게).
-	var amt: float = clampf(_poured, 0.0, 1.0)
-	var tint: Color = Color(1, 1, 1).lerp(_style["col"].lightened(0.35), amt * 0.5)
-	_food_hero.modulate = Color(tint.r, tint.g, tint.b, 1.0)
+	# 부은 양 [0,1]. perfect 구간에서 broth가 식욕 도는 warm red, 과다면 darker red.
+	var amt: float = clampf(_poured, 0.0, 1.3)
+	if is_instance_valid(_food_content):
+		# FoodContentSprite (그릇 없는 내용물) — 여기만 modulate. vessel(_food_hero) 보존.
+		var over: float = clampf(amt - 1.0, 0.0, 0.3)              # 과다분
+		var target: Color = _style["col"].lightened(0.35)
+		if over > 0.0:
+			target = _style["col"].darkened(over * 0.8)           # 과다 → darker red
+		var tint: Color = Color(1, 1, 1).lerp(target, clampf(amt, 0.0, 1.0) * 0.5)
+		_food_content.modulate = Color(tint.r, tint.g, tint.b, 1.0)
+	elif is_instance_valid(_season_overlay):
+		# SeasoningOverlay — bowl 안쪽 soft broth mask 알파만 올림(그릇 rim/배경 보존).
+		# 적정까지 깊어지는 warm red, 과다면 darker red. vessel은 원색 그대로.
+		var a: float = clampf(amt, 0.0, 1.0) * 0.34               # max ~0.34 (broth semi-transp, 그릇 X)
+		var over2: float = clampf(amt - 1.0, 0.0, 0.3)
+		var col: Color = _style["col"]
+		if over2 > 0.0:
+			col = _style["col"].darkened(over2 * 0.9)             # 과다 → broth darker red
+			a = minf(a + over2 * 0.55, 0.52)
+		_season_overlay.broth_color = Color(col.r, col.g, col.b, a)
+	# else: tint 대상 없음 → particle/steam VFX만 (vessel tint 0). 안전 fallback.
 
 
 func _update_simple_hint() -> void:
-	if not is_instance_valid(_hint):
-		return
 	if _poured < 0.45:
-		_hint.text = "%s — keep tilting…" % _style["label"]
+		_set_instruction("Keep tilting the %s…" % _style["label"])
 	elif _poured <= 1.05:
-		_hint.text = "Balanced! release"
+		_set_instruction("Balanced! Release to finish")
 	else:
-		_hint.text = "That's plenty — release"
+		_set_instruction("That's plenty — release")
 
 
 func _finalize_simple() -> void:
-	if is_instance_valid(_hint):
-		_hint.text = "Seasoned!"
-	_safe_feedback(RhythmJudge.GOOD, Vector2(540, 1200))
+	_set_instruction("Seasoned!")
+	_safe_feedback(RhythmJudge.GOOD, Vector2(540, 1100))
 	# §6.1 default: accuracy_season = 1.0 → 기존 auto-pour 90.0 그대로 (balance 무변경).
 	_finish(90.0)
 
 
 # --- marinade mode (tilt-and-massage 연속) ---
 func _start_marinade(params: Dictionary) -> void:
-	_build_header("Marinade", "Tilt and massage the sauce into the meat on every beat.")
+	_build_header("Marinade", "Work the sauce into the meat")
+	_build_instruction_band("Massage on every beat", "⟳")
 	var taps: int = int(params.get("marinade_taps", MARINADE_TAPS))
 	var bpm: float = float(params.get("marinade_bpm", MARINADE_BPM))
 	var spacing := 60000.0 / maxf(bpm, 1.0)
@@ -244,58 +424,57 @@ func _start_marinade(params: Dictionary) -> void:
 	for i in range(taps):
 		_taps.append({"target_ms": _start_ms + float(i) * spacing, "judged": false, "score": 0.0})
 
-	# marinade 보울 LOCK art.
+	# L2 — marinade base vessel (mixing_bowl). action zone 중앙 (vessel clamp).
 	var food_id: StringName = StringName(String(params.get("food_id", "")))
-	var bowl_path: String = ArtRegistry.TOOL_MARINATE
-	if ArtRegistry.file_exists(bowl_path):
+	var bowl_rect: Rect2 = Composition.rect_in_zone(
+		Composition.ZONE_ACTION, Composition.CLAMP_VESSEL, Vector2(0.5, 0.5))
+	var bowl_path: String = ArtRegistry.get_vessel("mixing_bowl")
+	if bowl_path != "":
 		var bowl_tex := TextureRect.new()
+		bowl_tex.name = "VesselSprite"   # marinade bowl — NEVER modulated (tint 금지).
 		bowl_tex.texture = load(bowl_path)
-		bowl_tex.position = Vector2(240, 900)
-		bowl_tex.size = Vector2(600, 420)
-		bowl_tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		bowl_tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		Composition.fit_texture_rect(bowl_tex, bowl_rect)
 		bowl_tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bowl_tex.z_index = L2_BASE
 		add_child(bowl_tex)
 	else:
 		var bowl := Panel.new()
-		bowl.position = Vector2(290, 940)
-		bowl.size = Vector2(500, 320)
+		bowl.position = bowl_rect.position
+		bowl.size = bowl_rect.size
 		var bsb := StyleBoxFlat.new()
 		bsb.bg_color = Color(0.30, 0.20, 0.12)
-		bsb.set_corner_radius_all(160)
+		bsb.set_corner_radius_all(int(bowl_rect.size.y * 0.5))
 		bowl.add_theme_stylebox_override("panel", bsb)
 		bowl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bowl.z_index = L2_BASE
 		add_child(bowl)
 
-	# hero ingredient (얇은 소고기) — 보울 위.
-	var ing_path: String = ArtRegistry.prep_whole(food_id)
-	if ArtRegistry.file_exists(ing_path):
+	# L3 — hero ingredient (양념 받을 고기) — bowl 안쪽에만.
+	var ing_path: String = ArtRegistry.get_ingredient("beef", "marinated")
+	if ing_path == "":
+		ing_path = ArtRegistry.get_ingredient("beef", "raw")
+	if ing_path != "":
+		var meat_rect: Rect2 = Composition.rect_inside(bowl_rect, 0.62, -10.0)
+		# FoodContentSprite — 고기 내용물(그릇 없음). marinade tint는 여기만 (bowl 보존).
 		_food_hero = TextureRect.new()
+		_food_hero.name = "FoodContentSprite"
 		_food_hero.texture = load(ing_path)
-		_food_hero.position = Vector2(360, 980)
-		_food_hero.size = Vector2(360, 260)
-		_food_hero.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		_food_hero.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		Composition.fit_texture_rect(_food_hero, meat_rect)
 		_food_hero.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_food_hero.z_index = L3_INGREDIENT
 		add_child(_food_hero)
+		_food_content = _food_hero   # marinade에서 _food_hero == content (vessel 미포함).
 
-	_attach_dish_shadow(Vector2(540, 1320), 480.0)
-
-	_hint = Label.new()
-	_hint.position = Vector2(40, 1560)
-	_hint.size = Vector2(1000, 70)
-	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_hint.add_theme_font_size_override("font_size", 38)
-	_hint.add_theme_color_override("font_color", Color(0.45, 0.32, 0.18))
-	_hint.text = "Massage on the beat…"
-	add_child(_hint)
+	_attach_dish_shadow(Vector2(540, bowl_rect.position.y + bowl_rect.size.y * 0.78), 480.0)
+	_hint = null   # marinade hint도 instruction band 사용 (일관 위치).
 
 
 ## tilt-massage 동작 = drag로 보울 위를 문지름. 비트 근처에서 문지르면 그 tap을 판정.
 func _massage_at(pos: Vector2) -> void:
 	if _finished:
 		return
-	if pos.y < 900.0 or pos.y > 1320.0:
+	# massage 유효 영역 = action zone (vessel 주변).
+	if pos.y < 400.0 or pos.y > 1300.0:
 		return
 	var now := _now_ms()
 	# 가장 가까운 미판정 tap을 마사지로 판정.
@@ -381,6 +560,9 @@ func _emit_particles(at: Vector2, n: int) -> void:
 			"drizzle":
 				p.size = Vector2(14, 14)
 				p.color = _style["col"].lightened(0.2)
+			"paste":  # gochujang dollop — 큰 paste 덩이 (가루 아님)
+				p.size = Vector2(26, 26)
+				p.color = _style["col"]
 			_:  # powder
 				p.size = Vector2(10, 10)
 		var sx: float = at.x + randf_range(-60.0, 60.0)

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://ccnt7lode0ru7"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_one_module.gd" id="1_one"]
+
+[node name="ShotOneModule" type="Node"]
+script = ExtResource("1_one")

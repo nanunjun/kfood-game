@@ -15,18 +15,23 @@
 ## ∈ [0,1]. 기존 single-tap window 점수(100 center → 50 edge → 0 late)가 만들던 도메인과 동일한
 ## [0,100] score를 그대로 `module_completed(score)` 로 emit — runner contract / MODULE_TO_FACTOR
 ## ("flip"->cook) 동일.
+## 5-Layer Composition (2026-06-06): base pan(L2) + food raw→cooked(L3 swap) + tool(L4) +
+## flip-arc/oil-splash/browning(L5). frying_pan/grill_pan + beef_raw→beef_cooked +
+## spatula/tongs. standalone sprite runtime 합성.
 extends "res://scripts/cooking_modules/base_module.gd"
 
-const ArtRegistry := preload("res://scripts/gameplay/art_registry.gd")
 const TouchGesture := preload("res://scripts/cooking_modules/touch_gesture.gd")
+# ArtRegistry / CookingFX 는 base_module(CookingModule)에서 상속.
 
 # flick 속도(px/sec) → 공중 회전 수 매핑. IDEAL_SPEED 부근이 깔끔한 1바퀴.
 const SPEED_MIN: float = 1400.0          # 이하 = 반뒤집(flop).
 const SPEED_IDEAL: float = 3200.0        # 적정 = 한 바퀴.
 const SPEED_MAX: float = 5400.0          # 이상 = 과회전.
 
-# 음식 hero 화면 위치.
-const FOOD_CENTER := Vector2(540, 1040)
+# pan vessel rect = action zone 중앙 (≤65%W/42%H). food은 pan 안.
+const PAN_RECT := Rect2(180, 560, 720, 500)
+# 음식 hero 중심 = pan 중앙.
+const FOOD_CENTER := Vector2(540, 800)
 
 # variant → 목표 flick 방향(도, 0=오른쪽 90=아래 -90=위) + 허용 방향 오차(도).
 #   pajeon : swipe-up (위로 뒤집기) → -90도.
@@ -49,6 +54,8 @@ var _cake: Control = null
 var _gesture = null   # TouchGestureRecognizer (preloaded TouchGesture)
 var _state_lbl: Label = null
 var _face_up: bool = false               # 착지 후 뒤집힘 상태(texture flip).
+var _cooked_tex: Texture2D = null        # L3 swap target — cooked sprite (raw→cooked).
+var _tool: Node2D = null                 # L4 active tool (spatula / tongs).
 
 
 func _module_start(params: Dictionary) -> void:
@@ -62,58 +69,66 @@ func _module_start(params: Dictionary) -> void:
 	_build_header("Flip", "%s — give it a quick flick." % _variant["label"])
 
 	var food_id: StringName = StringName(String(params.get("food_id", "")))
-	_attach_dish_shadow(Vector2(540, 1280), 540.0)
+	_attach_dish_shadow(Vector2(FOOD_CENTER.x, PAN_RECT.position.y + PAN_RECT.size.y * 0.66), 520.0)
 
-	# 팬 LOCK art (panfry.png) — 음식 아래.
-	var pan_path: String = ArtRegistry.TOOL_PANFRY
-	if ArtRegistry.file_exists(pan_path):
+	# L2 — 음식별 pan vessel (frying_pan / grill_pan). action zone 중앙.
+	var pan_path: String = ArtRegistry.cooking_vessel_for(food_id)
+	if pan_path != "":
 		var pan_tex := TextureRect.new()
 		pan_tex.texture = load(pan_path)
-		pan_tex.position = Vector2(240, 880)
-		pan_tex.size = Vector2(600, 400)
-		pan_tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		pan_tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		Composition.fit_texture_rect(pan_tex, PAN_RECT)
 		pan_tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		pan_tex.z_index = L2_BASE
 		add_child(pan_tex)
 	else:
 		var pan := Panel.new()
-		pan.position = Vector2(240, 900)
-		pan.size = Vector2(600, 360)
+		pan.position = PAN_RECT.position
+		pan.size = PAN_RECT.size
 		var psb := StyleBoxFlat.new()
 		psb.bg_color = Color(0.20, 0.18, 0.19)
-		psb.set_corner_radius_all(180)
+		psb.set_corner_radius_all(int(PAN_RECT.size.y * 0.5))
 		pan.add_theme_stylebox_override("panel", psb)
 		pan.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		pan.z_index = L2_BASE
 		add_child(pan)
 
-	# 음식 hero — 팬 위. flick으로 공중 회전.
-	var food_img: String = ArtRegistry.food(food_id)
-	if ArtRegistry.file_exists(food_img):
+	# L3 — food raw→cooked swap. beef_raw 시작, flip 성공 시 beef_cooked로 교체. pan 안쪽에만.
+	var sem: Array = ArtRegistry.flip_food_for(food_id)   # [name, before_state, after_state]
+	var raw_path: String = ArtRegistry.get_ingredient(String(sem[0]), String(sem[1]))
+	var cooked_path: String = ArtRegistry.get_ingredient(String(sem[0]), String(sem[2]))
+	_cooked_tex = load(cooked_path) if ArtRegistry.file_exists(cooked_path) else null
+	var food_rect: Rect2 = Composition.rect_inside(PAN_RECT, 0.60, -16.0)
+	if raw_path != "":
 		_cake_tex = TextureRect.new()
-		_cake_tex.texture = load(food_img)
-		_cake_tex.position = Vector2(FOOD_CENTER.x - 210, FOOD_CENTER.y - 140)
-		_cake_tex.size = Vector2(420, 280)
-		_cake_tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		_cake_tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		_cake_tex.texture = load(raw_path)
+		Composition.fit_texture_rect(_cake_tex, food_rect)
 		_cake_tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_cake_tex.pivot_offset = Vector2(210, 140)
 		_cake_tex.modulate = Color(1.02, 1.0, 0.94, 1)
+		_cake_tex.z_index = L3_INGREDIENT
 		add_child(_cake_tex)
 		_cake = _cake_tex
 	else:
 		_cake_panel = Panel.new()
-		_cake_panel.position = Vector2(FOOD_CENTER.x - 210, FOOD_CENTER.y - 120)
-		_cake_panel.size = Vector2(420, 240)
-		_cake_panel.pivot_offset = Vector2(210, 120)
+		_cake_panel.position = food_rect.position
+		_cake_panel.size = food_rect.size
+		_cake_panel.pivot_offset = food_rect.size * 0.5
 		var csb := StyleBoxFlat.new()
 		csb.bg_color = Color(0.86, 0.62, 0.30)
 		csb.set_corner_radius_all(120)
 		_cake_panel.add_theme_stylebox_override("panel", csb)
 		_cake_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_cake_panel.z_index = L3_INGREDIENT
 		add_child(_cake_panel)
 		_cake = _cake_panel
 
-	_attach_steam(Vector2(540, 940), 2)
+	# L4 — active tool (spatula / tongs). 팬 오른쪽 가장자리에 대기 (visible).
+	_tool = _build_flip_tool()
+	if _tool != null:
+		_tool.position = Vector2(PAN_RECT.position.x + PAN_RECT.size.x - 40.0,
+			PAN_RECT.position.y + PAN_RECT.size.y * 0.5)
+		add_child(_tool)
+
+	_attach_steam(Vector2(FOOD_CENTER.x, PAN_RECT.position.y + 60.0), 2)
 
 	_state_lbl = Label.new()
 	_state_lbl.position = Vector2(0, 1520)
@@ -142,6 +157,29 @@ func _infer_variant(food_id: String) -> String:
 			return "galbi"
 		_:
 			return "default"
+
+
+## L4 active tool standalone (spatula / tongs). 미존재 시 null(생략 — 음식·팬만).
+func _build_flip_tool() -> Node2D:
+	# 갈비(galbi)는 집게(tongs), 그 외 뒤집개(spatula).
+	var tool_name: String = "tongs" if String(_variant.get("axis", "")) == "horizontal" else "spatula"
+	var path: String = ArtRegistry.get_tool(tool_name)
+	if path == "":
+		return null
+	var holder := Node2D.new()
+	holder.z_index = L4_TOOL
+	holder.rotation = deg_to_rad(-28.0)
+	var tex := TextureRect.new()
+	# expand_mode를 texture 할당 전에 — 1024px 최소크기 박힘 방지(거대 도구 버그).
+	tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tex.custom_minimum_size = Vector2.ZERO
+	tex.texture = load(path)
+	tex.size = Vector2(190, 280)
+	tex.position = Vector2(-95, -240)
+	tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.add_child(tex)
+	return holder
 
 
 # --- gesture: flick (velocity vector) ---
@@ -244,6 +282,8 @@ func _compute_flip_score(turns: float, dir_ok: float) -> float:
 func _play_flip_arc(turns: float, dir: Vector2, _score: float) -> void:
 	if not is_instance_valid(_cake):
 		return
+	# L5 — oil splash at the pan as the food launches.
+	CookingFX.oil_splash(self, FOOD_CENTER + Vector2(0, 40), 9)
 	var node: Control = _cake
 	var start_pos: Vector2 = node.position
 	# arc 높이 — flick 방향이 위일수록 높이 솟음.
@@ -266,13 +306,24 @@ func _play_flip_arc(turns: float, dir: Vector2, _score: float) -> void:
 	var tw2 := node.create_tween()
 	tw2.tween_interval(0.22)
 	tw2.tween_property(node, "position", land_pos, 0.22).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	# 착지 후 texture flip — 반대면 노출 (modulate 살짝 진한 갈색 = 구워진 뒷면).
+	# 착지 후 L3 swap — raw→cooked standalone sprite로 교체(반대면=구워진 면).
 	tw2.tween_callback(func():
 		_face_up = not _face_up
 		if is_instance_valid(node):
 			if node is TextureRect:
-				(node as TextureRect).flip_v = _face_up
-			node.modulate = Color(0.82, 0.58, 0.32) if _face_up else Color(1.02, 1.0, 0.94)
+				var tr := node as TextureRect
+				if _face_up and _cooked_tex != null:
+					tr.texture = _cooked_tex   # 진짜 구워진 sprite로 swap
+					tr.flip_v = false
+					node.modulate = Color(1, 1, 1)
+				elif _face_up:
+					tr.flip_v = true
+					node.modulate = Color(0.82, 0.58, 0.32)
+				else:
+					tr.flip_v = false
+					node.modulate = Color(1.02, 1.0, 0.94)
+			else:
+				node.modulate = Color(0.82, 0.58, 0.32) if _face_up else Color(1.02, 1.0, 0.94)
 	)
 	# 착지 바운스.
 	tw2.tween_property(node, "scale", Vector2(1.06, 0.94), 0.06)
