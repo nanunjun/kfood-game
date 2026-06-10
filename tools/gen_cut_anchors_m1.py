@@ -1,6 +1,14 @@
 """
 K-Food Master — M1 후반 sprint 칼/도마 + cut style 6종 anchor 자동 생성.
 
+⚠️ DEPRECATED — ASSET ARCHITECTURE LOCK 위반 (docs/art/asset-architecture-lock.md §3.1, §6).
+    이 드라이버는 도마(L-TOOL) + 칼(L-TOOL) + cut재료(L-ING) 를 한 PNG 에 BAKED 한다
+    (= 사용자 NEVER-merge mandate 의 "Bad: cutting_board + carrot PNG" 정확한 위반).
+    production 사용 금지. 대체:
+      - cut 결과 재료 → tools/gen_ingredient_tool_hero.py 의 *_prepared/*_cooked variant (standalone)
+      - cutting_board / knife → L-TOOL standalone 으로 분리 생성 → Godot 가 runtime 합성
+    (코드 삭제는 main thread 영역 — 본 배너는 위반 표시 및 전환 경로 안내.)
+
 ADR-005 (4-stage rhythm tap) Stage 2A prerequisite — 재료 준비 = rhythm tap + Knife indicator.
 art-director docs/prompts-library.md v1.14 §5.5 STYLE_SUFFIX_CUT + 칼/도마 base + cut style 6종
 prompt를 그대로 inline 임베드.

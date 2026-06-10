@@ -1,0 +1,10 @@
+﻿Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+OpenGL API 3.3.0 Core Profile Context 25.10.30.02.250923 - Compatibility - Using Device: ATI Technologies Inc. - AMD Radeon(TM) Graphics
+
+[shot] saved user://player_name/gender_select.png (err=0) -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/player_name/gender_select.png
+[shot] saved user://player_name/name_entry.png (err=0) -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/player_name/name_entry.png
+[shot] saved user://player_name/name_entry_typed.png (err=0) -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/player_name/name_entry_typed.png
+[shot] saved user://player_name/menu_with_name.png (err=0) -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/player_name/menu_with_name.png
+[shot] saved user://player_name/result_with_name.png (err=0) -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/player_name/result_with_name.png
+=== player_name shots done ===
+EXIT=0

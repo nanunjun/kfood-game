@@ -1,0 +1,9 @@
+﻿Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+OpenGL API 3.3.0 Core Profile Context 25.10.30.02.250923 - Compatibility - Using Device: ATI Technologies Inc. - AMD Radeon(TM) Graphics
+
+[roll2f-shot] setup -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/roll2f_setup.png (540x960)
+[roll2f-shot] rolling_even -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/roll2f_rolling_even.png (540x960)
+[roll2f-shot] rolling_crooked -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/roll2f_rolling_crooked.png (540x960)
+[roll2f-shot] feedback -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/roll2f_feedback.png (540x960)
+[roll2f-shot] finished -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/roll2f_finished.png (540x960)
+EXIT=0

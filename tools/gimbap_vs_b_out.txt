@@ -1,0 +1,32 @@
+﻿Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+OpenGL API 3.3.0 Core Profile Context 25.10.30.02.250923 - Compatibility - Using Device: ATI Technologies Inc. - AMD Radeon(TM) Graphics
+
+[gvsb-shot] arrange -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gvsb_arrange.png (540x960)
+[roll-vs] prep_q=0.95 sweet_scale=0.98 arrange_bal=1.00 tilt_off=0.000
+[gvsb-shot] roll_mid -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gvsb_roll_mid.png (540x960)
+[roll-vs] prep_q=0.95 sweet_scale=0.98 arrange_bal=1.00 tilt_off=0.000
+[gvsb-shot] roll_perfect -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gvsb_roll_perfect.png (540x960)
+[roll-vs] prep_q=0.15 sweet_scale=0.68 arrange_bal=1.00 tilt_off=0.000
+[gvsb-shot] roll_bad -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gvsb_roll_bad.png (540x960)
+[slice-vs] roll_q=0.95 window_scale=0.98
+[gvsb-shot] slice_clean -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gvsb_slice_clean.png (540x960)
+[slice-vs] roll_q=0.15 window_scale=0.66
+[gvsb-shot] slice_wobble -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gvsb_slice_wobble.png (540x960)
+[gvsb-shot] plating -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gvsb_plating.png (540x960)
+[gvsb-shot] guest reaction line="Wow, the roll is so clean!"
+[gvsb-shot] guest_reaction -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gvsb_guest_reaction.png (540x960)
+[roll-vs] prep_q=0.95 sweet_scale=0.98 arrange_bal=1.00 tilt_off=0.000
+[gvsb-shot] roll_cmp_prep_good -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gvsb_roll_cmp_prep_good.png (540x960)
+[roll-vs] prep_q=0.15 sweet_scale=0.68 arrange_bal=1.00 tilt_off=0.000
+[gvsb-shot] roll_cmp_prep_bad -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gvsb_roll_cmp_prep_bad.png (540x960)
+[slice-vs] roll_q=0.95 window_scale=0.98
+[gvsb-shot] slice_cmp_roll_good -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gvsb_slice_cmp_roll_good.png (540x960)
+[slice-vs] roll_q=0.15 window_scale=0.66
+[gvsb-shot] slice_cmp_roll_bad -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gvsb_slice_cmp_roll_bad.png (540x960)
+[roll-vs] prep_q=0.95 sweet_scale=0.98 arrange_bal=1.00 tilt_off=0.000
+[roll-vs] prep_q=0.15 sweet_scale=0.68 arrange_bal=1.00 tilt_off=0.000
+[gvsb-PROOF] ROLL consequence ??SAME push (1.01/1.01): prep0.95 -> score=100.0 | prep0.15 -> score=93.8 | ?=6.2
+[slice-vs] roll_q=0.95 window_scale=0.98
+[slice-vs] roll_q=0.15 window_scale=0.66
+[gvsb-PROOF] SLICE consequence ??SAME cut (angle=69 spd=1050): roll0.95 -> cut=89.5 | roll0.15 -> cut=77.6 | ?=11.9
+EXIT=0

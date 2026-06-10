@@ -1,0 +1,20 @@
+﻿Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+OpenGL API 3.3.0 Core Profile Context 25.10.30.02.250923 - Compatibility - Using Device: ATI Technologies Inc. - AMD Radeon(TM) Graphics
+
+[fix-shot] === FIX 1: Slice knife scale ===
+[fix-shot] board width = 720 px
+[fix-shot] OLD knife = 200 px = 27.8% board width
+[fix-shot] NEW knife = 420 px = 58.3% board width
+[fix-shot] slice_before -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/fix_slice_before.png (540x960)
+[fix-shot] slice_after -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/fix_slice_after.png (540x960)
+[fix-shot] === FIX 2: Ramyeon season vessel-tint ===
+[fix-shot][assert] ramyeon_season_before: VesselSprite(_food_hero).modulate = (1.000,1.000,1.000) -> vessel_tint=ZERO (PASS)
+[fix-shot][assert] ramyeon_season_before: SeasoningOverlay broth alpha = 0.000 (col 0.82,0.18,0.12)
+[fix-shot] ramyeon_season_before -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/fix_ramyeon_season_before.png (540x960)
+[fix-shot][assert] ramyeon_season_after: VesselSprite(_food_hero).modulate = (1.000,1.000,1.000) -> vessel_tint=ZERO (PASS)
+[fix-shot][assert] ramyeon_season_after: SeasoningOverlay broth alpha = 0.289 (col 0.82,0.18,0.12)
+[fix-shot] ramyeon_season_after -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/fix_ramyeon_season_after.png (540x960)
+[fix-shot][assert] ramyeon_season_too_much: VesselSprite(_food_hero).modulate = (1.000,1.000,1.000) -> vessel_tint=ZERO (PASS)
+[fix-shot][assert] ramyeon_season_too_much: SeasoningOverlay broth alpha = 0.494 (col 0.61,0.13,0.09)
+[fix-shot] ramyeon_season_too_much -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/fix_ramyeon_season_too_much.png (540x960)
+EXIT=0

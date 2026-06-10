@@ -1,0 +1,601 @@
+﻿
+==================== res://scenes/cooking_modules_smoke.tscn ====================
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+=== Cooking Framework 2.0 ??smoke test ===
+
+[1] dish_modules.csv parse
+  [PASS] Ramyeon sequence length = 4  (got=4 expected=4)
+  [PASS] Ramyeon[0] = slice  (got=slice expected=slice)
+  [PASS] Ramyeon[1] = timing  (got=timing expected=timing)
+  [PASS] Ramyeon[2] = season  (got=season expected=season)
+  [PASS] Ramyeon[3] = plate  (got=plate expected=plate)
+  [PASS] Gimbap sequence length = 4  (got=4 expected=4)
+  [PASS] Gimbap[0] = arrange  (got=arrange expected=arrange)
+  [PASS] Gimbap[1] = roll  (got=roll expected=roll)
+  [PASS] Gimbap[2] = slice  (got=slice expected=slice)
+  [PASS] Gimbap[3] = plate  (got=plate expected=plate)
+  [PASS] Tteokbokki length = 5  (got=5 expected=5)
+  [PASS] Tteokbokki has stir  (got=true expected=true)
+  [PASS] Tteokbokki has season  (got=true expected=true)
+  [PASS] Bibimbap length = 5  (got=5 expected=5)
+  [PASS] Bibimbap[0] = slice  (got=slice expected=slice)
+  [PASS] Bibimbap[1] = arrange  (got=arrange expected=arrange)
+  [PASS] Galbi length = 5  (got=5 expected=5)
+  [PASS] Galbi has flip  (got=true expected=true)
+  [PASS] Galbi has timing  (got=true expected=true)
+  [PASS] Bulgogi length = 5  (got=5 expected=5)
+  [PASS] Bulgogi[0] = season (marinade-first)  (got=season expected=season)
+  [PASS] Bulgogi[1] = slice  (got=slice expected=slice)
+
+[2] sequence sanity (all dishes)
+  [PASS] [t1_002] non-empty sequence
+  [PASS] [t1_002] ends in plate  (got=plate expected=plate)
+  [PASS] [t1_002] 'slice' is a valid module
+  [PASS] [t1_002] 'timing' is a valid module
+  [PASS] [t1_002] 'season' is a valid module
+  [PASS] [t1_002] 'plate' is a valid module
+  [PASS] [t1_003] non-empty sequence
+  [PASS] [t1_003] ends in plate  (got=plate expected=plate)
+  [PASS] [t1_003] 'slice' is a valid module
+  [PASS] [t1_003] 'season' is a valid module
+  [PASS] [t1_003] 'stir' is a valid module
+  [PASS] [t1_003] 'timing' is a valid module
+  [PASS] [t1_003] 'plate' is a valid module
+  [PASS] [t1_004] non-empty sequence
+  [PASS] [t1_004] ends in plate  (got=plate expected=plate)
+  [PASS] [t1_004] 'arrange' is a valid module
+  [PASS] [t1_004] 'roll' is a valid module
+  [PASS] [t1_004] 'slice' is a valid module
+  [PASS] [t1_004] 'plate' is a valid module
+  [PASS] [t1_005] non-empty sequence
+  [PASS] [t1_005] ends in plate  (got=plate expected=plate)
+  [PASS] [t1_005] 'slice' is a valid module
+  [PASS] [t1_005] 'stir' is a valid module
+  [PASS] [t1_005] 'timing' is a valid module
+  [PASS] [t1_005] 'plate' is a valid module
+  [PASS] [t1_006] non-empty sequence
+  [PASS] [t1_006] ends in plate  (got=plate expected=plate)
+  [PASS] [t1_006] 'slice' is a valid module
+  [PASS] [t1_006] 'flip' is a valid module
+  [PASS] [t1_006] 'timing' is a valid module
+  [PASS] [t1_006] 'plate' is a valid module
+  [PASS] [t1_007] non-empty sequence
+  [PASS] [t1_007] ends in plate  (got=plate expected=plate)
+  [PASS] [t1_007] 'slice' is a valid module
+  [PASS] [t1_007] 'flip' is a valid module
+  [PASS] [t1_007] 'timing' is a valid module
+  [PASS] [t1_007] 'plate' is a valid module
+  [PASS] [t1_008] non-empty sequence
+  [PASS] [t1_008] ends in plate  (got=plate expected=plate)
+  [PASS] [t1_008] 'slice' is a valid module
+  [PASS] [t1_008] 'timing' is a valid module
+  [PASS] [t1_008] 'arrange' is a valid module
+  [PASS] [t1_008] 'plate' is a valid module
+  [PASS] [t2_008] non-empty sequence
+  [PASS] [t2_008] ends in plate  (got=plate expected=plate)
+  [PASS] [t2_008] 'slice' is a valid module
+  [PASS] [t2_008] 'arrange' is a valid module
+  [PASS] [t2_008] 'season' is a valid module
+  [PASS] [t2_008] 'stir' is a valid module
+  [PASS] [t2_008] 'plate' is a valid module
+  [PASS] [t2_010] non-empty sequence
+  [PASS] [t2_010] ends in plate  (got=plate expected=plate)
+  [PASS] [t2_010] 'slice' is a valid module
+  [PASS] [t2_010] 'arrange' is a valid module
+  [PASS] [t2_010] 'stir' is a valid module
+  [PASS] [t2_010] 'timing' is a valid module
+  [PASS] [t2_010] 'plate' is a valid module
+  [PASS] [t2_012] non-empty sequence
+  [PASS] [t2_012] ends in plate  (got=plate expected=plate)
+  [PASS] [t2_012] 'slice' is a valid module
+  [PASS] [t2_012] 'season' is a valid module
+  [PASS] [t2_012] 'timing' is a valid module
+  [PASS] [t2_012] 'flip' is a valid module
+  [PASS] [t2_012] 'plate' is a valid module
+  [PASS] [t2_013] non-empty sequence
+  [PASS] [t2_013] ends in plate  (got=plate expected=plate)
+  [PASS] [t2_013] 'slice' is a valid module
+  [PASS] [t2_013] 'timing' is a valid module
+  [PASS] [t2_013] 'season' is a valid module
+  [PASS] [t2_013] 'plate' is a valid module
+  [PASS] [t2_014] non-empty sequence
+  [PASS] [t2_014] ends in plate  (got=plate expected=plate)
+  [PASS] [t2_014] 'season' is a valid module
+  [PASS] [t2_014] 'slice' is a valid module
+  [PASS] [t2_014] 'stir' is a valid module
+  [PASS] [t2_014] 'timing' is a valid module
+  [PASS] [t2_014] 'plate' is a valid module
+
+[3] fallback sequence (unknown food)
+  [PASS] unknown food -> FALLBACK_SEQUENCE  (got=["slice", "timing", "season", "plate"] expected=["slice", "timing", "season", "plate"])
+  [PASS] fallback ends in plate
+
+[4] module -> factor mapping (ADR-011 lock)
+  [PASS] slice -> prep  (got=prep expected=prep)
+  [PASS] arrange -> prep  (got=prep expected=prep)
+  [PASS] roll -> prep  (got=prep expected=prep)
+  [PASS] stir -> cook  (got=cook expected=cook)
+  [PASS] flip -> cook  (got=cook expected=cook)
+  [PASS] timing -> timing  (got=timing expected=timing)
+  [PASS] season -> season  (got=season expected=season)
+  [PASS] plate -> plating  (got=plating expected=plating)
+
+[5] PlateModule tier -> score
+  [PASS] plate tier 'best' = 100.0  (got=100.0 expected=100.0)
+  [PASS] plate tier '2nd' = 70.0  (got=70.0 expected=70.0)
+  [PASS] plate tier 'bad' = 20.0  (got=20.0 expected=20.0)
+  [PASS] plate tier 'neutral' = 50.0  (got=50.0 expected=50.0)
+
+[6] Runner.load_sequence helper
+  [PASS] Runner.load_sequence('t1_002')[0] == slice  (got=slice expected=slice)
+  [PASS] Runner.load_sequence('t1_004')[1] == roll  (got=roll expected=roll)
+
+[7] SaveManager compat (records / recipe_xp / friendship preserved)
+[SaveManager] migrated v1 -> v2: friendship={ "junho": 5, "mina": 8 }
+  [PASS] v1 -> v2 bumped version  (got=2 expected=2)
+  [PASS] v1 -> v2 friendship junho=5 (2.5*2)  (got=5 expected=5)
+  [PASS] v1 -> v2 records dict auto-added  (got=27 expected=27)
+  [PASS] v1 -> v2 recipe_xp dict auto-added  (got=27 expected=27)
+  [PASS] v2 (no records) records auto-added  (got=27 expected=27)
+  [PASS] v2 friendship junho preserved  (got=4 expected=4)
+  [PASS] records persisted (junho 7800)  (got=7800 expected=7800)
+  [PASS] recipe_xp persisted (t1_002 = 45)  (got=45 expected=45)
+  [PASS] friendship persisted (junho = 5)  (got=5 expected=5)
+
+[8] all menus.csv dishes resolve to a non-empty sequence
+  [PASS] [t1_002] sequence non-empty
+  [PASS] [t1_002] ends in plate
+  [PASS] [t1_004] sequence non-empty
+  [PASS] [t1_004] ends in plate
+  [PASS] [t1_003] sequence non-empty
+  [PASS] [t1_003] ends in plate
+  [PASS] [t1_008] sequence non-empty
+  [PASS] [t1_008] ends in plate
+  [PASS] [m_kimchi_jjigae] sequence non-empty
+  [PASS] [m_kimchi_jjigae] ends in plate
+  [PASS] [t2_008] sequence non-empty
+  [PASS] [t2_008] ends in plate
+  [PASS] [m_doenjang_jjigae] sequence non-empty
+  [PASS] [m_doenjang_jjigae] ends in plate
+  [PASS] [t2_010] sequence non-empty
+  [PASS] [t2_010] ends in plate
+  [PASS] [t2_014] sequence non-empty
+  [PASS] [t2_014] ends in plate
+  [PASS] [t1_006] sequence non-empty
+  [PASS] [t1_006] ends in plate
+  [PASS] [m_maeuntang] sequence non-empty
+  [PASS] [m_maeuntang] ends in plate
+  [PASS] [t2_013] sequence non-empty
+  [PASS] [t2_013] ends in plate
+=== summary: 148 PASS / 0 FAIL ===
+[scene-exit=0]
+==================== res://scenes/cooking_runner_integration_smoke.tscn ====================
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+=== Cooking Runner ??integration smoke ===
+[runner] t1_002 L1 S=1.00 base=1.00 dish=0.00 pass=true compat=93 mood=happy emo=excellent rec=true seq=["slice", "timing", "season", "plate"]
+  [PASS] [t1_002] factor coverage matches sequence  (got=["plating", "prep", "season", "timing"] expected=["plating", "prep", "season", "timing"])
+  [PASS] [t1_002] plating registered
+  [PASS] [t1_002] plating == 1.0  (got=1.000 expected=1.000)
+[runner] t1_004 L1 S=1.00 base=1.00 dish=0.00 pass=true compat=60 mood=grumpy emo=good rec=true seq=["arrange", "roll", "slice", "plate"]
+  [PASS] [t1_004] factor coverage matches sequence  (got=["plating", "prep"] expected=["plating", "prep"])
+  [PASS] [t1_004] plating registered
+  [PASS] [t1_004] plating == 1.0  (got=1.000 expected=1.000)
+Godot_v4.6.3-stable_win64.exe : WARNING: [ArtRegistry] 'timing' module has NO dish-specific ingredient for 't1_003' 
+??using neutral placeholder (NOT a wrong dish ingredient). Add a mapping for recipe correctness.
+At C:\Projects\kfood-game\tools\run_regression.ps1:19 char:3
++   & $godot --headless --path $proj --quit-after 1200 $s *>&1 | Out-Fi ...
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (WARNING: [ArtRe...pe correctness.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] _warn_unmapped (res://scripts/gameplay/art_registry.gd:298)
+       [1] timing_food_for (res://scripts/gameplay/art_registry.gd:292)
+       [2] _build_food_sprites (res://scripts/cooking_modules/timing_module.gd:176)
+       [3] _module_start (res://scripts/cooking_modules/timing_module.gd:94)
+       [4] start (res://scripts/cooking_modules/base_module.gd:57)
+       [5] _run_next_module (res://scripts/gameplay/cooking_module_runner.gd:461)
+       [6] _on_module_completed (res://scripts/gameplay/cooking_module_runner.gd:551)
+[runner] t1_003 L2 S=1.00 base=1.00 dish=0.00 pass=true compat=76 mood=picky emo=excellent rec=true seq=["slice", "season", "stir", "timing", "plate"]
+  [PASS] [t1_003] factor coverage matches sequence  (got=["cook", "plating", "prep", "season", "timing"] expected=["cook", "plating", "prep", "season", "timing"])
+  [PASS] [t1_003] plating registered
+  [PASS] [t1_003] plating == 1.0  (got=1.000 expected=1.000)
+[runner] t1_008 L3 S=1.00 base=1.00 dish=0.00 pass=true compat=50 mood=easy emo=good rec=true seq=["slice", "timing", "arrange", "plate"]
+  [PASS] [t1_008] factor coverage matches sequence  (got=["plating", "prep", "timing"] expected=["plating", "prep", "timing"])
+  [PASS] [t1_008] plating registered
+  [PASS] [t1_008] plating == 1.0  (got=1.000 expected=1.000)
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+[scene-exit=0]
+==================== res://scenes/action_first_w1_smoke.tscn ====================
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+=== Action-First W1 ??smoke (slice / timing / season) ===
+
+[1] MODULE_TO_FACTOR unchanged (ADR-011 lock)
+  [PASS] slice -> prep  (got=prep expected=prep)
+  [PASS] timing -> timing  (got=timing expected=timing)
+  [PASS] season -> season  (got=season expected=season)
+
+[2] TouchGestureRecognizer primitives
+  [PASS] drag_started fired
+  [PASS] drag_released info non-empty
+  [PASS] distance > 0
+  [PASS] path_len >= distance
+  [PASS] straightness in [0,1]
+  [PASS] avg_speed >= 0
+  [PASS] vertical drag angle ~90
+
+[3] instantiate + start: slice
+  [PASS] [slice] instantiated + started (no crash)
+  [PASS] [slice] module_completed emitted once  (got=1 expected=1)
+  [PASS] [slice] score in [0,100]
+  [PASS] [slice] _finish clamps passthrough  (got=72.5 expected=72.5)
+  [PASS] [slice] double-finish ignored  (got=1 expected=1)
+
+[3] instantiate + start: timing
+  [PASS] [timing] instantiated + started (no crash)
+  [PASS] [timing] module_completed emitted once  (got=1 expected=1)
+  [PASS] [timing] score in [0,100]
+  [PASS] [timing] _finish clamps passthrough  (got=72.5 expected=72.5)
+  [PASS] [timing] double-finish ignored  (got=1 expected=1)
+
+[3] instantiate + start: season
+  [PASS] [season] instantiated + started (no crash)
+  [PASS] [season] module_completed emitted once  (got=1 expected=1)
+  [PASS] [season] score in [0,100]
+  [PASS] [season] _finish clamps passthrough  (got=72.5 expected=72.5)
+  [PASS] [season] double-finish ignored  (got=1 expected=1)
+
+[3] instantiate + start: season-marinade
+  [PASS] [season-marinade] instantiated + started (no crash)
+  [PASS] [season-marinade] module_completed emitted once  (got=1 expected=1)
+  [PASS] [season-marinade] score in [0,100]
+  [PASS] [season-marinade] _finish clamps passthrough  (got=72.5 expected=72.5)
+  [PASS] [season-marinade] double-finish ignored  (got=1 expected=1)
+
+[4] slice _score_cut domain [0,100]
+  [PASS] slice cut 'perfect vertical' in [0,100] (=80.6)
+  [PASS] slice cut 'slow under-cut' in [0,100] (=56.1)
+  [PASS] slice cut 'fast over-mince' in [0,100] (=61.3)
+  [PASS] slice cut 'diagonal off-angle' in [0,100] (=64.1)
+
+[5] timing finalize domain [0,100]
+  [PASS] timing hold=1.0 -> score in [0,100] (=100.0)
+  [PASS] timing hold=0.6 -> score in [0,100] (=82.2)
+  [PASS] timing hold=0.3 -> score in [0,100] (=32.0)
+  [PASS] timing hold=0.0 -> score in [0,100] (=0.0)
+
+[6] Runner buckets slice/timing/season into correct factor
+[runner] t1_002 L1 S=0.84 base=0.84 dish=0.00 pass=true compat=93 mood=happy emo=excellent rec=false seq=["slice", "timing", "season", "plate"]
+  [PASS] prep bucket got slice
+  [PASS] timing bucket got timing
+  [PASS] season bucket got season
+  [PASS] prep normalized [0,1] (=0.85)
+  [PASS] prep == 0.85 (85/100)  (got=0.85 expected=0.85)
+=== summary: 43 PASS / 0 FAIL ===
+[scene-exit=0]
+==================== res://scenes/action_first_w2_smoke.tscn ====================
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+=== Action-First W2 ??smoke (stir / arrange / roll / flip) ===
+
+[1] MODULE_TO_FACTOR unchanged (ADR-011 lock)
+  [PASS] stir -> cook  (got=cook expected=cook)
+  [PASS] arrange -> prep  (got=prep expected=prep)
+  [PASS] roll -> prep  (got=prep expected=prep)
+  [PASS] flip -> cook  (got=cook expected=cook)
+
+[2] instantiate + start: stir
+  [PASS] [stir] instantiated + started (no crash)
+  [PASS] [stir] module_completed emitted once  (got=1 expected=1)
+  [PASS] [stir] score in [0,100]
+  [PASS] [stir] _finish clamps passthrough  (got=72.5 expected=72.5)
+  [PASS] [stir] double-finish ignored  (got=1 expected=1)
+  [PASS] [stir] _finish clamps >100 to 100  (got=100.0 expected=100.0)
+
+[2] instantiate + start: arrange
+  [PASS] [arrange] instantiated + started (no crash)
+  [PASS] [arrange] module_completed emitted once  (got=1 expected=1)
+  [PASS] [arrange] score in [0,100]
+  [PASS] [arrange] _finish clamps passthrough  (got=72.5 expected=72.5)
+  [PASS] [arrange] double-finish ignored  (got=1 expected=1)
+  [PASS] [arrange] _finish clamps >100 to 100  (got=100.0 expected=100.0)
+
+[2] instantiate + start: roll
+  [PASS] [roll] instantiated + started (no crash)
+  [PASS] [roll] module_completed emitted once  (got=1 expected=1)
+  [PASS] [roll] score in [0,100]
+  [PASS] [roll] _finish clamps passthrough  (got=72.5 expected=72.5)
+  [PASS] [roll] double-finish ignored  (got=1 expected=1)
+  [PASS] [roll] _finish clamps >100 to 100  (got=100.0 expected=100.0)
+
+[2] instantiate + start: flip
+  [PASS] [flip] instantiated + started (no crash)
+  [PASS] [flip] module_completed emitted once  (got=1 expected=1)
+  [PASS] [flip] score in [0,100]
+  [PASS] [flip] _finish clamps passthrough  (got=72.5 expected=72.5)
+  [PASS] [flip] double-finish ignored  (got=1 expected=1)
+  [PASS] [flip] _finish clamps >100 to 100  (got=100.0 expected=100.0)
+
+[3a] stir _compute_stir_score domain [0,100]
+  [PASS] stir 'under' in [0,100] (=58.3)
+  [PASS] stir 'ideal' in [0,100] (=100.0)
+  [PASS] stir 'over-fast' in [0,100] (=52.5)
+  [PASS] stir ideal > under (more turns scores higher)
+  [PASS] stir over-fast penalized vs ideal
+
+[3b] arrange placement score = correct/total*100
+  [PASS] arrange 5/5 -> 100 (=100.0)
+  [PASS] arrange 3/5 -> 60 (=60.0)
+  [PASS] arrange 0/5 -> 0 (=0.0)
+  [PASS] arrange 6/6 -> 100 (=100.0)
+
+[3c] roll _compute_roll_score(left_p, right_p, pressure, smooth) domain [0,100]
+  [PASS] roll 'perfect (0.92/0.92, p1, s1)' in [0,100] (=100.0)
+  [PASS] roll 'crooked (0.95/0.45)' in [0,100] (=58.2)
+  [PASS] roll 'loose (0.30/0.30)' in [0,100] (=68.3)
+  [PASS] roll 'burst (1.18/1.18)' in [0,100] (=52.7)
+  [PASS] roll 'rough (0.90/0.90, s0.1)' in [0,100] (=84.0)
+  [PASS] roll perfect high (>=90)
+  [PASS] roll perfect > crooked (醫뚯슦 balance 40%)
+  [PASS] roll perfect > loose (distance/pressure)
+  [PASS] roll perfect > burst (over-pressure)
+  [PASS] roll perfect > rough (smooth 15%)
+
+[3d] flip _compute_flip_score(turns, dir_ok) domain [0,100]
+  [PASS] flip 'half-flop (0.5t)' in [0,100] (=74.0)
+  [PASS] flip 'clean one-turn (1.0t)' in [0,100] (=100.0)
+  [PASS] flip 'over-spin (1.9t)' in [0,100] (=48.0)
+  [PASS] flip 'wrong direction' in [0,100] (=65.0)
+  [PASS] flip clean one-turn > half-flop
+  [PASS] flip clean one-turn > over-spin
+  [PASS] flip correct dir > wrong dir
+
+[5] gesture quality -> score conversion
+  [PASS] flip speed->turns monotonic (slow<ideal<fast)
+  [PASS] flip ideal speed ~ 1.0 turn (=1.00)
+  [PASS] flip pajeon swipe-up dir_acc in [0,1] (=1.00)
+  [PASS] flip swipe-up better than swipe-down for pajeon
+  [PASS] stir variant 'wok' score in [0,100] (=100.0)
+  [PASS] stir variant 'bibim' score in [0,100] (=100.0)
+  [PASS] stir variant 'toss' score in [0,100] (=100.0)
+
+[6] Runner buckets stir/arrange/roll/flip into correct factor
+[runner] t1_004 L1 S=0.77 base=0.77 dish=0.00 pass=true compat=60 mood=grumpy emo=good rec=false seq=["arrange", "roll", "slice", "plate"]
+  [PASS] prep bucket got arrange
+  [PASS] prep bucket got roll (also prep)
+  [PASS] cook bucket got stir+flip
+  [PASS] cook normalized [0,1] (=0.70)
+  [PASS] cook == 0.70 (70/100)
+=== summary: 66 PASS / 0 FAIL ===
+[scene-exit=0]
+==================== res://scenes/result_v2_smoke.tscn ====================
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+=== Result Screen 2.0 ??smoke test ===
+
+[1] Compat regression
+  [PASS] kimchi_jjigae + Junho (happy) == 93  (got=93 expected=93)
+  [PASS] gimbap + Mina (easy) == 62  (got=62 expected=62)
+  [PASS] tteokbokki + Junho (hungry) == 49  (got=49 expected=49)
+
+[2] SaveManager: records + recipe_xp
+  [PASS] records dict exists  (got=27 expected=27)
+  [PASS] recipe_xp dict exists  (got=27 expected=27)
+  [PASS] record_of unknown == 0  (got=0 expected=0)
+  [PASS] first round sets record (check_record true)
+  [PASS] record_of after set == 7500  (got=7500 expected=7500)
+  [PASS] lower score does not break (check_record false)
+  [PASS] record unchanged at 7500  (got=7500 expected=7500)
+  [PASS] higher score breaks (8800)
+  [PASS] record bumped to 8800  (got=8800 expected=8800)
+  [PASS] record_of different guest = 0  (got=0 expected=0)
+  [PASS] recipe_xp_of new menu = 0  (got=0 expected=0)
+  [PASS] add_recipe_xp 26 -> 26  (got=26 expected=26)
+  [PASS] add_recipe_xp +30 -> 56  (got=56 expected=56)
+  [PASS] backward compat: records dict auto-added  (got=27 expected=27)
+  [PASS] backward compat: recipe_xp dict auto-added  (got=27 expected=27)
+  [PASS] backward compat: friendship preserved (junho=4)  (got=4 expected=4)
+
+[3] RewardCalc.emotion_level
+  [PASS] 3*+93 -> excellent  (got=excellent expected=excellent)
+  [PASS] 1*+95 -> excellent (compat>=90)  (got=excellent expected=excellent)
+  [PASS] 4*+75 -> excellent (3*+70+)  (got=excellent expected=excellent)
+  [PASS] 3*+50 -> good (stars>=3)  (got=good expected=good)
+  [PASS] 2*+62 -> okay (stars>=2)  (got=okay expected=okay)
+  [PASS] 1*+30 -> bad  (got=bad expected=bad)
+
+[4] RewardCalc.score_breakdown_rows
+  [PASS] 6 rows  (got=6 expected=6)
+  [PASS] row 0 key = prep  (got=prep expected=prep)
+  [PASS] row 1 key = cook  (got=cook expected=cook)
+  [PASS] row 2 key = season  (got=season expected=season)
+  [PASS] row 3 key = plating  (got=plating expected=plating)
+  [PASS] row 4 key = compat_bonus  (got=compat_bonus expected=compat_bonus)
+  [PASS] row 5 key = mood_modifier  (got=mood_modifier expected=mood_modifier)
+  [PASS] row 0 value_pct = 85  (got=85 expected=85)
+  [PASS] compat_bonus value = +30  (got=30 expected=30)
+
+[5] ReactionDB.generate_text
+  [Mina/tteokbokki/3*/95] Mina beamed at the sweet balance ??a sweet win!
+  [PASS] Mina line not empty
+  [PASS] Mina line contains 'Mina'
+  [Junho/kimchi_jjigae/3*/93] Junho loved the spicy kick ??best meal of the week!
+  [PASS] Junho line contains 'Junho'
+  [Riley/gimbap/2*/60] Riley smiled politely. A sharper sour would help.
+  [PASS] Riley line non-empty
+  [PASS] no leftover {placeholder} in [Mina beamed at the sweet balan]
+  [PASS] no leftover {placeholder} in [Junho loved the spicy kick ??b]
+  [PASS] no leftover {placeholder} in [Riley smiled politely. A sharp]
+
+[6] RecipeXP curve
+  [PASS] Lv 1 at 0 XP  (got=1 expected=1)
+  [PASS] Lv 1 at 29 XP  (got=1 expected=1)
+  [PASS] Lv 2 at 30 XP  (got=2 expected=2)
+  [PASS] Lv 2 at 89 XP  (got=2 expected=2)
+  [PASS] Lv 3 at 90 XP  (got=3 expected=3)
+  [PASS] Lv 10 at 1360 XP  (got=10 expected=10)
+  [PASS] Lv 10 at 9999 XP (clamp)  (got=10 expected=10)
+  [PASS] xp_gain(3, 93, true) == 59  (got=59 expected=59)
+  [PASS] xp_gain(2, 62, false) == 26  (got=26 expected=26)
+=== summary: 50 PASS / 0 FAIL ===
+[scene-exit=0]
+==================== res://scenes/guest_v2_smoke.tscn ====================
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+=== Guest System 2.0 ??smoke test ===
+  [PASS] kimchi_jjigae + Junho (happy) == 93  (got=93 expected=93)
+  [PASS] gimbap + Mina (easy) == 62  (got=62 expected=62)
+  [PASS] tteokbokki + Junho (hungry) == 49  (got=49 expected=49)
+  [PASS] SaveManager schema version == 2  (got=2 expected=2)
+  [PASS] add_friendship +3 from 0 -> 3  (got=3 expected=3)
+  [PASS] milestone 3 pending after crossing 3  (got=3 expected=3)
+  [PASS] milestone consumed (now 0)  (got=0 expected=0)
+  [PASS] milestone 7 pending  (got=7 expected=7)
+  [PASS] friendship clamped at 10  (got=10 expected=10)
+  [PASS] milestone 10 pending  (got=10 expected=10)
+  [PASS] legacy intimacy synced (10 -> 5.0)  (got=5.0000 expected=5.0000)
+  [PASS] compat 95 mult 1.30  (got=1.3000 expected=1.3000)
+  [PASS] compat 80 mult 1.15  (got=1.1500 expected=1.1500)
+  [PASS] compat 60 mult 1.00  (got=1.0000 expected=1.0000)
+  [PASS] compat 40 mult 0.85  (got=0.8500 expected=0.8500)
+  [PASS] compat 10 mult 0.70  (got=0.7000 expected=0.7000)
+  [PASS] reward final(10000, 93, Junho) == 15600  (got=15600 expected=15600)
+  [PASS] mood deterministic for junho  (got=happy expected=happy)
+  [PASS] junho mood is in mood_pool
+[mood] junho=happy mina=picky riley=hungry mrs_lee=grumpy seoyeon=happy mother_01=grumpy father_01=hungry
+=== done ===
+[scene-exit=0]
+==================== res://scenes/save_migration_test.tscn ====================
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+=== SaveManager v1 -> v2 migration test ===
+[seed] wrote v1 save (intimacy junho=2.5, mina=4.0, riley=0.5)
+[SaveManager] migrated v1 -> v2: friendship={ "junho": 5, "mina": 8, "riley": 1 }
+  [PASS] post-load version == 2  (got=2 expected=2)
+  [PASS] intimacy[junho] preserved  (got=2.5000 expected=2.5000)
+  [PASS] friendship[junho] = 5 (projected from intimacy 2.5)  (got=5 expected=5)
+  [PASS] friendship[mina] = 8 (projected from intimacy 4.0)  (got=8 expected=8)
+  [PASS] player_chef_gender backward-compat default ''  (got= expected=)
+  [PASS] has_chosen_chef() false on legacy save  (got=false expected=false)
+  [PASS] player_name backward-compat default ''  (got= expected=)
+  [PASS] has_player_name() false on legacy save  (got=false expected=false)
+  [PASS] player_name_display fallback 'My Chef'  (got=My Chef expected=My Chef)
+  [PASS] legacy level preserved (3)  (got=3 expected=3)
+  [PASS] legacy money preserved (12000)  (got=12000 expected=12000)
+  [PASS] player_chef_gender persists across reload ('m')  (got=m expected=m)
+  [PASS] has_chosen_chef() true after select  (got=true expected=true)
+  [PASS] invalid gender ignored (stays 'm')  (got=m expected=m)
+  [PASS] player_name trimmed + persists ('Bob')  (got=Bob expected=Bob)
+  [PASS] has_player_name() true after input  (got=true expected=true)
+  [PASS] player_name_display returns input ('Bob')  (got=Bob expected=Bob)
+  [PASS] blank name rejected (returns false)  (got=false expected=false)
+  [PASS] blank input keeps prior name ('Bob')  (got=Bob expected=Bob)
+  [PASS] name clamped to 12 chars  (got=true expected=true)
+=== done ===
+[scene-exit=0]
+==================== res://scenes/protagonist_smoke.tscn ====================
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+=== Player-Chef Integration ??smoke test ===
+
+[1] get_protagonist resolves all 8 (gender 횞 emotion)
+  [PASS] chef_f_neutral path  (got=res://art/sprites/protagonist/chef_f_neutral.png expected=res://art/sprites/protagonist/chef_f_neutral.png)
+  [PASS] chef_f_neutral file exists
+  [PASS] chef_f_cheer path  (got=res://art/sprites/protagonist/chef_f_cheer.png expected=res://art/sprites/protagonist/chef_f_cheer.png)
+  [PASS] chef_f_cheer file exists
+  [PASS] chef_f_think path  (got=res://art/sprites/protagonist/chef_f_think.png expected=res://art/sprites/protagonist/chef_f_think.png)
+  [PASS] chef_f_think file exists
+  [PASS] chef_f_cook path  (got=res://art/sprites/protagonist/chef_f_cook.png expected=res://art/sprites/protagonist/chef_f_cook.png)
+  [PASS] chef_f_cook file exists
+  [PASS] chef_m_neutral path  (got=res://art/sprites/protagonist/chef_m_neutral.png expected=res://art/sprites/protagonist/chef_m_neutral.png)
+  [PASS] chef_m_neutral file exists
+  [PASS] chef_m_cheer path  (got=res://art/sprites/protagonist/chef_m_cheer.png expected=res://art/sprites/protagonist/chef_m_cheer.png)
+  [PASS] chef_m_cheer file exists
+  [PASS] chef_m_think path  (got=res://art/sprites/protagonist/chef_m_think.png expected=res://art/sprites/protagonist/chef_m_think.png)
+  [PASS] chef_m_think file exists
+  [PASS] chef_m_cook path  (got=res://art/sprites/protagonist/chef_m_cook.png expected=res://art/sprites/protagonist/chef_m_cook.png)
+  [PASS] chef_m_cook file exists
+
+[2] helper graceful fallbacks
+  [PASS] unknown gender ??f neutral  (got=res://art/sprites/protagonist/chef_f_neutral.png expected=res://art/sprites/protagonist/chef_f_neutral.png)
+  [PASS] unknown emotion ??m neutral  (got=res://art/sprites/protagonist/chef_m_neutral.png expected=res://art/sprites/protagonist/chef_m_neutral.png)
+  [PASS] default emotion = neutral  (got=res://art/sprites/protagonist/chef_f_neutral.png expected=res://art/sprites/protagonist/chef_f_neutral.png)
+
+[3] PROTAGONIST constants
+  [PASS] PROTAGONIST_EMOTIONS count  (got=4 expected=4)
+  [PASS] PROTAGONIST_GENDERS count  (got=2 expected=2)
+  [PASS] emotions has cheer
+  [PASS] emotions has cook
+
+[4] SaveManager player_chef_gender field
+  [PASS] default player_chef_gender ''  (got= expected=)
+  [PASS] default has_chosen_chef false
+  [PASS] set f  (got=f expected=f)
+  [PASS] has_chosen_chef true after f
+  [PASS] set m  (got=m expected=m)
+  [PASS] invalid ignored (stays m)  (got=m expected=m)
+  [PASS] economy untouched ??seed money  (got=50000 expected=50000)
+
+[5] SaveManager player_name field (Player-Name Personalization)
+  [PASS] default player_name ''  (got= expected=)
+  [PASS] default has_player_name false
+  [PASS] default display fallback 'My Chef'  (got=My Chef expected=My Chef)
+  [PASS] set valid returns true
+  [PASS] set trims to 'Suji'  (got=Suji expected=Suji)
+  [PASS] has_player_name true after set
+  [PASS] display returns input 'Suji'  (got=Suji expected=Suji)
+  [PASS] blank set returns false
+  [PASS] blank keeps 'Suji'  (got=Suji expected=Suji)
+  [PASS] name clamped <= 12
+  [PASS] squash set returns true
+  [PASS] squash single space 'Big Boss'  (got=Big Boss expected=Big Boss)
+  [PASS] sanitize empty -> ''  (got= expected=)
+  [PASS] economy untouched after name ops  (got=50000 expected=50000)
+=== summary: 44 PASS / 0 FAIL ===
+[scene-exit=0]
+==================== res://scenes/gimbap_vs_smoke.tscn ====================
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+=== Gimbap Vertical Slice ??Pass B consequence smoke ===
+
+[1] 짠8.2 prep?뭨oll sweet-zone narrowing
+[roll-vs] prep_q=0.95 sweet_scale=0.98 arrange_bal=1.00 tilt_off=0.000
+[roll-vs] prep_q=0.15 sweet_scale=0.68 arrange_bal=1.00 tilt_off=0.000
+  [PASS] same push 1.04: prep0.95 score >= prep0.15 score
+  [PASS] bad prep strictly lowers score (hi>lo)
+    hi(prep0.95)=93.9  lo(prep0.15)=85.5
+
+[2] roll default (no vs) preserves legacy sweet zone
+  [PASS] legacy push 0.92 == perfect (100)
+
+[3] 짠8.4 roll?뭩lice cut-window narrowing
+[slice-vs] roll_q=0.95 window_scale=0.98
+[slice-vs] roll_q=0.15 window_scale=0.66
+  [PASS] same cut: roll0.95 cut >= roll0.15 cut
+  [PASS] bad roll strictly lowers cut (hi>lo)
+    hi(roll0.95)=89.5  lo(roll0.15)=77.6
+
+[4] slice default (no vs) preserves legacy cut window
+  [PASS] legacy centered cut == perfect (100)
+
+[5] 짠8.3 arrange balance / bias getters
+  [PASS] balanced fills ??balance >= 0.95
+  [PASS] all-left fills ??balance < 0.5
+  [PASS] all-left ??bias_dir +1 (left lean)
+
+[6] 짠8.1 runner _available_filling_slots from collected_fillings
+  [PASS] empty collected ??default 5
+  [PASS] 2 fillings collected ??2 slots
+  [PASS] 4 fillings collected ??4 slots
+
+[7] 짠5.3 plate vs-plating activation gate
+  [PASS] vs plating active when vs_quality_state present
+  [PASS] legacy tier path when no vs_quality_state
+=== summary: 14 PASS / 0 FAIL ===
+[scene-exit=0]
+ALLDONE

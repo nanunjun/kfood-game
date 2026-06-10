@@ -1,0 +1,11 @@
+﻿Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+OpenGL API 3.3.0 Core Profile Context 25.10.30.02.250923 - Compatibility - Using Device: ATI Technologies Inc. - AMD Radeon(TM) Graphics
+
+[cr] saved user://cooking_rebuild/slice_after.png (err=0) -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/cooking_rebuild/slice_after.png (540x960)
+[cr] saved user://cooking_rebuild/season_after.png (err=0) -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/cooking_rebuild/season_after.png (540x960)
+[cr] saved user://cooking_rebuild/stir_after.png (err=0) -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/cooking_rebuild/stir_after.png (540x960)
+[cr] saved user://cooking_rebuild/timing_after.png (err=0) -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/cooking_rebuild/timing_after.png (540x960)
+[cr] saved user://cooking_rebuild/roll_after.png (err=0) -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/cooking_rebuild/roll_after.png (540x960)
+[cr] saved user://cooking_rebuild/plate_after.png (err=0) -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/cooking_rebuild/plate_after.png (540x960)
+=== cooking_rebuild shots done (tag=after) ===
+EXIT=0

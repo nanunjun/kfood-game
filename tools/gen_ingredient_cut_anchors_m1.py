@@ -1,6 +1,14 @@
 """
 K-Food Master — M1 후반 sprint 음식 12 × hero ingredient CUT (손질된) anchor 12장 자동 생성.
 
+⚠️ DEPRECATED — ASSET ARCHITECTURE LOCK 위반 (docs/art/asset-architecture-lock.md §3.1, §6).
+    이 드라이버는 cut 결과 재료(L-ING) 를 도마(L-TOOL) + 칼(L-TOOL) 위에 BAKED 한다
+    (= 사용자 NEVER-merge mandate 의 "Bad: cutting_board + carrot PNG" 정확한 위반).
+    cut variant 는 도마 없이 "결과물 단독" 이어야 한다 (§3.3, §4-4). production 사용 금지.
+    대체: tools/gen_ingredient_tool_hero.py 의 *_prepared/*_cooked variant (standalone) →
+    Godot 가 cutting_board/knife L-TOOL 과 runtime 합성.
+    (코드 삭제는 main thread 영역 — 본 배너는 위반 표시 및 전환 경로 안내.)
+
 ADR-005 (4-stage rhythm tap) Stage 2B/2C prerequisite — 재료 준비 결과 (whole의 "after" pair).
 각 음식의 hero ingredient를 음식 시그니처 cut 형태로 결과 placement.
 
