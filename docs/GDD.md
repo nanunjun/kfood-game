@@ -1,7 +1,8 @@
 # K-Food Master GDD (Game Design Document)
 
-> 버전: **v2.2** · 최초 작성: 2026-05-23 · 최종 개정: 2026-05-26
+> 버전: **v2.3** · 최초 작성: 2026-05-23 · 최종 개정: 2026-06-05
 > 본 문서는 **K-Food Master**의 게임 디자인 문서.
+> v2.3 변경 요약: [ADR-013](decisions.md#adr-013) (Polish Phase Direction) 반영 — §1.1 Vision 신설 ("Korean Food Discovery Game" + 4 player feelings + 5 pillars + success criteria), §10.1.P Polish Phase Roadmap 신설 (6 priority done/todo + Environment L1~L5 + Art Direction LOCK: Cooking Diary/Animal Restaurant/Travel Town, NOT Royal Match). canonical = product-brief-locked.md.
 > v2.2 변경 요약: [ADR-005](decisions.md#adr-005) 반영 — 3-stage → 4-stage (Stage 2A 재료 준비, rhythm tap). §2 Core Loop 4-stage sync / §6.3 데이터 prep_* + cut_variations 컬럼 / §13 R-A13~R-A16 4건 추가.
 > v2.1 변경 요약: [ADR-004](decisions.md#adr-004) 반영 — Unity → Godot 4.6 (GDScript only) 엔진 전환, §8 Tech Stack / §6.3 데이터 형식 / §12.3 기술 의존성 / §13 R10 갱신.
 > v2.0 변경 요약: pm 관점의 KPI(§11) / 의존성(§12) / 리스크(§13) / Go-NoGo 판정 기준(§14) 신설.
@@ -12,6 +13,18 @@
 - 한식 요리 매칭 게임. **재료 선택 + 조리 방법 + 조리 시간**의 3단계 점수.
 - **사회적 progression**: 1인분에서 시작 → 가족 식사 → 친구 초대 → 파티로 확장.
 - **3-stream 수익 모델** (프로그래매틱 광고 + Store Ads + IAP), 캐주얼 모바일 게임. *(상세: §5)*
+
+### 1.1 Vision (Polish Phase LOCKED — [ADR-013](decisions.md#adr-013))
+> Canonical: [`product-brief-locked.md`](product-brief-locked.md). mandate = **Presentation > Features. Emotion > Numbers. Polish > Complexity.**
+
+- **Product Vision**: **"Korean Food Discovery Game"** — NOT a Cooking Fever clone. 점수 최적화가 아니라 한식을 발견·요리·나눔하는 정서적 경험.
+- **Player가 느껴야 하는 4가지**:
+  1. **I cooked Korean food** (내가 한식을 요리했다)
+  2. **I learned about Korean food** (한식을 배웠다)
+  3. **My guest enjoyed it** (내 손님이 즐겼다)
+  4. **I want to cook for this guest again** (이 손님을 위해 또 요리하고 싶다)
+- **Success Criteria**: 10분 플레이 후 US player가 one Korean dish / one Korean ingredient / one guest character를 기억하고 "I want to cook Korean food again"을 느껴야. (KPI보다 우선 — polish 단계 ship 게이트.)
+- **5 Core Pillars**: ① Korean Food Authenticity ② Cooking Action Authenticity (Casual default / Immersive opt-in) ③ Guest Relationships (characters, not stat dispensers) ④ Emotional Reward (Result Screen emotion-first) ⑤ Korean Food Learning (optional/<5s). 상세 = product-brief-locked.md §2.
 
 ## 2. Core Loop (30~60초 1 cycle)
 Round는 **3-scene / 4-stage 구조** ([ADR-005](decisions.md#adr-005) 2026-05-26, 3-stage → 4-stage) — Scene 3종은 유지, Scene 2 키친 안에서 Stage 2A 재료 준비 sub-flow 신설. 상세 UI/연출: [`systems/cooking-mechanics.md`](systems/cooking-mechanics.md) §1 §2A.
@@ -251,6 +264,39 @@ unlock_level  : int
 > **게이트**: M0 종료 시 pm + game-designer + art-director reality check. 일정 ±20% 초과 시 scope 재조정.
 > **Dual-track 권장**: M2~M3 동안 Tier 3 자산 40% pre-production (post-launch 콘텐츠 지속력 확보).
 
+### 10.1.P Polish Phase ([ADR-013](decisions.md#adr-013) 2026-06-05) — Presentation 우선
+
+> feature/system 구축(ADR-009~012) 완료 후 **production-quality presentation**으로 끌어올리는 단계. **신규 gameplay system 0건**. 상세 done/todo + owner + sequencing = [`roadmap-polish-phase.md`](roadmap-polish-phase.md).
+
+**6 Immediate Priorities (LOCKED order)**
+
+| # | Priority | 완료% | Primary owner |
+|---|----------|------|---------------|
+| **P1** | D1+D2+D3 Visual Package (placeholder dish / orange buttons / beige void 제거) | ~85% | godot-dev (+art) |
+| **P2** | Avatar + Emotion Polish | ~70% | art-director → godot-dev |
+| **P3** | Cooking Background System (level별 L1~L5 환경) | ~50% | art-director → godot-dev |
+| **P4** | Result Screen Rebuild (emotion-first: reaction → friendship → reward → score) | ~30% | ui-designer → godot-dev |
+| **P5** | Learning Layer V1 (optional / <5s / Food·Ingredient·Cooking·Culture Fact) | ~0% | game-designer → ui-designer |
+| **P6** | Food Critic System (mastery → critic → badge → one-time, no farming) | ~20% | game-designer → godot-dev |
+
+- **ROI 권고 순서**: P4 reorder(최우선, 데이터 무변경) → P5 learning → P6 critic → 사안#1 Casual Mode. P2/P3 art는 art-style lock(R-A14) 게이트 후.
+- **동결 (NOT prioritize)**: new game modes / currencies / ads / IAP / analytics / remote config / monetization / feature expansion.
+
+**Environment Roadmap (빈 배경 교체 — 신규 cooking 환경 art)**
+
+| Level | Environment |
+|-------|-------------|
+| L1 | Home Kitchen |
+| L2 | Neighborhood Snack Shop |
+| L3 | Traditional Korean Market |
+| L4 | Famous Food Alley |
+| L5 | Prestige Korean Restaurant |
+
+**Art Direction LOCK**
+- Focus 순서: Environment → Character → Food presentation → VFX → Animation.
+- Target references: **Cooking Diary / Animal Restaurant / Travel Town**. **NOT Royal Match** (outside scope).
+- Screenshot 하나로 "Korean food game" 인식 가능해야.
+
 ### 10.2 Post-Launch LiveOps (12개월)
 
 | 시점 | 추가 |
@@ -409,6 +455,7 @@ unlock_level  : int
 ---
 
 ## 변경 이력
+- **v2.3 (2026-06-05)** — [ADR-013](decisions.md#adr-013) Polish Phase Direction 반영. §1.1 Vision 신설 ("Korean Food Discovery Game" + 4 player feelings + 5 Core Pillars + success criteria). §10.1.P Polish Phase Roadmap 신설 (6 Immediate Priorities done/todo + owner, Environment Roadmap L1~L5, Art Direction LOCK = Cooking Diary/Animal Restaurant/Travel Town NOT Royal Match). canonical 박제 = [`product-brief-locked.md`](product-brief-locked.md), 6 priority 상세 = [`roadmap-polish-phase.md`](roadmap-polish-phase.md). 신규 gameplay system 0건 (ADR-009~012 전부 유지).
 - **v2.2 (2026-05-26)** — [ADR-005](decisions.md#adr-005) 반영. §2 Core Loop **3-stage → 4-stage** sync (Stage 2A 재료 준비 신설, Knife indicator visual cue, Skip 옵션). §3 Scoring System 곱셈 모델 → **가중 평균 (25/20/20/35)** supersede + ★ 임계 30/60/90으로 변경. §6.1 Foods 스키마에 `prep_ingredient / prep_cut_style / prep_bpm / prep_tap_count` 4 컬럼 추가, §6.2 Ingredients 스키마에 `cut_variations` 컬럼 추가. §13 Risks 신규 4건 (R-A13 audio latency / R-A14 art-style reset 의존 / R-A15 sound deferral 충돌 / R-A16 일정 +1~3주 out-of-bound).
 - **v2.1 (2026-05-23)** — [ADR-004](decisions.md#adr-004) 반영. §8 Tech Stack을 Godot 4.6 + Godot Foundation plugin 셋(IAP / GPGS / StoreKit) + Godotx Firebase + AppLovin MAX 공식 Godot plugin으로 갱신. §6.3 데이터 형식 `ScriptableObject` → Godot `Resource (.tres)`. §12.3 기술 의존성 Godot 스택 반영, R10 Unity LTS 종료 리스크 해소.
 - **v2.0 (2026-05-23)** — pm 관점 §11~§14 신설: KPI 목표(retention/monetization/gameplay health), Dependencies(외부 계정·라이선스·기술), Risks 10개, MVP Go/No-Go 판정 기준.

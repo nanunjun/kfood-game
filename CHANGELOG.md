@@ -16,6 +16,119 @@
 
 ---
 
+## [2026-06-10] Gimbap Vertical Slice — Pass B: cross-stage consequence chain (godot-dev)
+- **무엇**: 김밥(t1_004) vertical slice **Pass B** — Pass A의 stub stage를 실제 wiring해 **"내가 먼저 한 행동이 나중 결과를 바꾼다"** consequence chain 6개를 구현 + Plating drag-arrange 격상 + Guest 5-quality reaction. **economy/save/4-factor scoring contract 전부 무변경, 신규 module 0, 신규 system 최소(transient quality-state carry만).**
+- **왜**: `docs/design/gimbap-vertical-slice-v1.md` §8 — 5-stage loop의 진짜 검증 대상은 cross-stage 인과 체감. Pass A가 carry만 한 quality-state(`vs_quality_state`)를 module이 실제 소비.
+- **결과/다음 단계**:
+  - **consequence chain 6개 wiring** (모두 기존 입력/공식 무변경 — sweet zone/window/tilt만 quality-state로 보정):
+    - §8.1 shopping→arrange: runner `_available_filling_slots()` — `collected_fillings` 중 filling(carrot/egg/spinach/danmuji/ham) 수만큼만 arrange slot 생성(누락 재료 = 빈 김밥). arrange가 `vs_available_slots` 소비.
+    - §8.2 prep→roll: roll_module `_consume_vs_consequence` — `prep_quality` → sweet zone 폭 `lerp(0.62,1.0)`. 나쁜 strip → 좁은 zone → 같은 push가 burst/loose. `_compute_roll_score` + `_finalize_roll` burst/loose 임계가 scale 반응.
+    - §8.3 arrange→roll: arrange `get_arrange_balance()/get_arrange_bias_dir()`(filled slot 좌우 대칭) → runner가 quality_state에 기록 → roll `_vs_tilt_offset`(균등 push여도 비뚤어짐).
+    - §8.4 roll→slice: slice_module `_consume_vs_consequence` — `roll_quality` → cut window `lerp(0.6,1.0)`(angle/speed tolerance 좁힘) + `_spawn_piece` wobble(조각 제각각). loose roll → 같은 cut이 빡빡 판정.
+    - §8.5 slice→plating: plate `_start_vs_plating`이 `slice_quality` → 조각 단면 wobble/orientation.
+    - §8.6 plate→guest: runner `_pick_reaction_line`이 5 quality 종합 → 가장 약/강 stage 직접 지목 bubble.
+  - **Plating 격상 (drag-arrange, design §5.3)**: plate_module에 vs-plating MODE 추가(`vs_quality_state` 있을 때만 — 일반 dish는 기존 3지선다 tier tap 100% 보존). 김밥 6조각을 wooden_tray target row에 **drag로 배치** → `plate_quality = placement(spacing/중앙안착) 0.6 + orientation(slice 기반) 0.4`. plate_quality=display bonus(★ 무영향).
+  - **Guest reaction (5 quality bubble)**: guest avatar(neutral sprite) + 짧은 reaction("Wow, the roll is so clean!" / "The filling is falling out a bit." / "Some pieces are thicker than others." / "It looks a little messy." / "The strips are a bit chunky.") — 약점 우선 지목 후 강점 칭찬.
+  - **bad julienne asset import**: `carrot_julienne_bad.png` → `godot-project/art/sprites/ingredient/` 임포트 + ArtRegistry INGREDIENT_KEYS 등록. julienne bad swap이 procedural fallback 대신 실제 chunky asset 사용.
+  - **검증**: 실제 F5 opengl3 540x960 screenshot `assets-raw/_screenshots/gimbap_vs_b/` 12컷 (arrange / roll_mid / roll_perfect / roll_bad / slice_clean / slice_wobble / plating / guest_reaction + **consequence 비교쌍** roll_cmp_prep_good vs bad[같은 push 1.04, prep만 다름 → tight vs squeeze-out] / slice_cmp_roll_good vs bad[같은 cut, roll만 다름 → clean row vs wobble]). 신규 unit smoke `gimbap_vs_smoke.tscn` 14 PASS(consequence 수치 + 기본 무변경 + plate gate). **Regression 전 suite 0 FAIL / 416 inline PASS**(CTA guest_v2 19 PASS 유지, t1_004 integration plating==1.0 무변경). consequence 수치 증명: roll 같은 push 1.04 → prep0.95=93.9 vs prep0.15=85.5 / slice 같은 cut → roll0.95=89.5 vs roll0.15=77.6.
+  - **shot harness**: `shot_gimbap_vs_b.tscn` + `run_gimbap_vs_b_shots.ps1`. 일반 runner(vs_quality_state 미전달)는 전 module이 default scale 1.0 → 기존 12 dish 난이도 100% 보존.
+
+---
+
+## [2026-06-09] Gimbap Vertical Slice — Pass A: runner 골격 + Shopping + Julienne (godot-dev)
+- **무엇**: 김밥(t1_004) 1종 5-stage vertical slice의 **Pass A** 구현 — 오케스트레이션 runner 골격(5-stage chain + shared quality-state) + Stage 1 Shopping 미니게임 + Stage 2 Julienne(angle+rhythm+spacing+thickness) prep. 나머지 3 stage(Arrange+Roll / Slice+Plate / Guest)는 **stub**(기존 module 호출 + consequence hook 예약). **economy/save/기존 4-factor scoring contract 전부 무변경, 신규 system 최소, 신규 module 0(ADR-011 정합 — Shopping=stage, Julienne=Slice 확장).**
+- **왜**: `docs/design/gimbap-vertical-slice-v1.md`(game-designer 승인) 5-stage loop 비전을 김밥 1종으로 vertical slice 검증. content volume 아닌 gameplay quality + cross-stage consequence chain 검증.
+- **결과/다음 단계**:
+  - **`gimbap_slice_runner.gd`** (CookingModuleRunner 상속 — scoring/save/economy/result contract 100% 보존): STEP_PLAN 7-step(shopping → julienne → arrange → roll → slice → plate → guest)을 `_run_next_module` override로 dispatch. **shared `quality_state` dict**{shopping/prep/roll/slice/plate_quality 각 [0,1]} = consequence chain backbone(transient runtime, save 무관). step-aware 4-factor 매핑(shopping/julienne/arrange→prep, roll→cook, slice→timing, plate→plating — design §9.3 첫/둘째 Slice 구분 flag 해소).
+  - **`shopping_stage.gd`** (Stage 1, 신규 module 아님 — 독립 Control + `stage_completed(quality, fillings)` signal): 한식 시장(MarketBG 톤, e-commerce UI 금지) 좌판에 정답 6(seaweed/rice/danmuji/carrot/egg/spinach) + 함정 4(ramyeon/gochujang/tofu/tteok) 셔플 진열. `shopping_quality = clamp01(correct/N − 0.15×wrong − key누락 0.20)` (cooking-mechanics §2.5 보존). 핵심 재료(seaweed/rice/danmuji) 누락 = `!` 빈 슬롯 + §8.1 consequence hook(`collected_fillings` carry). freshness/budget/inventory 제외(MVP LOCK).
+  - **`julienne_module.gd`** (Stage 2, SliceModule **상속** — drag-knife engine 재사용): cut timestamp/x 배열 누적 → 변동계수(CV) 기반 **rhythm/spacing consistency** 2축 신규 + angle(부모 cut score) + thickness(rhythm·spacing 유도) = `prep_quality` 4축 가중평균(각 25%). live "Even/Uneven" feedback. **visual 분기 검증**: perfect(prep≥0.80)=고른 얇은 strip + sparkle / bad=chunky uneven(carrot_julienne_bad asset, 미존재 시 ArtRegistry fallback + procedural chunky overlay). `module_completed(0~100)` contract 무변경.
+  - **검증**: 실제 F5 opengl3 540x960 screenshot `assets-raw/_screenshots/gimbap_vs_a/` (shopping / julienne_perfect[prep=0.99] / julienne_bad[prep=0.18] / runner_flow[Step 1/7 Market]). Regression **전 suite 351 PASS / 0 FAIL**(기존 scoring/save/t1_004 sequence 무변경 — parent runner integration smoke 포함). `--check-only` 3 신규 script parse 0 error. shot harness: `shot_gimbap_vs_a.tscn` + `run_gimbap_vs_a_shots.ps1`.
+  - **Pass B 인계**: stub 3 stage(arrange/roll/slice/plate 기존 module 호출 자리) + consequence hook 예약 — runner가 `params["vs_quality_state"]`/`vs_collected_fillings`를 module에 carry(현재 미소비, 기존 난이도 보존). Pass B = prep→roll sweet zone 보정 / roll→slice window 보정 / Arrange filling balance / Plating drag 격상 / Guest reaction 심화.
+
+---
+
+## [2026-06-08] Player-Name Personalization — 주인공 셰프 이름 직접 입력 (godot-dev)
+- **무엇**: 주인공 host 라벨을 고정명("Chef Mina"/"Chef Junho")에서 **플레이어 직접 입력명**으로 전환. gender select 직후 1회 이름 입력 화면 추가. **scoring/CSV/economy/progression 전부 무변경, save는 `player_name` 1필드만 추가(backward-compatible), 7 guest 시스템/이름 무변경 — visual + 1 field.**
+- **왜**: gender_select 카드의 "Chef Mina/Junho" 고정명이 **guest 7명 이름(Mina/Junho 등)과 충돌**. result에서 guest Junho reaction인데 플레이어도 "Chef Junho"면 혼란. 사용자 결정 = 주인공 이름 플레이어 입력.
+- **결과/다음 단계**:
+  - **흐름**: gender_select → **name_entry**(신규) → menu (최초 1회). menu_select `_ready` 게이트가 `has_chosen_chef()` && `has_player_name()` 둘 다 충족해야 메뉴 렌더 — 성별만 있고 이름 없으면 name_entry로 redirect(legacy save 안전망).
+  - **name_entry.gd/.tscn**: 선택한 셰프(neutral) 미리보기 + `LineEdit`(가상 키보드 `virtual_keyboard_enabled=true`, `max_length=12`, clear 버튼) + "Start Cooking" CTA. 빈/공백 입력 → fallback "My Chef" 저장(재진입 방지). "change later in Settings" 톤 일관.
+  - **SaveManager**: `player_name`(기본 "") + `player_name()`/`player_name_display()`(fallback "My Chef")/`has_player_name()`/`set_player_name()`/`sanitize_player_name()`(static: trim + 내부 공백 squash + 12자 clamp). 기존 save는 `_merge()`로 backward-compatible(필드 없으면 "" → name_entry 1회).
+  - **host 라벨 반영**: 메뉴 헤더 badge 캡션("Your Chef" 고정 → 입력명) / result host("You cooked!" → "{입력명} cooked this!") / cooking cook host("Chef" → 입력명). gender_select 카드 라벨은 guest명 제거 → 성별 설명("Female Chef / 여자 셰프", "Male Chef / 남자 셰프"). **guest 7명 이름 무변경**.
+  - **버그 fix**: `menu_select._build_warm_dish_placeholder` — `Polygon2D`(Node2D)에 없는 `mouse_filter` 할당 제거(food art 미존재 dish 카드에서 SCRIPT ERROR 발생하던 latent 버그).
+  - **검증**: 실제 F5 opengl3 1080x1920 screenshot `assets-raw/_screenshots/player_name/` (gender_select / name_entry / name_entry_typed / menu_with_name / result_with_name — 전부 입력명 반영 + script error 0). Regression **전 suite 0 FAIL**(`save_migration_test`에 player_name backward-compat/trim/blank-reject/clamp assert 추가, `protagonist_smoke`에 player_name 필드 14 assert 추가 — 둘 다 economy 무변경 확인). shot harness: `shot_player_name.tscn` + `run_player_name_shots.ps1`.
+
+---
+
+## [2026-06-08] Player-Chef Integration — 주인공 셰프 통합 (성별 선택 + host 배치) (godot-dev)
+- **무엇**: 플레이어 본인 아바타 "셰프"를 게임에 통합. 성별 선택(여/남) 1회 + 화면별 host 배치. **scoring/CSV/progression/economy 전부 무변경, save는 `player_chef_gender` 1필드만 추가(backward-compatible), 7 guest 시스템 무변경 — visual + 1 setting field.**
+- **왜**: 손님(먹는 쪽, 7 guest avatar)은 있으나 "요리하는 나" 주인공이 부재. 플레이어가 선택하는 본인 셰프 아바타로 정체성/몰입 부여. 손님-셰프 역할 분리(먹는 쪽 vs 요리하는 쪽).
+- **결과/다음 단계**:
+  - **8장 asset import**: `assets-raw/protagonist_pack_m2` → `art/sprites/protagonist/chef_{f|m}_{neutral|cheer|think|cook}.png` (transparent rembg cutout, 1536×1024 landscape, north star 톤 — 여=크림 자켓+테라코타 앞치마+헤어밴드 / 남=navy 자켓+sand 앞치마+반다나). 8 `.import` 생성 + headless reimport로 ctex.
+  - **ArtRegistry**: `get_protagonist(gender, emotion)` 헬퍼 + `PROTAGONIST_EMOTIONS`/`PROTAGONIST_GENDERS` 상수. gender 미지정→"f", emotion 미존재→neutral graceful fallback, `ResourceLoader.exists()` 가드.
+  - **SaveManager**: `player_chef_gender` 필드(기본 "") + `player_chef_gender()`/`has_chosen_chef()`/`set_player_chef_gender()` (invalid 값 무시). 기존 save는 `_merge()`로 backward-compatible(필드 없으면 "" 유지) — migration 불필요.
+  - **gender_select.gd/.tscn**: 최초 1회 성별 선택 화면(여/남 2 카드, 실제 chef 미리보기 + 정체성 라벨 + Choose CTA). menu_select가 `has_chosen_chef()` 게이트로 미선택 시 redirect.
+  - **host 배치(용도별 emotion)**: 메뉴 헤더=neutral("Your Chef" 코너 badge) / result=성공 시 cheer·보통 neutral("You cooked!" 상단 좌측) / cooking 요청=think("Hmm, how to cook this...") / cooking 진행=cook(우하단 — 손님 mini 좌하단과 역할 분리). 전부 world BG 위 layer.
+  - **렌더 버그 회피**: 원형 프레임 chef는 `frame.clip_contents=true` + 자식 TextureRect `FULL_RECT anchor + STRETCH_KEEP_ASPECT_COVERED` 조합이어야 렌더(수동 size+COVERED는 Godot 4.6.3에서 미렌더 — debug로 확정, 4개 host 전부 anchor 방식).
+  - **검증**: 실제 F5 opengl3 1080x1920 screenshot `assets-raw/_screenshots/protagonist/` (gender_select / menu_host_f / menu_host_m / result_host_cheer / cooking_request_think / cooking_cook_host). Regression **337 PASS / 0 FAIL** (신규 `protagonist_smoke` 30 PASS + `save_migration_test`에 chef 필드 7 assert 추가 — backward-compat·legacy 보존·set/reload round-trip·invalid reject 전부 PASS). shot harness: `shot_protagonist.tscn` + `run_protagonist_shots.ps1`.
+
+---
+
+## [2026-06-08] P0 Screen World-Integration — flat 베이지 void를 한식 주방 world로 (godot-dev)
+- **무엇**: Menu / Guest / Result / Cooking 4개 화면의 **배경 레이어만** 재배치. flat 베이지 procedural 배경(`MarketBG` / `CookingBackground`)을 **기존 PASS 환경 art**(`art/bg/l1~l5`)로 교체해 모든 화면을 따뜻한 한식 주방 world 위에 integrate. **economy/save/scoring/CSV/progression 전부 무변경, 신규 art 0(기존 환경 재사용).**
+- **왜**: North Star audit 결론 — asset은 북극성급 PASS이나 screen 조립 레이어가 격차. 좋은 asset을 flat 베이지 void 위에 product-catalog처럼 배치 → 첫인상 "prototype UI". 최단 수렴 = 재생성 아닌 재배치(기존 환경 BG를 화면 뒤에 깔기).
+- **결과/다음 단계**:
+  - **`kitchen_background.gd` 확장**: (1) `MARKET_TO_ENV` static 매핑 + `env_key_for_market()` static helper — levels.csv의 실제 market 값(home/noryangjin/market/gwangjang)을 env art key로 정규화(noryangjin→L3 market, gwangjang→L5 prestige). 4개 화면이 같은 source of truth 공유. (2) `fill_screen` 모드 — art를 화면 전체 cover(중앙 0.35 정렬), 상단 wall-연장 gradient 생략 → beige void 박멸. (3) `scrim_alpha` — 카드/텍스트 가독성용 얇은 warm 막.
+  - **menu_select.gd**: procedural `MarketBG` → `KitchenBackground(fill_screen, scrim 0.14)`, player level market로 매핑. "Recipe art coming soon" raw 라벨 → `_build_warm_dish_placeholder()`(받침+무쇠솥+나무뚜껑+김 procedural 일러스트, "simmering soon").
+  - **result_screen_v2.gd**: procedural `CookingBackground` → `KitchenBackground(fill_screen, scrim 0.16)`, 음식 unlock level market로 매핑. "K" chef-hat+이니셜 placeholder → `_build_warm_dish_card()`(menu와 동일 솥 motif). food art 없는 3 stew(kimchi/doenjang/maeuntang `ready=0`)만 placeholder, 나머지는 실제 음식 art swap.
+  - **cooking_module_runner.gd + base_module.gd**: `KitchenBackground.fill_screen=true`로 전환 — 기존 width-cover 하단정렬은 상단 절반이 beige wall-연장 void였음. 이제 환경 world가 화면을 가득 채우고 action zone이 그 안에 얹힘. `_env_key_for_market` / `_env_key_for_level`을 공유 helper로 위임. module은 runner의 `skip_bg=true`로 BG 1장만(중복 방지).
+  - **guest_select.gd**: 흐름 일관성 위해 동일 적용(`fill_screen, scrim 0.16`) — menu→guest→cooking→result 전 여정이 같은 warm world 공유.
+  - **환경 BG 매핑**: home(L1 home kitchen) / noryangjin·market(L3 traditional market) / gwangjang(L5 prestige). dish의 unlock_level이 native market을 결정 → 라면(Lv1)=L1 home, 비빔밥·김치찌개(Lv4)=L3 market.
+  - **검증**: 실제 F5 opengl3 1080x1920 screenshot `assets-raw/_screenshots/world_integration/` (menu/result/cooking/guest before·after + cooking_home_l1 + cooking_step 1~5). Regression **338 PASS / 0 FAIL** (6 smoke scene scene-exit=0). shot harness: `shot_world_integration.tscn` + `run_world_integration_shots.ps1`.
+
+## [2026-06-07] Gimbap Roll 레이아웃 교정 — long-strip 자산으로 실제 김밥 마는 setup (godot-dev)
+- **무엇**: Roll module의 시각 composition만 교정. long-strip wide 자산으로 실제 김밥 마는 setup 표현. **gameplay/scoring/CSV 전부 무변경** (`_compute_roll_score` / gesture handlers / MODULE_TO_FACTOR("roll"→prep) 동일).
+- **왜**: 기존 roll이 김밥 만드는 것처럼 안 보임 — rice sheet + 중앙 tiny short fillings + bamboo mat 분리. 실제 김밥: 김발 받침 → 김 → 밥 → 속재료를 김 폭 가로질러 긴 strip → 아래→위 말기.
+- **결과/다음 단계**:
+  - **자산 import (7 long-strip wide)**: `assets-raw/roll_assets_m2/`의 `bamboo_mat_large / seaweed_sheet_rect / rice_layer_flat_rect / carrot_strip_long / egg_strip_long / green_strip_long / beef_strip_long` (각 1536x1024 transparent) → `godot-project/art/sprites/roll/` clean naming + Godot .import.
+  - **`art_registry.gd ROLL_KEYS` 확장** — 7 신규 key 추가. `get_roll_asset(key)` 무변경(디렉터리 lookup). 구 square 자산 graceful fallback 유지.
+  - **`roll_module.gd` LOCKED layer order 재구현** (z bottom→top): (1) bamboo_mat_large base 받침(action zone 중앙, 860w wide) → (2) seaweed_sheet_rect 김 stacked(720w, mat이 받침 frame) → (3) rice_layer_flat_rect 밥(612w, 김 top edge 살짝 보이게) → (4) filling 4 strip(carrot/egg/green/beef)을 김 폭 75%(540px, 70~85% 안) continuous 가로 band로 lower-middle third에 세로 stacking → (5) roll direction guide(`_RollGuideDraw` 곡선 베지어 + arrowhead, 아래→위) + "Roll from the bottom edge" text → (6) 완성 김밥(content_only)은 SUCCESS에서만(HR1). 자산 측정(solid bar y 0.24~0.43h / x 0.76~0.89w)으로 box·row_gap 산출해 4 strip 모두 distinct full-width로 가시화. 완성 swap box를 460² square로 키워 finished roll이 dominant.
+  - **검증**: 실제 F5 screenshot `assets-raw/_screenshots/roll_layout_fix/{state1_setup, state3_rolling, state4_finished}.png` (opengl3 540x960 viewport, `shot_roll_layout_fix.tscn` + `run_roll_layout_shots.ps1`). Regression **352 PASS / 0 FAIL** (roll instantiate + `_compute_roll_score` 도메인 under=29.3/ideal=96.0/over=22.2/burst=35.0 사전값 동일).
+
+## [2026-06-06] 5-Layer Composition LAYOUT 긴급 수정 — 7-zone 시스템 + scale clamp + L1 환경 배경 (godot-dev)
+- **무엇**: standalone layered asset architecture는 유지(baked revert X), runtime layout/scaling/framing만 refactor. 신규 system 없음, gameplay/scoring/CSV 무변경.
+- **왜**: 5-layer 화면이 (1) asset scale 틀림 (2) 화면 밖 crop (3) tool/ingredient 거대 (4) layer 랜덤 overlap (5) framing 미설계 (6) 큰 beige void (7) guest mini 작음 — 의도된 cooking scene으로 안 보임. 실제 F5 screenshot으로 확인된 문제.
+- **결과/다음 단계**:
+  - **신설 `scripts/cooking_modules/composition.gd`** (CookingComposition) — 7 zone const(1080x1920: Instruction 15% / Action 55% / Control / Feedback 20% / Safe / GuestMini) + `clamp_scale_to_zone` / `fit_asset_to_rect` / `rect_in_zone` / `rect_inside` / `rect_at_center` + per-layer scale clamp(ingredient 45/35, tool 40/28, vessel 65/42, dish hero 70/45) + `debug_zone_overlay` toggle(default OFF).
+  - **신설 `scripts/ui/kitchen_background.gd`** — environment_pack_m2 L1 home kitchen art를 화면에 깔아 beige void 제거(L1~L5 level 매핑). `art/bg/`에 L1~L5 import. runner + base_module가 사용(runner는 chrome 가림 방지 위해 module skip_bg).
+  - **8 module composition preset 적용** — slice/arrange/stir/flip/timing/season/roll/plate 모두 zone+clamp+framing으로 5-layer mount. vessel 중앙, food는 vessel 안쪽(rect_inside)에만, tool visible 대각선 대기.
+  - **근본 버그 수정**: `TextureRect.texture = load()` 후 `.size` 설정 시 1024px 최소크기가 박혀 asset이 화면 전체를 덮던 버그(stir 거대 kimchi 더미 / F5 now_cooking_banner thumb가 화면 덮음)를 8 module + now_cooking_banner.gd에서 `expand_mode`를 texture 할당 전에 설정해 수정. `cooking_fx.attach_dish_shadow`를 hard ColorRect→rounded Panel(soft ellipse)로 교체(grey bar 제거). `sparkle_particle.gd` class_name 오타(SparkleParticle55→SparkleParticle) 수정.
+  - **검증**: 실제 F5 screenshot `assets-raw/_screenshots/layout_fix/{after,before}/` (8 module isolated + 4 F5 runner 경로). Regression 350 PASS / 0 FAIL (cooking_modules 166 + runner_integration 6 + action_first_w1 43 + w2 62 + guest_v2 19 + result_v2 50 + save_migration 4).
+
+## [2026-06-05] Polish Phase 3-design — P5 Learning content + P6 Food Critic flow + 사안#1 Casual mode spec (ADR-013, game-designer)
+- **무엇**: ADR-013 Polish Phase의 game-designer 위임 3건. **NO new gameplay systems** (content + flow + input-variant design only). scoring/progression/sequence 전부 무변경.
+- **왜**: ADR-013 §3(사안 #1 Casual) / §5 brief Pillar 1+2(P5 Learning) / §5 사안 #3(P6 Critic). 사용자 mandate "Presentation > Features / Emotion > Numbers".
+- **결과/다음 단계**:
+  - **P5 Learning Layer V1** — 신설 `data/learning_facts.csv` (12 음식 × 4 fact = Food/Ingredient/Cooking Tip/Culture, 각 ≤ 60 char, 영어 primary + 한글 음식명 sub, US 8~60 친화). 신설 `docs/systems/learning-layer-v1.md` v1.0 (flavor card non-blocking UX: result reveal 시 2.5s auto-dismiss + ⓘ flip-card, 회차별 fact rotation, retention 정당화). 8 핵심(라면/김밥/비빔밥/김치찌개/갈비/잡채/떡볶이/순두부) + 잔여 4(해물파전/콘도그/잔치국수/김치볶음밥) full coverage.
+  - **P6 Food Critic System** — 신설 `docs/systems/food-critic-v1.md` v1.0. **mastery = Recipe XP Lv 7 도달**(recipe_xp.csv 기존 milestone 재활용, ★3 N회 카운터 신규 storage 회피). **Golden Spoon Inspector**(기존 goldspoon guest, reward_bonus 2.00, fictional brand — Michelin 금지). 5-step flow(mastery→appears→special eval→badge→one-time reward). special evaluation = 기존 ADR-009 compat 공식 + critic_pass(★3 AND compat≥80) 게이트(scoring 무영향). one-time reward 5종(friendship +3 / reputation coin / encyclopedia unlock / Korean food fact / badge) 전부 기존 자산. **no-farming guard**(critic_pending/critic_unlocked 2 dict). 신설 `data/critic_badges.csv` (12 음식 badge). 신규 currency/mechanic 0.
+  - **사안#1 Casual Mode** — 신설 `docs/systems/cooking-modes-v1.md` v1.0. ADR-012 gesture = **Immersive(opt-in)** 재라벨, **Casual(default)** = 8 module 단순화 variant 표(slice tap-hold / arrange tap-to-place / stir 짧은 swipe N회 / flip single tap / timing single tap zone / season 1-tap auto-pour / roll tap-hold / plate tap select). one-handed 친화. **scoring 무변경 audit**(두 mode 동일 output signal → 동일 4-factor → 동일 ★, 입력 난이도만 완화). mode toggle = settings + Remote Config `cooking.mode.default=casual`. input-layer variant only (TouchGestureRecognizer 재활용), 신규 system 아님 = ADR-012 amendment.
+  - **cross-ref 갱신**: `cooking-modules-v1.md` v1.1→v1.2 (Casual/Immersive 정합 + §8 관련문서). `cooking-mechanics.md` v0.7 상단에 Polish Phase 3 신규 문서 cross-ref 추가.
+  - **무변경 보증**: 4-factor(25/20/20/35) / ★ 임계(30/60/90) / perfect_width 12 row / `module_completed(score)` signal / dish_modules.csv sequence / Skip auto-perfect 0.9 전부 무변경.
+  - **godot-dev 후속**: P5 LearningDB loader + flavor card scene(non-blocking CanvasLayer). P6 mastery hook(Lv 7) + critic_pending/unlocked guard + CriticDB loader. Casual 8 module 입력 핸들러 + settings toggle. ui-designer: P5 flavor card layout(result-screen-v2-layout) / P6 critic appears prompt + badge reveal / Casual settings toggle UI + onboarding opt-in.
+
+## [2026-06-05] Master Product Brief LOCKED 박제 + Polish Phase 방향 정합 (ADR-013, pm)
+- **무엇**: 사용자 LOCKED Master Product Brief를 canonical 박제 + 현 프로젝트 상태 정합. **방향 전환** = feature/system 구축 종료 → **production-quality presentation 우선** (Presentation > Features / Emotion > Numbers / Polish > Complexity). **신규 gameplay system 0건** — ADR-009~012 전부 유지, presentation/emotion/polish layer만 얹음.
+- **왜**: 사용자 mandate "Do not add new systems until production quality is achieved." Product vision = "Korean Food Discovery Game" (NOT Cooking Fever clone). NOT prioritize = new modes/currencies/ads/IAP/analytics/remote config/monetization/feature expansion.
+- **결과/다음 단계**:
+  - **신설 `docs/product-brief-locked.md` v1.0** — canonical 브리프 (5 Core Pillars / 6 Immediate Priorities / Food Critic + Haptic + Art Direction LOCK / Environment L1~L5 / success criteria + 정합 사안 5건 해소).
+  - **신설 `docs/roadmap-polish-phase.md` v1.0** — 6 priority 상세 done/todo + owner + 의존성 + ROI sequencing.
+  - **`docs/decisions.md` ADR-013 신설** (Accepted) — Polish Phase Direction. Casual(default)/Immersive(opt-in) mode 정합 + Result emotion-first 순서 + Critic=Golden Spoon + Art LOCK + 6 priority lock. ADR-009~012 무변경 audit.
+  - **`docs/GDD.md` v2.2 → v2.3** — §1.1 Vision 신설 + §10.1.P Polish Phase Roadmap 신설 (Art Direction = Cooking Diary/Animal Restaurant/Travel Town, NOT Royal Match).
+  - **6 priority audit**: P1 ~85% / P2 ~70% / P3 ~50% / P4 ~30% / P5 ~0% / P6 ~20%. P1-P3 이미 상당 완료, **P4(result reorder) / P5(learning) / P6(critic flow)가 실질 신규 todo**.
+  - **정합 사안 5건 해소**: ① ADR-012 gesture = Immersive opt-in 재라벨링, Casual tap default variant 추가(scoring 무변경) ② Result 역순 → emotion-first 재배치(데이터 무변경) ③ goldspoon="Golden Spoon Inspector" 이미 존재 → mastery wire ④ BG-01~05=storefront → 신규 L1~L5 cooking 환경 art ⑤ done audit = 재작업 최소.
+  - **ROI 권고 next**: P4 Result reorder 최우선(데이터 무변경 + Pillar 4 직결) → P5 Learning → P6 Critic. P2/P3 art는 art-style lock(R-A14) 후.
+  - **위임 plan**: game-designer(casual variant spec / P5 fact content / P6 critic flow) / ui-designer(P4 reorder layout / P5 non-blocking UX) / godot-dev(P4 impl / casual input / P5·P6 wire / env swap) / art-director(P2 avatar+emotion / P3 환경 5종 / P6 badge, art-style lock 후).
+
 ## [2026-06-05] Action-First Cooking W2 — stir/arrange/roll/flip input redesign → 8 module 전체 완성 (ADR-012, godot-dev)
 - **무엇**: ADR-012 input-layer redesign Sprint M3 W2. W1(slice/timing/season)에 이어 나머지 4 module(stir/arrange/roll/flip)을 추상 ActionPuck tap → 실제 조리 동작 gesture로 교체. **이로써 8 module 전체(slice/timing/season W1 + stir/arrange/roll/flip W2 + plate 기존 drag) = 8/8 action-first 완성.** scoring / sequence / progression / 4-factor / `module_completed(score)` signal contract 전부 무변경 — 입력 gesture만 교체.
 - **왜**: 사용자 verbatim "I rolled gimbap NOT I held a button / I stirred NOT I tapped / I flipped NOT I tapped a beat / I arranged NOT I auto-placed." game-designer ADR-012 lock `docs/systems/action-first-cooking-v1.md`.

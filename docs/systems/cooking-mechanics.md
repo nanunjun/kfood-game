@@ -5,6 +5,11 @@
 > 상위 문서: [`../GDD.md`](../GDD.md) §2 Core Loop / §3 Scoring System
 > 본 문서는 GDD §2의 **4단계** cooking matching 루프를 **구현 가능한 수준**으로 상세화한다.
 >
+> ⚠️ **Polish Phase cross-ref (2026-06-05, [ADR-013](../decisions.md#adr-013))**: 본 문서의 4-stage scoring/sequence/progression은 **무변경**. 폴리시 단계에서 다음 presentation/input layer 문서가 본 메커닉 위에 얹힌다:
+> - [`cooking-modes-v1.md` v1.0](cooking-modes-v1.md) — **Casual(default) / Immersive(opt-in)** 8 module 입력 variant (사안 #1). 입력 난이도만 완화, scoring 무변경.
+> - [`learning-layer-v1.md` v1.0](learning-layer-v1.md) — **P5 Korean Food Learning** (12 음식 × 4 fact, Result Screen flavor card, non-blocking).
+> - [`food-critic-v1.md` v1.0](food-critic-v1.md) — **P6 Golden Spoon Inspector** (Recipe XP Lv 7 mastery → critic → badge, no-farming, 기존 자산 재활용).
+>
 > ⚠️ **v0.7 갱신**: **§X Motion Spec cross-ref 신설** — 12 음식 × Stage × 도구 × motion + BPM 매핑 본격 정의는 [`motion-spec.md` v0.1](motion-spec.md)로 분리. 본 문서는 mechanic 룰 + motion 참조만 유지. Option 1 motion lock 명시 (Godot AnimationPlayer Transform-only, frame art 추가 0건).
 >
 > ⚠️ **v0.6 갱신 (보존)**: **§2.2 basic_pantry 자동 제외 룰 신설** + **§2.2.7 Kitchen rack 자동 제공 신설** + **§2.5 accuracy_ingredients 공식 분모 N에서 basic_pantry 차감** + **§X 양념재우기 메커닉 정합 명시** (양념 "고르기" 행위 X) + **§8 store_type mapping에 `pantry` 카테고리 추가**.

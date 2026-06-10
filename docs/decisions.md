@@ -18,6 +18,7 @@
 | **010** | **Result Screen 2.0 — 6 row breakdown + 4 emotion + recipe XP + new record + milestone reveal (pure display layer, mechanic 무영향, ADR-009 후속)** | **Accepted** | **2026-06-04** |
 | **011** | **8-Module Cooking Pipeline — Slice/Arrange/Stir/Flip/Timing/Season/Roll/Plate 8 reusable modules로 12 음식 sequence 표현 (avoid per-dish minigame)** | **Accepted** | **2026-06-04** |
 | **012** | **Action-First Cooking Interaction — 8 module input-layer 재설계 (tap/hold/button → drag/tilt/swipe/flick). 추상 button mechanic → 실제 조리 동작 시뮬레이션. ADR-011 input-layer amendment (scoring/sequence/progression 무변경)** | **Accepted** | **2026-06-05** |
+| **013** | **Polish Phase Direction — Presentation > Features mandate. Korean Food Discovery vision lock. Casual(default)/Immersive(opt-in) mode 정합. 6 priority lock. no new gameplay systems** | **Accepted** | **2026-06-05** |
 
 > **ADR-001 backfill 권장**: 재래시장 다점포 메커닉 결정은 `systems/cooking-mechanics.md` §2 + `CHANGELOG.md`에 기록됐으나 ADR 형식 미작성. 필요 시 사후 backfill.
 
@@ -1252,5 +1253,107 @@ ADR-011은 8 reusable module로 12 음식 sequence를 표현하도록 lock했으
 - ADR-011 (8-module) — 본 ADR이 input-layer amend (구성/scoring/sequence 무변경)
 - ADR-005 (4-stage) — Knife indicator input만 deprecated, meta 무변경
 - ADR-007 (basic_pantry) — Season default 정합
+
+
+---
+
+## ADR-013: Polish Phase Direction — Presentation > Features mandate
+
+- **Status**: ✅ **Accepted**
+- **Date**: 2026-06-05
+- **Deciders**: 사용자 (Master Product Brief verbatim) → pm (codify + reconcile)
+- **Type**: **Phase direction** (no gameplay system supersede — ADR-009~012 전부 유지, presentation/emotion/polish layer만 얹음)
+- **상위 트리거**: 사용자 LOCKED Master Product Brief 제시:
+  > "Presentation > Features. Emotion > Numbers. Polish > Complexity. Do not add new systems until production quality is achieved."
+
+### Context
+
+직전 sprint들(ADR-009 Guest 2.0 / ADR-010 Result 2.0 / ADR-011 8-module / ADR-012 action-first)은 **feature/system 구축** 모드였다. 사용자가 방향을 전환 — **production quality(presentation) 우선**, 신규 system 동결.
+
+핵심 갈등 2건이 정합 필요했다:
+1. ADR-012 action-first gesture = brief의 **Immersive Mode**에 해당하나, brief는 **Casual Mode(간단 tap)를 default**로 명시.
+2. 현 Result Screen 2.0(ADR-010) 순서 = dish→emotion→score→breakdown→rewards 가, brief의 emotion-first 순서(reaction→friendship→reward→score)와 **역순**.
+
+### Decision
+
+#### 1. Presentation > Features mandate (LOCKED)
+- 우선순위: **Presentation > Features / Emotion > Numbers / Polish > Complexity**.
+- "Do not add new systems until production quality is achieved."
+- **동결 (polish 단계 NOT prioritize)**: new game modes / currencies / ads / IAP / analytics / remote config / monetization / feature expansion. (GDD §5·§11 등 기설계는 보존, polish 단계 재개 안 함.)
+
+#### 2. Product Vision LOCKED
+- **"Korean Food Discovery Game"** — NOT Cooking Fever clone.
+- Player 4 feelings: ① I cooked Korean food ② I learned about Korean food ③ My guest enjoyed it ④ I want to cook for this guest again.
+
+#### 3. Casual / Immersive Mode 정합 (사안 #1 resolution)
+- 현 ADR-012 gesture 구현 = **Immersive Mode (optional, opt-in)** 으로 재라벨링. **코드 재작성 X** — 이미 만든 gesture 자산 보존.
+- **Casual Mode = default**: 각 gesture의 단순화 variant (slice = tap-and-hold drag 1회 / season = 1-tap auto-pour 복귀 / stir = 짧은 swipe / timing = single tap zone 등). **4-factor scoring / signal contract / sequence 무변경, 입력 난이도만 완화**.
+- "Retention > realism" 준수. mode toggle = settings/onboarding opt-in.
+- scope = **input-layer variant only** (TouchGestureRecognizer 재활용). 신규 system 아님 → ADR-012 amendment 성격, supersede 아님.
+
+#### 4. Result Screen 순서 정합 (사안 #2 resolution)
+- **emotion-first 순서로 재배치**: ① Guest reaction → ② Friendship gain → ③ Reward → ④ Score breakdown(collapsible default).
+- 데이터·scoring·SaveManager schema **무변경** = pure reorder + emphasis. ADR-010 구조 전부 유지.
+
+#### 5. Food Critic 정합 (사안 #3 resolution)
+- **Michelin 금지 → fictional brand only**: Golden Spoon Inspector(=기존 `goldspoon`) / Master Food Critic / Heritage Food Reviewer.
+- unlock flow: Dish Mastery(Recipe XP wire) → Critic Appears → Special Evaluation → Critic Badge → One-Time Reward. **No repeat farming** ((food, critic) badge 1회).
+- 기존 goldspoon + ADR-010 Recipe XP 활용 — 신규 system 0.
+
+#### 6. Art Direction LOCK
+- Focus 순서: Environment → Character → Food presentation → VFX → Animation.
+- Target refs: **Cooking Diary / Animal Restaurant / Travel Town**. **NOT Royal Match** (outside scope).
+- Environment roadmap: L1 Home Kitchen / L2 Neighborhood Snack Shop / L3 Traditional Korean Market / L4 Famous Food Alley / L5 Prestige Korean Restaurant. (현 BG-01~05 storefront art와 별개 = 신규 cooking 환경 art.)
+- Haptic allowlist: Perfect action / Excellent dish / Friendship level up / New recipe unlock / Critic success / New record **만**. No spam.
+
+#### 7. Six Priorities LOCKED (order)
+P1 D1+D2+D3 Visual Package / P2 Avatar+Emotion Polish / P3 Cooking Background System / P4 Result Screen Rebuild / P5 Learning Layer V1 / P6 Food Critic System.
+done/todo audit + owner + sequencing = [`roadmap-polish-phase.md`](roadmap-polish-phase.md), canonical brief = [`product-brief-locked.md`](product-brief-locked.md).
+
+### Alternatives Considered
+
+| 대안 | 평가 |
+|------|------|
+| A. Immersive(gesture) default 유지, Casual variant 안 만듦 | Reject. brief "Casual default + Retention > realism" 명시 위배. gesture 난이도 = 캐주얼 진입장벽 |
+| B. 현 gesture 자산 폐기하고 Casual tap만 | Reject. ADR-012 작업 손실 + Immersive opt-in 가치 상실. 재라벨링 + variant가 자산 보존 |
+| C. Result Screen 전면 rewrite (데이터까지) | Reject. emotion-first는 display 순서 문제 — pure reorder로 충분, schema 손대면 ripple |
+| D. Michelin 실명 critic | Reject. 사용자 명시 금지 + 상표 리스크. fictional brand로 충족 |
+| E. 신규 system(예: 새 currency for critic reward) 추가 | Reject. brief §NOT-prioritize 위배. 기존 friendship/encyclopedia/fact로 reward 구성 |
+
+### Consequences
+
+✅ **Positive**:
+- 방향 명확화 — feature 확장 종료, presentation/emotion/polish로 집중. success criteria(10분 후 dish/ingredient/guest 기억 + cook again) = ship 게이트.
+- **재작업 최소** — ADR-009~012 전부 보존. P4=reorder / P6=wiring / casual=input variant / 환경=art. 신규 gameplay system 0.
+- Casual default가 retention 직결. Immersive opt-in이 자산 보존 + 깊이 옵션.
+- Result emotion-first가 Pillar 4("가장 중요") + "guest enjoyed it" 직접 충족.
+
+⚠️ **Negative**:
+- Casual variant 8 module = game-designer spec + godot-dev input 추가 작업 (단 scoring 무변경이라 ripple 0).
+- 환경 5종 + critic art = art-director 작업, **art-style lock(R-A14) 게이트 의존** — art-style 미결 시 P2/P3 BLOCKED.
+- monetization/analytics 동결로 수익화 검증이 polish 이후로 지연 (의도적 — quality first).
+
+🔄 **Follow-ups**:
+- pm (본 turn): `product-brief-locked.md` 신설 / `roadmap-polish-phase.md` 신설 / GDD §Vision §Roadmap §Art sync / 본 ADR.
+- game-designer: 사안#1 casual variant spec / P5 fact content / P6 critic flow.
+- ui-designer: P4 result reorder layout / P5 learning non-blocking UX.
+- godot-dev: P4 reorder impl / casual mode input variant / P5·P6 wire / env swap / P1 잔여.
+- art-director (art-style lock 후): P2 avatar+emotion / P3 환경 5종 / P6 critic badge.
+
+### 정합성 (ADR-009~012 무변경)
+
+| ADR | 본 ADR 영향 |
+|-----|------------|
+| ADR-009 Guest 2.0 | 무변경 — compat/reward 백엔드 유지, 표시만 character 언어 강조 (Pillar 3) |
+| ADR-010 Result 2.0 | **순서 재배치** (emotion-first), 데이터/scoring/schema 무변경 |
+| ADR-011 8-module | 무변경 — 8 module 구성 유지 |
+| ADR-012 action-first | **재라벨링** — gesture = Immersive(opt-in). Casual default variant 추가 (scoring 무변경) |
+| ADR-007 basic_pantry | 무변경 — Season Casual default = 1-tap auto-pour 복귀 정합 |
+
+### 관련 문서
+- [`product-brief-locked.md` v1.0](product-brief-locked.md) — canonical 브리프 (본 ADR이 lock하는 핵심 spec)
+- [`roadmap-polish-phase.md` v1.0](roadmap-polish-phase.md) — 6 priority done/todo + owner + sequencing
+- [GDD.md §Vision §Roadmap](GDD.md) — Korean Food Discovery vision + polish roadmap sync
+- ADR-009 / ADR-010 / ADR-011 / ADR-012 — 전부 유지, presentation/emotion/polish layer만 얹음
 
 

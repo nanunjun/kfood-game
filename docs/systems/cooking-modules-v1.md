@@ -1,10 +1,12 @@
 # Cooking Modules v1 — 8 Reusable Modules + Dish-to-Module Matrix
 
-> 버전: **v1.1 (2026-06-05, supersedes v1.0)** · 작성자: game-designer
-> Status: **Accepted** · ADR-011 lock + **ADR-012 action-first input-layer amendment**
-> 상위 문서: [`decisions.md` ADR-005 / ADR-007 / ADR-011 / ADR-012](../decisions.md), [`action-first-cooking-v1.md` v1.0](action-first-cooking-v1.md), [`cooking-mechanics.md` v0.7](cooking-mechanics.md), [`motion-spec.md` v0.1](motion-spec.md), [`balance-config.md` v0.7](../balance-config.md)
+> 버전: **v1.2 (2026-06-05, supersedes v1.1)** · 작성자: game-designer
+> Status: **Accepted** · ADR-011 lock + **ADR-012 action-first input-layer amendment** + **ADR-013 Casual/Immersive mode 정합**
+> 상위 문서: [`decisions.md` ADR-005 / ADR-007 / ADR-011 / ADR-012 / ADR-013](../decisions.md), [`action-first-cooking-v1.md` v1.0](action-first-cooking-v1.md), [`cooking-modes-v1.md` v1.0](cooking-modes-v1.md), [`cooking-mechanics.md` v0.7](cooking-mechanics.md), [`motion-spec.md` v0.1](motion-spec.md), [`balance-config.md` v0.7](../balance-config.md)
 >
-> ⚠️ **v1.1 갱신 ([ADR-012](../decisions.md#adr-012))**: 각 module §1.x interaction에 **action-first cross-ref** 추가 (button/tap → drag/tilt/swipe/flick). 본 문서의 module 구성(8개) / sequence / reuse 분포 / output state / scoring 전부 **무변경** — interaction "어떻게 입력하는가"만 action-first로 amend. 상세 action 설계는 [`action-first-cooking-v1.md`](action-first-cooking-v1.md).
+> ⚠️ **v1.2 갱신 ([ADR-013](../decisions.md#adr-013) §3, 사안 #1)**: ADR-012 action-first gesture = **Immersive Mode (opt-in)** 로 재라벨. **Casual Mode (default)** = 각 module 단순화 variant (slice tap-hold / season 1-tap auto-pour / stir 짧은 swipe / timing single tap zone 등). 두 mode 모두 동일 output signal — scoring 무변경. variant 표 = [`cooking-modes-v1.md` §1`](cooking-modes-v1.md). 본 문서 module 구성/sequence/reuse/scoring 전부 무변경.
+>
+> ⚠️ **v1.1 갱신 ([ADR-012](../decisions.md#adr-012))**: 각 module §1.x interaction에 **action-first cross-ref** 추가 (button/tap → drag/tilt/swipe/flick). 본 문서의 module 구성(8개) / sequence / reuse 분포 / output state / scoring 전부 **무변경** — interaction "어떻게 입력하는가"만 action-first로 amend. 상세 action 설계는 [`action-first-cooking-v1.md`](action-first-cooking-v1.md). ⚠️ ADR-013으로 이 action-first interaction은 **Immersive Mode** 입력이 되었고, **Casual default**는 단순 tap/hold variant ([`cooking-modes-v1.md`](cooking-modes-v1.md)).
 >
 > **목표 (사용자 verbatim)**:
 > - "Players should feel they are cooking a specific Korean dish."
@@ -386,8 +388,10 @@ Plate module은 mechanic 1종이지만 **음식별 그릇·garnish가 dish ident
 
 ## 8. 관련 문서
 
-- [ADR-012](../decisions.md#adr-012) — Action-First Cooking Interaction (본 문서 v1.1 input-layer amend)
-- [action-first-cooking-v1.md v1.0](action-first-cooking-v1.md) — 8 module action-first 상세 설계 (gesture / visual sim / 3 states / score emergence)
+- [ADR-013](../decisions.md#adr-013) — Polish Phase, Casual/Immersive mode 정합 (본 문서 v1.2 Casual variant cross-ref)
+- [cooking-modes-v1.md v1.0](cooking-modes-v1.md) — Casual(default) / Immersive(opt-in) 8 module variant 표 (scoring 무변경)
+- [ADR-012](../decisions.md#adr-012) — Action-First Cooking Interaction (= Immersive Mode 입력, 본 문서 v1.1 input-layer amend)
+- [action-first-cooking-v1.md v1.0](action-first-cooking-v1.md) — 8 module action-first 상세 설계 = Immersive (gesture / visual sim / 3 states / score emergence)
 - [ADR-005](../decisions.md#adr-005) — 4-stage 메커닉 (high-level meta)
 - [ADR-007](../decisions.md#adr-007) — basic_pantry (Season default 정합)
 - [ADR-011](../decisions.md#adr-011) — 8-Module Cooking Pipeline (본 spec의 정식 ADR)
