@@ -1,8 +1,17 @@
 """
-K-Food Master — Player Protagonist (Chef Avatar) Pack — Gender Select.
+K-Food Master — Player Protagonist (Chef Avatar) Pack — Choose Your Chef.
 
-플레이어 셰프 주인공 아바타 2종 (여자 + 남자) — 성별 선택 (gender select).
-2 chef × N emotion = 6 (or 8) PNG. transparent-native.
+플레이어 셰프 주인공 아바타 6종 — Choose Your Chef preset.
+  chef_f / chef_m  = Korean player chefs (여자 + 남자).
+  chef_foreign_1 (Chef Leo) / chef_foreign_2 (Chef Amara)
+    = 외국인 셰프 — 한식을 배우러 온 외국인 (Korean Food Discovery 정합).
+      diverse (Latino / African-diaspora), 따뜻·정중, 캐리커처 회피.
+  chef_min (Chef Min) / chef_ari (Chef Ari)   ← 신규 (gimbap-visual-quality-rebuild-v1 §10)
+    = Min  : Creative & balanced, androgynous/gender-neutral 셰프 (mustard/slate).
+      Ari  : Cheerful & curious, younger/playful 셰프 (coral/cream).
+      4 preset 다양성 — chef select "Choose Your Chef" 4+ avatar (성별 이분법 폐기).
+N chef × N emotion (neutral / cheer / think / cook). transparent-native.
+  → 신규 2종 cook 포함 시 2 × 4 = 8 PNG. 같은 시각 언어 (한 IP 매칭 set).
 
 ═══════════════════════════════════════════════════════════════════════════════
 사용자 LOCK (이 driver 의 헌법):
@@ -228,6 +237,116 @@ chef and contrasts the female chef's warm-red apron while staying in the same mu
 55-78% saturation family) over a warm SAND / oat-beige plain apron (warm neutral, no
 text, no logo, no flag). The vibe is a friendly dependable home-kitchen chef ready to
 cook with the player.""",
+    },
+    {
+        "id": "chef_foreign_1",
+        "display_name": "Chef Leo",
+        "gender": "male",
+        "silhouette": "short curly dark hair, light stubble, plain chef bandana",
+        "color": "warm olive-green chef jacket over a cream apron",
+        "identity_prompt": """The character is CHEF LEO — a non-Korean foreign 외국인
+young man chef in his late 20s who has come to Korea to LEARN Korean cooking (the
+player's own avatar, a foreign-chef gender-select option). He is warm, eager,
+good-natured, humble about learning. He shares the EXACT SAME storybook visual
+language as the Korean player chefs (same Cocoa #3A2A1E outline, same soft volumetric
+shading, same warm palette restraint, same storybook face tone, same chef jacket +
+apron costume identity) — so all the chef avatars read as ONE matching set; only his
+ethnicity, hair, and jacket color differ. Leo reads as Latino / Mediterranean with a
+warm medium-tan skin tone (a diverse warm shade clearly distinct from the Korean
+chefs, drawn respectfully and dignified, NOT a caricature). SILHOUETTE ANCHOR: short
+dark brown softly CURLY hair (a little volume on top, neat sides) with a touch of
+light short stubble on the jaw (a gentle grown-up cue, NOT a heavy beard), and a
+simple plain folded chef bandana across the forehead. Warm brown eyes, warm peach
+cheeks, an open eager smile. COSTUME / COLOR ANCHOR: a warm OLIVE-GREEN chef jacket
+(cook's coat, soft, no embroidery, no name tag — fill with a muted warm olive
+#7E8B4F, an earthy warm green that distinguishes Leo from the Korean chefs' cream and
+navy while staying in the same muted 55-78% saturation family) over a simple CREAM /
+off-white plain apron (no text, no logo, no flag). The vibe is an eager humble foreign
+chef thrilled to learn Korean home cooking with the player. Drawn warmly and
+respectfully — NOT a stereotype.""",
+    },
+    {
+        "id": "chef_foreign_2",
+        "display_name": "Chef Amara",
+        "gender": "female",
+        "silhouette": "hair in protective bun under a plain headwrap, gold stud",
+        "color": "warm plum / berry chef jacket over a cream apron",
+        "identity_prompt": """The character is CHEF AMARA — a non-Korean foreign 외국인
+young woman chef in her late 20s who has come to Korea to LEARN Korean cooking (the
+player's own avatar, a foreign-chef gender-select option). She is warm, confident,
+graceful, joyfully curious. She shares the EXACT SAME storybook visual language as the
+Korean player chefs (same Cocoa #3A2A1E outline, same soft volumetric shading, same
+warm palette restraint, same storybook face tone, same chef jacket + apron costume
+identity) — so all the chef avatars read as ONE matching set; only her ethnicity,
+hair, and jacket color differ. Amara reads as Black / African-diaspora with a warm
+deep-brown skin tone (a diverse rich warm shade clearly distinct from the other chefs,
+drawn beautifully, respectfully and dignified, NOT a caricature, NOT exaggerated
+features). SILHOUETTE ANCHOR: dark hair worn neatly in a soft protective bun tucked
+under a simple plain fabric HEADWRAP / kitchen head-wrap in a warm solid color (a
+clean modern cook's headwrap, NO printed pattern text), plus one small gold stud
+earring. A round friendly confident face, warm dark-brown eyes, warm peach-toned cheek
+blush adapted to her deeper skin (a soft warm flush, NOT cool pink), a bright warm
+smile. COSTUME / COLOR ANCHOR: a warm PLUM / berry chef jacket (cook's coat, soft, no
+embroidery, no name tag — fill with a muted warm plum #8E5A6B, a cozy berry tone that
+distinguishes Amara from the other chefs while staying in the same muted 55-78%
+saturation family) over a simple CREAM / off-white plain apron (no text, no logo, no
+flag). The vibe is a confident graceful foreign chef delighted to master Korean
+cooking with the player. Drawn warmly, beautifully and respectfully — NOT a
+stereotype.""",
+    },
+    {
+        "id": "chef_min",
+        "display_name": "Chef Min",
+        "gender": "neutral",
+        "silhouette": "soft undercut / short tousled hair, no flower pin, thin headband",
+        "color": "warm mustard / amber chef jacket over a slate-grey plain apron",
+        "identity_prompt": """The character is CHEF MIN — a young Korean chef in their 20s with a
+CREATIVE & BALANCED, calm-confident personality (the player's own avatar, a gender-neutral /
+androgynous preset). Min is warm, thoughtful, inventive and welcoming, and reads as gender-neutral /
+androgynous — NOT strongly feminine, NOT strongly masculine, a soft balanced look (do NOT add an
+obvious "third gender" label or costume gimmick — express it naturally through a balanced silhouette
+and calm expression). Min shares the EXACT SAME storybook visual language as the other player chefs
+(same Cocoa #3A2A1E outline, same soft volumetric shading, same warm palette restraint, same
+storybook face tone, same chef jacket + apron costume identity) — so all the chef avatars read as ONE
+matching set; only hair, costume color, and a balanced androgynous look differ. SILHOUETTE ANCHOR:
+modern SHORT softly-tousled dark brown hair with a gentle textured-undercut feel (neat sides, a
+little volume on top — a clean balanced cut that does not read as a long ponytail nor a strongly
+masculine buzz), and a thin plain fabric HEADBAND across the forehead (NO flower hairpin — clearly
+different from the north-star mascot Hanhana). A soft rounded friendly young-adult face, warm brown
+eyes, warm peach cheeks, a calm easy balanced smile. COSTUME / COLOR ANCHOR: a warm MUSTARD / amber
+chef jacket (cook's coat, soft, no embroidery, no name tag — fill with a muted warm mustard-amber
+#C99B3A, a cozy creative golden tone that distinguishes Min from the cream / navy / olive / plum of
+the other chefs while staying in the same muted 55-78% saturation family) over a calm SLATE-GREY /
+warm-grey plain apron (a neutral balanced grey, no text, no logo, no flag). The vibe is a creative,
+balanced, thoughtful home-kitchen chef ready to invent dishes with the player. Drawn warmly and
+respectfully — gender-neutral expressed naturally, NOT a stereotype, NOT a gimmick.""",
+    },
+    {
+        "id": "chef_ari",
+        "display_name": "Chef Ari",
+        "gender": "female",
+        "silhouette": "bouncy short twin-buns or playful short bob, no flower pin",
+        "color": "warm coral / tangerine chef jacket over a soft cream apron",
+        "identity_prompt": """The character is CHEF ARI — a CHEERFUL & CURIOUS, younger and playful
+Korean chef (the player's own avatar, the youngest / most energetic preset). Ari is bright, bubbly,
+eager and delighted to be cooking — reading a little YOUNGER and more playful than the other chefs
+(late teens / very early 20s energy), but still an able cooking chef, NOT a small child. Ari shares
+the EXACT SAME storybook visual language as the other player chefs (same Cocoa #3A2A1E outline, same
+soft volumetric shading, same warm palette restraint, same storybook face tone, same chef jacket +
+apron costume identity) — so all the chef avatars read as ONE matching set; only hair, costume color,
+and a younger playful energy differ. SILHOUETTE ANCHOR: bouncy PLAYFUL dark brown hair — either two
+small high SPACE-BUNS or a short rounded perky BOB with a couple of bouncy front strands — kept
+youthful and energetic, with a small plain fabric headband or thin kerchief (NO flower hairpin —
+clearly different from the north-star mascot Hanhana). A round bright friendly face, big warm
+sparkly-but-not-anime brown eyes (still the single tiny highlight, NOT shoujo sparkle pupils), warm
+peach cheeks, a wide cheerful open smile. COSTUME / COLOR ANCHOR: a bright warm CORAL / tangerine
+chef jacket (cook's coat, soft, no embroidery, no name tag — fill with a lively warm coral-tangerine
+#F08C5A, a fun youthful warm tone that distinguishes Ari from the cream / navy / olive / plum /
+mustard of the other chefs while staying near the muted 55-78% saturation family, just a touch
+brighter to read "playful") over a soft CREAM / off-white plain apron (no text, no logo, no flag).
+The vibe is a cheerful, curious, playful young home-kitchen chef bursting with energy to try cooking
+with the player. Drawn warmly and respectfully — youthful and bubbly, NOT a small child, NOT a
+stereotype.""",
     },
 ]
 
@@ -711,7 +830,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--only", type=str, default="",
-        help="콤마구분 chef ID만 (chef_f,chef_m). 빈 값 = 2 chef 전체.",
+        help="콤마구분 chef ID만 (chef_f,chef_m,chef_foreign_1,chef_foreign_2,chef_min,chef_ari). "
+             "빈 값 = 6 chef 전체. 신규 Min/Ari 만: --only chef_min,chef_ari",
     )
     parser.add_argument(
         "--emotion", type=str, default="",

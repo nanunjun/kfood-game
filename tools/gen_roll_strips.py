@@ -13,7 +13,9 @@ K-Food Master — Roll (김밥) LONG-STRIP standalone assets.
   - 김발/김/밥/strip 각각 분리 — 함께 굽지 않는다. 합성(김발↓김↓밥↓strip 가로 band)은
     Godot runtime 책임. gameplay X / baked X — standalone asset only.
   - Style Bible v1 톤: warm cozy, Cocoa #3A2A1E outline 3-4px, soft volumetric shading,
-    top-left key light, top-down 또는 slight 3/4. cool sage/mint 금지, flat/UI-icon 금지.
+    top-left key light. cool sage/mint 금지, flat/UI-icon 금지.
+  - 카메라 (2026-06-10 교정): **straight-on OVERHEAD top-down 사용자 시점** — 위에서 똑바로 내려다본
+    평평한 수평 직사각 (edge가 frame과 평행). 비스듬 oblique 3/4 / 회전 diamond·parallelogram 금지.
 
 핵심 형태 규칙 (gen_roll_assets.py 의 'bundle of matchsticks'와의 결정적 차이):
   - 각 strip = 가로로 긴 단일 띠 (aspect ratio 가로:세로 >= 5:1, 거의 막대).
@@ -105,9 +107,15 @@ CONSISTENCY LOCK — every asset in this set MUST share the SAME look (Style Bib
   NOT a glossy plastic coating). No second/opposite/flat lighting.
 - OUTLINE: a warm dark COCOA outline (#3A2A1E) of consistent ~3-4px weight on EVERY asset, with
   slight hand-drawn weight variation (warm, not a cold uniform vector stroke).
-- CAMERA: a clean top-down / slight 3/4 overhead view so the LONG HORIZONTAL form reads clearly
-  (the strip / sheet lies flat across the frame). One consistent camera family across the set —
-  never a low hero angle, never a steep perspective that hides the horizontal length.
+- CAMERA — STRAIGHT-ON OVERHEAD TOP-DOWN (PLAYER POV, looking straight DOWN): a clean overhead
+  top-down view, the camera directly ABOVE-and-slightly-toward the player looking STRAIGHT DOWN at
+  the flat object lying on the table (a steep ~65-75 degree high-angle, very close to a plan view),
+  so the LONG HORIZONTAL form reads clearly. The strip / sheet lies FLAT as a HORIZONTAL rectangle
+  with its long axis running LEFT-TO-RIGHT and its edges PARALLEL to the frame edges (near edge at
+  the bottom, far edge at the top). ABSOLUTELY NOT rotated into a diamond / rhombus / parallelogram,
+  NOT a slanted or tilted layout, NOT an oblique 3/4 product/catalog angle, NOT a low hero angle,
+  NOT a steep side perspective that hides the horizontal length. Edges square to the frame
+  (horizontal and vertical). One consistent straight-on top-down camera across the entire set.
 - PALETTE: warm cozy muted palette (mid saturation ~55-78%), appetizing and inviting.
 
 COMPOSITION (STANDALONE — Asset Architecture Lock: never bake co-assets together):
@@ -148,8 +156,11 @@ ROLL_STRIPS = [
         "id": "bamboo_mat_large", "name": "큰 김발 (Large Bamboo Rolling Mat)",
         "form": None,
         "body": """A HERO illustration of a large Korean bamboo rolling mat for gimbap (김발),
-laid flat and seen from a clean top-down / slight 3/4 overhead view: a WIDE landscape rectangular
-mat made of many thin pale-golden bamboo slats running PARALLEL across the width, bound together by
+laid flat and seen from a STRAIGHT-ON OVERHEAD top-down view (camera directly above looking straight
+DOWN, the mat a horizontal rectangle with edges PARALLEL to the frame — NOT rotated to a diamond,
+NOT an oblique 3/4 angle): a WIDE landscape rectangular
+mat made of many thin pale-golden bamboo slats running PARALLEL across the width (left-to-right),
+bound together by
 two or three rows of cotton string, oriented HORIZONTALLY and clearly wider than it is tall (spans
 ~85-90% of the frame width). Warm light-oak bamboo tone (#D6A56B to #C49256) with soft top-left
 key light giving each rounded slat a gentle cylindrical highlight and a soft groove shadow between
@@ -162,7 +173,9 @@ in Godot. Dimensional and tactile (NOT a flat woven texture swatch, NOT a UI ico
         "id": "seaweed_sheet_rect", "name": "김 한 장 직사각 (Seaweed Sheet, wide rect)",
         "form": WIDE_RECT_FORM,
         "body": """A HERO illustration of a single sheet of Korean roasted seaweed for gimbap
-(김 한 장), seen from a clean top-down / slight 3/4 overhead view: a flat WIDE rectangular sheet of
+(김 한 장), seen from a STRAIGHT-ON OVERHEAD top-down view (camera directly above looking straight
+DOWN, the sheet a horizontal rectangle with edges PARALLEL to the frame — NOT rotated to a diamond,
+NOT an oblique 3/4 angle): a flat WIDE rectangular sheet of
 dried laver in deep dark green-black (a very dark forest-green fading toward warm near-black, NOT
 pure flat black), with a MATTE non-glossy surface and a subtle fine pebbled texture, the edges
 gently uneven and softly curling. Soft top-left key light gives the sheet faint volume and a
@@ -175,8 +188,10 @@ seaweed sheet — NO rice on it, NO filling, NO bamboo mat under it.
         "id": "rice_layer_flat_rect", "name": "밥 layer 직사각 (Flat Rice Layer, wide rect)",
         "form": WIDE_RECT_FORM,
         "body": """A HERO illustration of a FLAT thin spread LAYER of steamed Korean short-grain
-white rice for gimbap (김밥용으로 펴 놓은 평평한 밥 한 겹), seen from a clean top-down / slight 3/4
-overhead view: an even WIDE rectangular slab of glistening sticky white rice pressed flat and
+white rice for gimbap (김밥용으로 펴 놓은 평평한 밥 한 겹), seen from a STRAIGHT-ON OVERHEAD top-down
+view (camera directly above looking straight DOWN, the rice layer a horizontal rectangle with edges
+PARALLEL to the frame — NOT rotated to a diamond, NOT an oblique 3/4 angle): an even WIDE rectangular
+slab of glistening sticky white rice pressed flat and
 smooth, the many individual plump grains clearly visible across the surface with a gentle moist
 steamed sheen, warm cream-white (Rice Cream #FAF4E6) with soft top-left key light and a tender low
 thickness (a thin even bed of rice, NOT a heaped mound). This is JUST the flat wide rice layer

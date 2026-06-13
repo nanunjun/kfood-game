@@ -1,0 +1,12 @@
+﻿Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+OpenGL API 3.3.0 Core Profile Context 25.10.30.02.250923 - Compatibility - Using Device: ATI Technologies Inc. - AMD Radeon(TM) Graphics
+
+[grp-shot] roll_flat -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gimbap_roll_plate/roll_flat.png (540x960)
+[grp-shot] roll_mid -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gimbap_roll_plate/roll_mid.png (540x960)
+[grp-shot] roll_finished left_p=0.93 right_p=0.93
+[grp-shot] roll_finished -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gimbap_roll_plate/roll_finished.png (540x960)
+[grp-shot] plate_topdown -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gimbap_roll_plate/plate_topdown.png (540x960)
+[plate-vs] placement=1.00 orient=0.98 slice_q=0.95 plate_quality=0.99
+[grp-shot] plate_placed placed=6 plate_quality=0.99
+[grp-shot] plate_placed -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gimbap_roll_plate/plate_placed.png (540x960)
+EXIT=0

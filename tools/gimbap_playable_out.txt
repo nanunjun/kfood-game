@@ -1,0 +1,15 @@
+﻿Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+OpenGL API 3.3.0 Core Profile Context 25.10.30.02.250923 - Compatibility - Using Device: ATI Technologies Inc. - AMD Radeon(TM) Graphics
+
+[playable-shot] market_before -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gimbap_playable/market_before.png (540x960)
+[playable-shot] market_after -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gimbap_playable/market_after.png (540x960)
+[playable-shot] julienne_before -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gimbap_playable/julienne_before.png (540x960)
+[playable-shot] julienne_after -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gimbap_playable/julienne_after.png (540x960)
+[playable-shot] basket_icons -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gimbap_playable/basket_icons.png (540x960)
+[playable-shot] header_clean -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gimbap_playable/header_clean.png (540x960)
+[shopping] collected=[] wrong=0 quality=0.00 fillings=[]
+[done-advance] reached Step 2 module=Control
+[done-advance] julienne cuts_done=6 done_enabled=true
+[done-advance] PASS ??Done advanced Step 2 -> Step 3 (module=Control) BLOCKING RESOLVED
+[playable-shot] done_advance -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gimbap_playable/done_advance.png (540x960)
+EXIT=0

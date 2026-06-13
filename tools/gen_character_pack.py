@@ -1,7 +1,9 @@
 """
 K-Food Master — Art Production Sprint 1 / Priority 1: Character Production Pack.
 
-7 character × 4 emotion (neutral / happy / excited / disappointed) = 28 PNG.
+9 character × 4 emotion (neutral / happy / excited / disappointed) = 36 PNG.
+  (7 original + 2 foreign guests Sofia / Kenji — Korean Food Discovery 정합:
+   외국인이 한국 음식을 처음 먹고 반응. 따뜻·정중·diverse, 캐리커처 회피.)
 Style Bible v1 (docs/art/style-bible-v1.md) WARM tone — supersedes the OLD Cool
 Sage / Royal Match tone of gen_guest_avatars.py. This is a PRODUCTION RESKIN: the
 2-pass driver structure (Phase B neutral generation → Phase C emotion image edit,
@@ -239,6 +241,58 @@ lemon-slice or leaf motif at the chest (single accent, small subtle, a lemon-yel
 pop). The vibe is bright, fresh, globally inclusive — a friend who shows up saying
 "give me something bright and tangy!" with a relaxed open posture. NOT a cowboy, NOT
 a Western caricature — just a warm cosmopolitan young friend.""",
+    },
+    {
+        "id": "guest_foreign_1",
+        "display_name": "Sofia",
+        "personality": "외국인 따뜻 호기심 (warm curious K-food explorer)",
+        "silhouette": "dark curly shoulder-length hair pulled half-up, hoop earring",
+        "color": "warm marigold / saffron top (leaf accent)",
+        "identity_prompt": """The character SOFIA, a non-Korean foreign 외국인 young adult
+woman in her late 20s visiting / studying in Korea (a warm cosmopolitan traveler
+discovering Korean food for the first time, full of delighted curiosity — explicitly
+NOT a Korean ethnic identity). Sofia reads as Latina / Mediterranean with a warm
+medium-brown / tan skin tone (a richer warm skin shade clearly distinct from the
+Korean cast and from Riley's lighter tone — diverse, drawn with the SAME warm
+respectful storybook treatment, NOT a caricature, NOT exaggerated features).
+SILHOUETTE ANCHOR: dark brown softly CURLY shoulder-length hair pulled half-up (a few
+loose curls framing the face — clearly different from Riley's short straight-wavy
+blonde and from the Korean characters' styles), plus one small simple gold hoop
+earring as her gentle signature accent. A round friendly open face. COLOR ANCHOR: a
+warm MARIGOLD / saffron-gold blouse or knit top (fill with a warm marigold #E8A33D
+softened, a sunny mid-saturation warm gold that distinguishes Sofia and is clearly
+different from Mina's pale cream-yellow and from Riley's blue), with a small soft flat
+leaf / sprout motif at the collar (single small accent — her curious "what's this
+ingredient?" cue). The vibe is warm, curious, open, delighted — a traveler who shows
+up saying "I've always wanted to try real Korean food!" with an eager friendly
+posture. Drawn warmly and respectfully, dignified and inclusive — NOT a stereotype.""",
+    },
+    {
+        "id": "guest_foreign_2",
+        "display_name": "Kenji",
+        "personality": "외국인 정중 미식 (polite foreign food-lover, gentle gourmet)",
+        "silhouette": "short tidy black hair, slim modern glasses",
+        "color": "soft sage-green button shirt (chopstick/spoon accent)",
+        "identity_prompt": """The character KENJI, a non-Korean foreign 외국인 young adult
+man in his early 30s — a Southeast-Asian / Filipino-leaning expat working in Korea who
+has fallen in love with Korean cuisine (a polite, appreciative, gentle gourmet
+discovering each dish thoughtfully — explicitly NOT a Korean ethnic identity, and
+explicitly NOT a Japanese identity despite the name; he is simply a warm individual
+with his own name). Kenji has a warm tan / golden-brown skin tone (a diverse warm
+shade distinct from the Korean cast, from Riley, and from Sofia — drawn with the SAME
+respectful storybook treatment, dignified, NOT a caricature). SILHOUETTE ANCHOR: short
+tidy neat black hair (a clean modern side-part, NOT spiky, NOT bowl-cut) plus slim
+modern rectangular glasses with a thin warm-brown frame as his clear signature
+accessory (clearly different from Mrs Lee's round reading glasses — Kenji's are slim
+rectangular and he is a young man). A gentle, kind, attentive face. COLOR ANCHOR: a
+soft SAGE-GREEN / muted olive button-up shirt (fill with a warm-leaning muted sage
+#7E9B6B, a calm earthy green that distinguishes Kenji — clearly different from every
+other character's top, the one green in the cast), with a small soft flat
+spoon-and-chopstick or rice-bowl motif at the chest pocket (single small accent — his
+thoughtful "let me taste this properly" gourmet cue). The vibe is polite, warm,
+appreciative, gently enthusiastic — an expat who shows up saying "I'd love to learn
+how this is made" with a courteous attentive posture. Drawn warmly and respectfully —
+NOT a stereotype.""",
     },
     {
         "id": "mrs_lee",

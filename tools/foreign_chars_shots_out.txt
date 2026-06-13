@@ -1,0 +1,9 @@
+﻿Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+OpenGL API 3.3.0 Core Profile Context 25.10.30.02.250923 - Compatibility - Using Device: ATI Technologies Inc. - AMD Radeon(TM) Graphics
+
+[shot] saved user://foreign_chars/chef_select.png (err=0) -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/foreign_chars/chef_select.png
+[shot] saved user://foreign_chars/guest_select_foreign.png (err=0) -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/foreign_chars/guest_select_foreign.png
+[shot] saved user://foreign_chars/guest_select_foreign_scrolled.png (err=0) -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/foreign_chars/guest_select_foreign_scrolled.png
+[shot] saved user://foreign_chars/result_sofia.png (err=0) -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/foreign_chars/result_sofia.png
+=== foreign chars shots done ===
+EXIT=0

@@ -2,9 +2,9 @@
 OpenGL API 3.3.0 Core Profile Context 25.10.30.02.250923 - Compatibility - Using Device: ATI Technologies Inc. - AMD Radeon(TM) Graphics
 
 [gvsa-shot] shopping -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gvsa_shopping.png (540x960)
-[gvsa-shot] julienne perfect prep_quality=0.99 dims={ "angle": 0.96, "rhythm": 1.0, "spacing": 1.0, "thickness": 1.0 }
+[gvsa-shot] julienne perfect prep_quality=1.00 dims={ "angle": 1.0, "rhythm": 1.0, "spacing": 1.0, "thickness": 1.0 }
 [gvsa-shot] julienne_perfect -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gvsa_julienne_perfect.png (540x960)
-[gvsa-shot] julienne bad prep_quality=0.18 dims={ "angle": 0.38, "rhythm": 0.0, "spacing": 0.21432579868161, "thickness": 0.10716289934081 }
+[gvsa-shot] julienne bad prep_quality=0.47 dims={ "angle": 0.6, "rhythm": 0.0, "spacing": 0.6610379066826, "thickness": 0.6 }
 [gvsa-shot] julienne_bad -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gvsa_julienne_bad.png (540x960)
 [gvsa-shot] runner_flow -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gvsa_runner_flow.png (540x960)
 EXIT=0

@@ -1,0 +1,11 @@
+﻿Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+OpenGL API 3.3.0 Core Profile Context 25.10.30.02.250923 - Compatibility - Using Device: ATI Technologies Inc. - AMD Radeon(TM) Graphics
+
+[julienne-shot] julienne_rhythm -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gimbap_julienne2/julienne_rhythm.png (540x960)
+[julienne-shot] hit cuts_done=3 strips=3 knife_busy=true
+[julienne-shot] julienne_hit -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gimbap_julienne2/julienne_hit.png (540x960)
+[julienne-shot] done cuts_done=6 done_enabled=true prep_q=0.00
+[julienne-shot] julienne_done -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gimbap_julienne2/julienne_done.png (540x960)
+[shopping] collected=[] wrong=0 quality=0.00 fillings=[]
+[julienne-shot] runner_julienne -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gimbap_julienne2/runner_julienne.png (540x960)
+EXIT=0

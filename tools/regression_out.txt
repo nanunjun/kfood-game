@@ -174,11 +174,11 @@ Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
 Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
 
 === Cooking Runner ??integration smoke ===
-[runner] t1_002 L1 S=1.00 base=1.00 dish=0.00 pass=true compat=93 mood=happy emo=excellent rec=true seq=["slice", "timing", "season", "plate"]
+[runner] t1_002 L1 S=1.00 base=1.00 dish=0.00 pass=true compat=79 mood=grumpy emo=excellent rec=true seq=["slice", "timing", "season", "plate"]
   [PASS] [t1_002] factor coverage matches sequence  (got=["plating", "prep", "season", "timing"] expected=["plating", "prep", "season", "timing"])
   [PASS] [t1_002] plating registered
   [PASS] [t1_002] plating == 1.0  (got=1.000 expected=1.000)
-[runner] t1_004 L1 S=1.00 base=1.00 dish=0.00 pass=true compat=60 mood=grumpy emo=good rec=true seq=["arrange", "roll", "slice", "plate"]
+[runner] t1_004 L1 S=1.00 base=1.00 dish=0.00 pass=true compat=66 mood=hungry emo=good rec=true seq=["arrange", "roll", "slice", "plate"]
   [PASS] [t1_004] factor coverage matches sequence  (got=["plating", "prep"] expected=["plating", "prep"])
   [PASS] [t1_004] plating registered
   [PASS] [t1_004] plating == 1.0  (got=1.000 expected=1.000)
@@ -192,14 +192,14 @@ At C:\Projects\kfood-game\tools\run_regression.ps1:19 char:3
  
    at: push_warning (core/variant/variant_utility.cpp:1034)
    GDScript backtrace (most recent call first):
-       [0] _warn_unmapped (res://scripts/gameplay/art_registry.gd:298)
-       [1] timing_food_for (res://scripts/gameplay/art_registry.gd:292)
+       [0] _warn_unmapped (res://scripts/gameplay/art_registry.gd:411)
+       [1] timing_food_for (res://scripts/gameplay/art_registry.gd:405)
        [2] _build_food_sprites (res://scripts/cooking_modules/timing_module.gd:176)
        [3] _module_start (res://scripts/cooking_modules/timing_module.gd:94)
        [4] start (res://scripts/cooking_modules/base_module.gd:57)
        [5] _run_next_module (res://scripts/gameplay/cooking_module_runner.gd:461)
-       [6] _on_module_completed (res://scripts/gameplay/cooking_module_runner.gd:551)
-[runner] t1_003 L2 S=1.00 base=1.00 dish=0.00 pass=true compat=76 mood=picky emo=excellent rec=true seq=["slice", "season", "stir", "timing", "plate"]
+       [6] _on_module_completed (res://scripts/gameplay/cooking_module_runner.gd:555)
+[runner] t1_003 L2 S=1.00 base=1.00 dish=0.00 pass=true compat=79 mood=happy emo=excellent rec=true seq=["slice", "season", "stir", "timing", "plate"]
   [PASS] [t1_003] factor coverage matches sequence  (got=["cook", "plating", "prep", "season", "timing"] expected=["cook", "plating", "prep", "season", "timing"])
   [PASS] [t1_003] plating registered
   [PASS] [t1_003] plating == 1.0  (got=1.000 expected=1.000)
@@ -270,7 +270,7 @@ Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
   [PASS] timing hold=0.0 -> score in [0,100] (=0.0)
 
 [6] Runner buckets slice/timing/season into correct factor
-[runner] t1_002 L1 S=0.84 base=0.84 dish=0.00 pass=true compat=93 mood=happy emo=excellent rec=false seq=["slice", "timing", "season", "plate"]
+[runner] t1_002 L1 S=0.84 base=0.84 dish=0.00 pass=true compat=79 mood=grumpy emo=excellent rec=false seq=["slice", "timing", "season", "plate"]
   [PASS] prep bucket got slice
   [PASS] timing bucket got timing
   [PASS] season bucket got season
@@ -365,7 +365,7 @@ Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
   [PASS] stir variant 'toss' score in [0,100] (=100.0)
 
 [6] Runner buckets stir/arrange/roll/flip into correct factor
-[runner] t1_004 L1 S=0.77 base=0.77 dish=0.00 pass=true compat=60 mood=grumpy emo=good rec=false seq=["arrange", "roll", "slice", "plate"]
+[runner] t1_004 L1 S=0.77 base=0.77 dish=0.00 pass=true compat=66 mood=hungry emo=good rec=false seq=["arrange", "roll", "slice", "plate"]
   [PASS] prep bucket got arrange
   [PASS] prep bucket got roll (also prep)
   [PASS] cook bucket got stir+flip
@@ -465,9 +465,9 @@ Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
   [PASS] compat 40 mult 0.85  (got=0.8500 expected=0.8500)
   [PASS] compat 10 mult 0.70  (got=0.7000 expected=0.7000)
   [PASS] reward final(10000, 93, Junho) == 15600  (got=15600 expected=15600)
-  [PASS] mood deterministic for junho  (got=happy expected=happy)
+  [PASS] mood deterministic for junho  (got=grumpy expected=grumpy)
   [PASS] junho mood is in mood_pool
-[mood] junho=happy mina=picky riley=hungry mrs_lee=grumpy seoyeon=happy mother_01=grumpy father_01=hungry
+[mood] junho=grumpy mina=happy riley=grumpy mrs_lee=hungry seoyeon=hungry mother_01=happy father_01=grumpy
 === done ===
 [scene-exit=0]
 ==================== res://scenes/save_migration_test.tscn ====================
@@ -490,6 +490,11 @@ Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
   [PASS] player_chef_gender persists across reload ('m')  (got=m expected=m)
   [PASS] has_chosen_chef() true after select  (got=true expected=true)
   [PASS] invalid gender ignored (stays 'm')  (got=m expected=m)
+  [PASS] preset 'leo' persists across reload  (got=leo expected=leo)
+  [PASS] has_chosen_chef() true after leo  (got=true expected=true)
+  [PASS] preset 'amara' persists across reload  (got=amara expected=amara)
+  [PASS] legacy 'f' save still valid preset  (got=true expected=true)
+  [PASS] legacy 'f' reads as preset 'f'  (got=f expected=f)
   [PASS] player_name trimmed + persists ('Bob')  (got=Bob expected=Bob)
   [PASS] has_player_name() true after input  (got=true expected=true)
   [PASS] player_name_display returns input ('Bob')  (got=Bob expected=Bob)
@@ -503,7 +508,7 @@ Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
 
 === Player-Chef Integration ??smoke test ===
 
-[1] get_protagonist resolves all 8 (gender 횞 emotion)
+[1] get_protagonist resolves all 24 (6 preset 횞 4 emotion)
   [PASS] chef_f_neutral path  (got=res://art/sprites/protagonist/chef_f_neutral.png expected=res://art/sprites/protagonist/chef_f_neutral.png)
   [PASS] chef_f_neutral file exists
   [PASS] chef_f_cheer path  (got=res://art/sprites/protagonist/chef_f_cheer.png expected=res://art/sprites/protagonist/chef_f_cheer.png)
@@ -520,25 +525,82 @@ Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
   [PASS] chef_m_think file exists
   [PASS] chef_m_cook path  (got=res://art/sprites/protagonist/chef_m_cook.png expected=res://art/sprites/protagonist/chef_m_cook.png)
   [PASS] chef_m_cook file exists
+  [PASS] leo_neutral path  (got=res://art/sprites/protagonist/leo_neutral.png expected=res://art/sprites/protagonist/leo_neutral.png)
+  [PASS] leo_neutral file exists
+  [PASS] leo_cheer path  (got=res://art/sprites/protagonist/leo_cheer.png expected=res://art/sprites/protagonist/leo_cheer.png)
+  [PASS] leo_cheer file exists
+  [PASS] leo_think path  (got=res://art/sprites/protagonist/leo_think.png expected=res://art/sprites/protagonist/leo_think.png)
+  [PASS] leo_think file exists
+  [PASS] leo_cook path  (got=res://art/sprites/protagonist/leo_cook.png expected=res://art/sprites/protagonist/leo_cook.png)
+  [PASS] leo_cook file exists
+  [PASS] amara_neutral path  (got=res://art/sprites/protagonist/amara_neutral.png expected=res://art/sprites/protagonist/amara_neutral.png)
+  [PASS] amara_neutral file exists
+  [PASS] amara_cheer path  (got=res://art/sprites/protagonist/amara_cheer.png expected=res://art/sprites/protagonist/amara_cheer.png)
+  [PASS] amara_cheer file exists
+  [PASS] amara_think path  (got=res://art/sprites/protagonist/amara_think.png expected=res://art/sprites/protagonist/amara_think.png)
+  [PASS] amara_think file exists
+  [PASS] amara_cook path  (got=res://art/sprites/protagonist/amara_cook.png expected=res://art/sprites/protagonist/amara_cook.png)
+  [PASS] amara_cook file exists
+  [PASS] min_neutral path  (got=res://art/sprites/protagonist/min_neutral.png expected=res://art/sprites/protagonist/min_neutral.png)
+  [PASS] min_neutral file exists
+  [PASS] min_cheer path  (got=res://art/sprites/protagonist/min_cheer.png expected=res://art/sprites/protagonist/min_cheer.png)
+  [PASS] min_cheer file exists
+  [PASS] min_think path  (got=res://art/sprites/protagonist/min_think.png expected=res://art/sprites/protagonist/min_think.png)
+  [PASS] min_think file exists
+  [PASS] min_cook path  (got=res://art/sprites/protagonist/min_cook.png expected=res://art/sprites/protagonist/min_cook.png)
+  [PASS] min_cook file exists
+  [PASS] ari_neutral path  (got=res://art/sprites/protagonist/ari_neutral.png expected=res://art/sprites/protagonist/ari_neutral.png)
+  [PASS] ari_neutral file exists
+  [PASS] ari_cheer path  (got=res://art/sprites/protagonist/ari_cheer.png expected=res://art/sprites/protagonist/ari_cheer.png)
+  [PASS] ari_cheer file exists
+  [PASS] ari_think path  (got=res://art/sprites/protagonist/ari_think.png expected=res://art/sprites/protagonist/ari_think.png)
+  [PASS] ari_think file exists
+  [PASS] ari_cook path  (got=res://art/sprites/protagonist/ari_cook.png expected=res://art/sprites/protagonist/ari_cook.png)
+  [PASS] ari_cook file exists
 
 [2] helper graceful fallbacks
-  [PASS] unknown gender ??f neutral  (got=res://art/sprites/protagonist/chef_f_neutral.png expected=res://art/sprites/protagonist/chef_f_neutral.png)
+  [PASS] unknown preset ??f neutral  (got=res://art/sprites/protagonist/chef_f_neutral.png expected=res://art/sprites/protagonist/chef_f_neutral.png)
   [PASS] unknown emotion ??m neutral  (got=res://art/sprites/protagonist/chef_m_neutral.png expected=res://art/sprites/protagonist/chef_m_neutral.png)
-  [PASS] default emotion = neutral  (got=res://art/sprites/protagonist/chef_f_neutral.png expected=res://art/sprites/protagonist/chef_f_neutral.png)
+  [PASS] unknown emotion ??leo neutral  (got=res://art/sprites/protagonist/leo_neutral.png expected=res://art/sprites/protagonist/leo_neutral.png)
+  [PASS] default emotion = neutral (amara)  (got=res://art/sprites/protagonist/amara_neutral.png expected=res://art/sprites/protagonist/amara_neutral.png)
 
 [3] PROTAGONIST constants
   [PASS] PROTAGONIST_EMOTIONS count  (got=4 expected=4)
-  [PASS] PROTAGONIST_GENDERS count  (got=2 expected=2)
+  [PASS] PROTAGONIST_PRESETS count  (got=6 expected=6)
+  [PASS] presets has leo
+  [PASS] presets has amara
+  [PASS] presets has min (new)
+  [PASS] presets has ari (new)
+  [PASS] presets keeps f (backward-compat)
+  [PASS] presets keeps m (backward-compat)
   [PASS] emotions has cheer
   [PASS] emotions has cook
 
-[4] SaveManager player_chef_gender field
-  [PASS] default player_chef_gender ''  (got= expected=)
+[4] SaveManager player_chef_preset field (Choose-Your-Chef)
+  [PASS] default player_chef_preset ''  (got= expected=)
+  [PASS] default player_chef_gender alias ''  (got= expected=)
   [PASS] default has_chosen_chef false
-  [PASS] set f  (got=f expected=f)
+  [PASS] set preset f  (got=f expected=f)
+  [PASS] gender alias reads f  (got=f expected=f)
   [PASS] has_chosen_chef true after f
-  [PASS] set m  (got=m expected=m)
-  [PASS] invalid ignored (stays m)  (got=m expected=m)
+  [PASS] set preset m  (got=m expected=m)
+  [PASS] gender alias reads m  (got=m expected=m)
+  [PASS] has_chosen_chef true after m
+  [PASS] set preset leo  (got=leo expected=leo)
+  [PASS] gender alias reads leo  (got=leo expected=leo)
+  [PASS] has_chosen_chef true after leo
+  [PASS] set preset amara  (got=amara expected=amara)
+  [PASS] gender alias reads amara  (got=amara expected=amara)
+  [PASS] has_chosen_chef true after amara
+  [PASS] set preset min  (got=min expected=min)
+  [PASS] gender alias reads min  (got=min expected=min)
+  [PASS] has_chosen_chef true after min
+  [PASS] set preset ari  (got=ari expected=ari)
+  [PASS] gender alias reads ari  (got=ari expected=ari)
+  [PASS] has_chosen_chef true after ari
+  [PASS] gender alias setter ??f  (got=f expected=f)
+  [PASS] invalid ignored (stays f)  (got=f expected=f)
+  [PASS] invalid gender alias ignored (stays f)  (got=f expected=f)
   [PASS] economy untouched ??seed money  (got=50000 expected=50000)
 
 [5] SaveManager player_name field (Player-Name Personalization)
@@ -556,7 +618,7 @@ Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
   [PASS] squash single space 'Big Boss'  (got=Big Boss expected=Big Boss)
   [PASS] sanitize empty -> ''  (got= expected=)
   [PASS] economy untouched after name ops  (got=50000 expected=50000)
-=== summary: 44 PASS / 0 FAIL ===
+=== summary: 101 PASS / 0 FAIL ===
 [scene-exit=0]
 ==================== res://scenes/gimbap_vs_smoke.tscn ====================
 Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
@@ -596,6 +658,30 @@ Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
 [7] 짠5.3 plate vs-plating activation gate
   [PASS] vs plating active when vs_quality_state present
   [PASS] legacy tier path when no vs_quality_state
-=== summary: 14 PASS / 0 FAIL ===
+
+[8] GimbapSliceModule ?듭뜲湲???window narrowing + contract 蹂댁〈
+  [PASS] default (no vs) window_scale == 1.0
+  [PASS] default vs_active == false
+[gimbap-slice-vs] roll_q=0.00 window_scale=0.60
+  [PASS] roll_q=0 ??window_scale == 0.6 (narrow)
+  [PASS] vs_active == true with vs_quality_state
+  [PASS] runner GimbapSliceScene 議댁옱
+  [PASS] runner GimbapBuildScene 議댁옱
+
+[9] Gimbap filling sprite 諛곗꽑 (?밴렐/???쇰룞 ?쒓굅)
+  [PASS] danmuji_strip in INGREDIENT_KEYS
+  [PASS] spinach_cooked in INGREDIENT_KEYS
+  [PASS] danmuji_strip.png resolves
+  [PASS] spinach_cooked.png resolves
+  [PASS] 4 filling specs
+  [PASS] spec[0] = danmuji
+  [PASS] spec[1] = spinach
+  [PASS] spec[2] = carrot
+  [PASS] spec[3] = egg
+  [PASS] danmuji tex = danmuji_strip (not carrot)
+  [PASS] spinach tex = spinach_cooked (not green_onion)
+  [PASS] carrot tex resolves
+  [PASS] egg tex resolves (not whole egg)
+=== summary: 33 PASS / 0 FAIL ===
 [scene-exit=0]
 ALLDONE
