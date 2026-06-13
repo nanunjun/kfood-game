@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://c7opfq6ac8b0k"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_gimbap_painterly.gd" id="1_gpaint"]
+
+[node name="ShotGimbapPainterly" type="Node"]
+script = ExtResource("1_gpaint")

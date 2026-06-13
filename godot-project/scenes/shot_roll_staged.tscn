@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://c8roll3st4ged0"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_roll_staged.gd" id="1_rst"]
+
+[node name="ShotRollStaged" type="Node"]
+script = ExtResource("1_rst")

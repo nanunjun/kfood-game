@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://0becjfp7r705"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_gimbap_rebuild.gd" id="1_gbr"]
+
+[node name="ShotGimbapRebuild" type="Node"]
+script = ExtResource("1_gbr")

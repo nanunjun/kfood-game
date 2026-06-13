@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://d4fpvf3sbm1ea"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_foreign_chars.gd" id="1_fc"]
+
+[node name="ShotForeignChars" type="Node"]
+script = ExtResource("1_fc")

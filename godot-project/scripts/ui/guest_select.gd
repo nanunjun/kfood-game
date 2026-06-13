@@ -125,12 +125,21 @@ func _bar_button(txt: String, x: float, neutral: bool = false) -> Button:
 	return b
 
 
+# Gimbap vertical slice (t1_004) — routes to gimbap_slice_runner.tscn. Only this dish.
+const GIMBAP_VS_ID := "t1_004"
+const GIMBAP_VS_RUNNER_SCENE := "res://scenes/gimbap_slice_runner.tscn"
+
+
 func _on_pick(guest_id: String) -> void:
-	# Cooking Framework 2.0 — route to the new module runner scene.
+	# Cooking Framework 2.0 — route to the new module runner scene. GimbapSliceRunner extends
+	# CookingModuleRunner, so the same static pending_menu_id / pending_guest_id slots feed it.
 	var RunnerScript := preload("res://scripts/gameplay/cooking_module_runner.gd")
 	RunnerScript.pending_menu_id = pending_menu_id
 	RunnerScript.pending_guest_id = guest_id
-	get_tree().change_scene_to_file("res://scenes/cooking_module_runner.tscn")
+	if pending_menu_id == GIMBAP_VS_ID:
+		get_tree().change_scene_to_file(GIMBAP_VS_RUNNER_SCENE)
+	else:
+		get_tree().change_scene_to_file("res://scenes/cooking_module_runner.tscn")
 
 
 func _on_back() -> void:

@@ -272,12 +272,12 @@ func _mood_word_color(emo: String) -> Color:
 # ArtRegistry.get_protagonist로 해석. 미선택/미존재 시 silent skip. world BG 위 layer.
 func _add_chef_host(emotion: String, pos: Vector2, sz: float) -> void:
 	var sm := get_node_or_null("/root/SaveManager")
-	if sm == null or not sm.has_method("player_chef_gender"):
+	if sm == null or not sm.has_method("player_chef_preset"):
 		return
-	var gender: String = sm.player_chef_gender()
-	if gender != "f" and gender != "m":
+	var preset: String = sm.player_chef_preset()
+	if not ArtRegistry.PROTAGONIST_PRESETS.has(preset):
 		return
-	var path := ArtRegistry.get_protagonist(gender, emotion)
+	var path := ArtRegistry.get_protagonist(preset, emotion)
 	if path == "" or not ResourceLoader.exists(path):
 		return
 	# 원형 프레임 (north star warm 톤)
@@ -1114,10 +1114,16 @@ func _on_cook_again() -> void:
 	cook_again_pressed.emit()
 	var food: Dictionary = _payload.get("food", {}) as Dictionary
 	var guest: Dictionary = _payload.get("guest", {}) as Dictionary
+	var food_id: String = String(food.get("id", ""))
+	# GimbapSliceRunner extends CookingModuleRunner and shares the same static pending slots,
+	# so we only need to change which scene we reload. Gimbap (t1_004) → vertical slice runner.
 	var RunnerScript := load("res://scripts/gameplay/cooking_module_runner.gd")
-	RunnerScript.pending_menu_id = String(food.get("id", ""))
+	RunnerScript.pending_menu_id = food_id
 	RunnerScript.pending_guest_id = String(guest.get("id", ""))
-	get_tree().change_scene_to_file("res://scenes/cooking_module_runner.tscn")
+	if food_id == "t1_004":
+		get_tree().change_scene_to_file("res://scenes/gimbap_slice_runner.tscn")
+	else:
+		get_tree().change_scene_to_file("res://scenes/cooking_module_runner.tscn")
 
 
 func _on_choose_other() -> void:

@@ -1,69 +1,57 @@
-## RollModule — TWO-FINGER balanced gimbap rolling (full redesign 2026-06-08).
+## RollModule — TWO-FINGER bottom-to-top gimbap rolling (STRICT TOP-DOWN rebuild 2026-06-12).
 ##
-## "I rolled the gimbap with both hands." 플레이어는 김발 하단 **양쪽(좌·우)을 두 손가락으로
-## 잡고 함께 위로 밀어** 김+밥+속을 단단한 원통으로 만다. 핵심 skill = balance(좌우 sync),
-## even pressure(일관된 누름), full roll(끝까지 말기), smooth motion(매끄러운 동작).
+## "I am rolling the gimbap from the bottom upward." 플레이어는 도마를 **똑바로 위에서 내려다본다**
+## (strict top-down, 사선 0). 김발(bamboo mat)이 화면 **아래쪽 near edge에서 위쪽으로 접히며**
+## 김+밥+속을 단단한 **수평 원통**으로 만다. roll axis = **left-to-right 고정**(항상 수평).
+## 핵심 skill = balance(좌우 sync), even pressure(일관된 누름), full roll(끝까지 말기), smooth.
 ##
-## ── 입력 (two-finger multi-touch) ────────────────────────────────────────────────
+## ── 사용자 거부 교정 (2026-06-12 strict top-down rebuild) ────────────────────────────
+## 반복 불만: 김밥이 사선/3-4/floating, 김발 twist, "말리는 느낌" 약함. 원인 = AI staged curl
+## sprite(gimbap_roll_*)가 oblique 3/4 + end-cap 단면을 baked → Godot transform으로 못 편다.
+## 교정 = gimbap_slice_module과 동일 철학으로 **procedural 강제 top-down**(custom _draw).
+##   - 김발 mat = 화면과 평행한 수평 직사각 (oblique parallelogram sprite 폐기).
+##   - rolling = mat이 **bottom edge → top**으로 접히는 fold (mat twist 0, 가로 stretch 0).
+##   - 완성 cylinder = **수평**(rotation 0, axis L→R 고정), end-cap 단면 노출 0(slice 단계에서만).
+##   - floating roll icon 0 — 모든 오브젝트가 동일 top-down plane, shadow 정하향.
+##
+## ── 입력 (two-finger multi-touch — 무변경) ───────────────────────────────────────────
 ## InputEventScreenTouch / InputEventScreenDrag의 index로 좌·우 손가락을 **독립 추적**한다.
 ##   - 화면 좌측 절반에서 시작한 터치 = LEFT 손가락, 우측 = RIGHT 손가락.
-##   - 두 손가락의 forward(위로) 이동량 = 각 side의 roll 진행.
-##   - 좌우 진행 차이 = tilt(균형). 누름 일관성(속도 변동) = pressure. 평균 진행 = roll distance.
+##   - 두 손가락이 mat **bottom edge를 위로 drag** = 각 side의 fold 진행(bottom→top).
+##   - 좌우 진행 차이 = tilt(균형, 균일=tight / 다름=crooked). 평균 진행 = roll distance.
 ## DESKTOP fallback (테스트/screenshot): 마우스 좌클릭 = 시작점이 속한 side를 드래그, 동시에
 ##   다른 side는 keyboard(A/D 또는 ←/→)로 시뮬레이션. 키보드 단독 sim도 지원(테스트 결정성).
 ##
-## ── 새 SCORING (사용자 승인, roll 한정 내부 변경) ────────────────────────────────────
-## §6.1 재정의 — 40% 좌우 balance / 25% pressure consistency / 20% roll completion distance /
+## ── SCORING (무변경) ─────────────────────────────────────────────────────────────────
+## §6.1 — 40% 좌우 balance / 25% pressure consistency / 20% roll completion distance /
 ##   15% smooth motion. 0~100 → `module_completed(score)` 로 emit (contract 무변경).
 ## CONTRACT 보존: module_completed(0~100) signal / MODULE_TO_FACTOR("roll"→prep) / 4-factor /
-##   progression / save / economy / 게임 flow(Step 2/4 Roll, Gimbap, progress, result) 전부 동일.
+##   progression / save / economy / consequence(§8.2 prep→roll, §8.3 arrange→roll) 전부 동일.
 ##
-## ── 레이어 (실제 김밥 구조, z bottom→top) ────────────────────────────────────────────
-##   1. bamboo_mat_large      — 받침/말이 도구 (base, 음식 자체 아님)
-##   2. seaweed_sheet_rect    — 김 (mat 위 직사각, mat이 받침으로 둘레 보임)
-##   3. rice_layer_flat_rect  — 밥 (김 70~80% 얇게 균등, 위쪽 far edge 김 노출 = seal)
-##   4. filling strips         — 밥 lower-middle 가로 평행 band (egg/carrot/green/beef, embedded)
-##   5. two-finger UI          — 좌·우 원형 target + ghost finger + 위 화살표 2개 + balance meter
-##   6. 완성 김밥(content_only) — SUCCESS 후에만.
-## 김/밥/strip은 _stage_group에 담아 두 손가락 push로 함께 말린다(curl→cylinder). mat은 가이드.
+## ── 레이어 (strict top-down, z bottom→top) ───────────────────────────────────────────
+##   1. _TopDownRollStage   — procedural mat + 김 + 밥 + 속 + 말리는 cylinder (한 custom-draw 노드)
+##   2. two-finger UI       — 좌·우 원형 target + ghost finger + 위 화살표 2개 + balance meter
+## 시각은 전부 _stage가 담당(fold progress + tilt만 전달). 가로 stretch / rotation(cylinder) 0.
 extends "res://scripts/cooking_modules/base_module.gd"
 
-# --- composition geometry ---
-const ROLL_X: float = 540.0              # roll 중심 X.
-const ROLL_HERO_Y: float = 760.0         # setup group 기준 Y (화면 중앙 상단, food area 크게).
+# --- top-down composition geometry (strict top-down, 사선 0) ---
+# 도마(작업면)를 화면 1080x1920 중앙 action zone에 수평으로 눕힌다. mat box = 화면과 평행한
+# 직사각(oblique 0). near edge = box 하단(화면 앞쪽), far edge = box 상단(화면 뒤쪽).
+const ROLL_X: float = 540.0              # roll 중심 X (좌우 대칭축).
+# mat 작업면 box — 가로로 넓게(roll axis = 가로). top-down 직사각.
+const MAT_RECT := Rect2(120, 660, 840, 560)   # (x, y, w, h) — 화면과 평행한 수평 작업면.
+const ROLL_HERO_Y: float = 760.0         # dish shadow / feedback anchor 참고용(기존 호환).
 
-# 정면 first-person 평면 원근 — setup을 세로로 살짝 압축해 평면이 화면 안쪽(위)으로 receding.
-const FRONTAL_SQUASH_Y: float = 0.82     # 1.0=압축 없음.
-
-# 김발 / 김 / 밥 / strip 박스 (3:2, 1536x1024 자산. KEEP_ASPECT_CENTERED가 letterbox 방지).
-const MAT_BOX_W: float = 860.0           # 김발 base 가로 (food area 크게 — empty space 줄임)
-const MAT_BOX_H: float = 573.0           # 3:2 유지 (860 * 1024/1536)
-const SEAWEED_BOX_W: float = 740.0       # 김 — mat보다 작게 (mat이 받침 frame)
-const SEAWEED_BOX_H: float = 493.0       # 3:2 유지
-const RICE_BOX_W: float = 632.0          # 밥 — 김 visible 폭 ~80% 얇게 균등 spread
-const RICE_BOX_H: float = 421.0          # 3:2 유지
-const RICE_SQUASH_Y: float = 0.62        # 밥 세로 압축 — 두꺼운 block을 얇은 layer로
-const RICE_CENTER_Y: float = 46.0        # 밥 중심 Y(stage 로컬) — 아래로 내려 far edge(위) 김 노출(seal)
-
-# 속재료 strip — visible bar 폭을 동일하게(김 visible 폭의 비율) + 세로 압축 = 얇은 평행 band.
-const STRIP_BAR_RATIO: float = 0.66      # 모든 strip visible bar = 김 visible 폭의 66% (rice 안)
-const STRIP_SQUASH_Y: float = 0.52       # strip 세로 압축 — 얇은 김밥 속
-const STRIP_OVERLAP: float = 32.0        # strip 간 겹침 (평행·가까이 — 붙은 band)
-const STRIP_BAND_CENTER_Y: float = 92.0  # 4-strip band 중심 Y(stage 로컬) — 밥 lower-middle
-
-# two-finger 입력 / target.
+# two-finger 입력 / target — mat **bottom edge(near)** 양쪽을 위로 drag.
 const TOUCH_TARGET_OFFSET_X: float = 250.0   # 좌·우 target X 오프셋(중심 기준).
-const TOUCH_TARGET_Y: float = 1230.0         # 두 target Y (mat 하단 near edge 쪽).
-const TOUCH_TARGET_R: float = 64.0           # 원형 target 반지름.
-const PUSH_DISTANCE: float = 460.0           # 완전한 roll까지 필요한 forward(위로) push 거리(px).
+const TOUCH_TARGET_Y: float = 1300.0         # 두 target Y (mat 하단 near edge 아래 — drag 시작점).
+const TOUCH_TARGET_R: float = 62.0           # 원형 target 반지름.
+const PUSH_DISTANCE: float = 440.0           # 완전한 roll까지 필요한 위로 push 거리(px).
 
 # balance / pressure 판정 임계.
-const TILT_WARN: float = 0.12            # 좌우 진행 차 / PUSH_DISTANCE 비율 — 이 이상 = tilt 경고.
+const TILT_WARN: float = 0.12            # 좌우 진행 차 — 이 이상 = tilt 경고.
 const TILT_BAD: float = 0.28             # 이 이상 = crooked(심한 비뚤).
 const SMOOTH_JITTER_REF: float = 1800.0  # 속도 변동(px/s) 기준 — 이 이상이면 smooth 감점.
-
-# halfway swap — 이 progress 이상에서 평평 layer를 "반쯤 말린" sprite로 교체.
-const HALFWAY_SWAP_P: float = 0.55
 
 # === Gimbap Vertical Slice — consequence hook (design §8.2 / §8.3) ===
 # Pass B: prep_quality(julienne strip 품질) → roll sweet zone 폭 보정 / arrange balance →
@@ -101,17 +89,8 @@ var _mouse_side: int = 0                 # 0=없음, -1=좌, +1=우 (현재 마�
 var _kb_left_held: bool = false
 var _kb_right_held: bool = false
 
-# --- 시각 nodes ---
-var _stage_group: Node2D = null          # 김+밥+속 wrapper (양손 push로 함께 말림)
-var _stage_base_y: float = 0.0
-var _mat_node2d: Node2D = null           # 김발 받침 wrapper
-var _mat: Control = null
-var _mat_base_y: float = 0.0
-var _seaweed: TextureRect = null
-var _rice: TextureRect = null
-var _fillings: Array = []
-var _halfway: TextureRect = null
-var _finished_roll: TextureRect = null
+# --- 시각 nodes (strict top-down procedural) ---
+var _stage: _TopDownRollStage = null      # mat + 김 + 밥 + 속 + 말리는 cylinder (custom-draw 단일 노드)
 
 # two-finger UI.
 var _ui_left: _TouchTargetDraw = null
@@ -125,20 +104,16 @@ var _fill_marker: ColorRect = null
 func _module_start(params: Dictionary) -> void:
 	_attach_cooking_bg(1000.0)
 	# Step 2/4 Roll — game flow 보존. dish name = Gimbap (header title는 "Roll").
-	_build_header("Roll", "Use two fingers to push both sides evenly")
+	_build_header("Roll", "Drag both sides upward evenly")
 	set_process_input(true)
 	_consume_vs_consequence(params)
 
-	var food_id: StringName = StringName(String(params.get("food_id", "")))
-	_attach_dish_shadow(Vector2(ROLL_X, ROLL_HERO_Y + 180.0), 560.0)
+	# soft contact shadow — mat 작업면 아래 정하향(top-down 통일, 사선 0).
+	_attach_dish_shadow(Vector2(ROLL_X, MAT_RECT.position.y + MAT_RECT.size.y + 8.0), 700.0)
 
-	# Layer 1 — bamboo mat base (받침/말이 도구).
-	_build_bamboo_mat_base()
-	# Layer 2~3 — 김 + 밥 (실제 김밥 구조).
-	_build_stage_layers(food_id)
-	# Layer 4 — 속재료 평행 band (밥에 살짝 embedded).
-	_build_fillings(food_id)
-	# Layer 5 — two-finger UI (좌·우 target + ghost + arrow + balance meter).
+	# Layer 1 — strict top-down procedural stage (mat + 김 + 밥 + 속 + 말리는 cylinder).
+	_build_top_down_stage()
+	# Layer 2 — two-finger UI (좌·우 target + ghost + arrow + balance meter).
 	_build_two_finger_ui()
 	# progress track.
 	_build_progress_ui()
@@ -152,203 +127,23 @@ func _module_start(params: Dictionary) -> void:
 	_hint.add_theme_color_override("font_color", Color(0.30, 0.20, 0.12))
 	_hint.add_theme_color_override("font_outline_color", Color(1, 1, 1, 0.85))
 	_hint.add_theme_constant_override("outline_size", 8)
-	_hint.text = "Roll evenly from both edges"
+	_hint.text = "Drag both sides upward evenly to roll the gimbap tight."
 	add_child(_hint)
 
 
-# Layer 1 — bamboo_mat_large 받침 (말이 도구, 음식 자체 아님). z=L2_BASE 최하단.
-func _build_bamboo_mat_base() -> void:
-	_mat_node2d = Node2D.new()
-	_mat_node2d.z_index = L2_BASE
-	_mat_node2d.position = Vector2(ROLL_X, ROLL_HERO_Y + 70.0)
-	_mat_node2d.scale = Vector2(1.0, FRONTAL_SQUASH_Y)
-	_mat_base_y = _mat_node2d.position.y
-	add_child(_mat_node2d)
-	var mat_path: String = ArtRegistry.get_roll_asset("bamboo_mat_large")
-	if mat_path == "":
-		mat_path = ArtRegistry.get_vessel("rolling_mat")   # graceful fallback
-	if mat_path != "":
-		var mat_tex := TextureRect.new()
-		mat_tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		mat_tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		mat_tex.custom_minimum_size = Vector2.ZERO
-		mat_tex.texture = load(mat_path)
-		mat_tex.position = Vector2(-MAT_BOX_W * 0.5, -MAT_BOX_H * 0.5)
-		mat_tex.size = Vector2(MAT_BOX_W, MAT_BOX_H)
-		mat_tex.pivot_offset = Vector2(MAT_BOX_W * 0.5, MAT_BOX_H * 0.5)
-		mat_tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_mat_node2d.add_child(mat_tex)
-		_mat = mat_tex
-	else:
-		var strip := ColorRect.new()
-		strip.color = Color(0.78, 0.58, 0.30)
-		strip.size = Vector2(MAT_BOX_W, MAT_BOX_H)
-		strip.position = Vector2(-MAT_BOX_W * 0.5, -MAT_BOX_H * 0.5)
-		strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var cols: int = 13
-		for i in range(cols):
-			var line := ColorRect.new()
-			line.color = Color(0.62, 0.44, 0.22)
-			line.size = Vector2(4, MAT_BOX_H)
-			line.position = Vector2(float(i) * (MAT_BOX_W / float(cols)), 0)
-			line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			strip.add_child(line)
-		_mat_node2d.add_child(strip)
-		_mat = strip
-
-
-# Layer 2~3 — 김(seaweed) → 밥(rice). 밥은 김 70~80% 얇게 균등, far edge(위) 김 노출(seal).
-func _build_stage_layers(_food_id: StringName) -> void:
-	_stage_group = Node2D.new()
-	_stage_group.position = Vector2(ROLL_X, ROLL_HERO_Y + 70.0)
-	_stage_group.scale = Vector2(1.0, FRONTAL_SQUASH_Y)
-	_stage_group.z_index = L3_INGREDIENT
-	_stage_base_y = _stage_group.position.y
-	add_child(_stage_group)
-
-	# 김 한 장.
-	var sheet_w: float = SEAWEED_BOX_W
-	var sheet_h: float = SEAWEED_BOX_H
-	var seaweed_path: String = ArtRegistry.get_roll_asset("seaweed_sheet_rect")
-	if seaweed_path == "":
-		seaweed_path = ArtRegistry.get_roll_asset("seaweed_sheet")
-	if seaweed_path != "":
-		_seaweed = TextureRect.new()
-		_seaweed.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		_seaweed.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		_seaweed.custom_minimum_size = Vector2.ZERO
-		_seaweed.texture = load(seaweed_path)
-		_seaweed.size = Vector2(sheet_w, sheet_h)
-		_seaweed.position = Vector2(-sheet_w * 0.5, -sheet_h * 0.5)
-		_seaweed.pivot_offset = Vector2(sheet_w * 0.5, sheet_h * 0.5)
-		_seaweed.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_stage_group.add_child(_seaweed)
-	else:
-		var fb := ColorRect.new()
-		fb.color = Color(0.16, 0.20, 0.14)
-		fb.size = Vector2(sheet_w, sheet_h)
-		fb.position = Vector2(-sheet_w * 0.5, -sheet_h * 0.5)
-		fb.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_stage_group.add_child(fb)
-		_seaweed = null
-
-	# 밥 — 김 70~80% 얇게 균등 spread, 중심 RICE_CENTER_Y로 내려 far edge(위) 김 노출(seal).
-	var rice_w: float = RICE_BOX_W
-	var rice_h: float = RICE_BOX_H
-	var rice_path: String = ArtRegistry.get_roll_asset("rice_layer_flat_rect")
-	if rice_path == "":
-		rice_path = ArtRegistry.get_roll_asset("rice_layer_flat")
-	if rice_path != "":
-		_rice = TextureRect.new()
-		_rice.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		_rice.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		_rice.custom_minimum_size = Vector2.ZERO
-		_rice.texture = load(rice_path)
-		_rice.size = Vector2(rice_w, rice_h)
-		_rice.pivot_offset = Vector2(rice_w * 0.5, rice_h * 0.5)
-		_rice.scale = Vector2(1.0, RICE_SQUASH_Y)
-		_rice.position = Vector2(-rice_w * 0.5, RICE_CENTER_Y - rice_h * 0.5)
-		_rice.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_stage_group.add_child(_rice)
-
-	# swap 대상 — halfway / finished (처음엔 숨김).
-	var swap_box: float = 470.0
-	var halfway_path: String = ArtRegistry.get_roll_asset("gimbap_roll_halfway")
-	if halfway_path != "":
-		_halfway = TextureRect.new()
-		_halfway.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		_halfway.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		_halfway.custom_minimum_size = Vector2.ZERO
-		_halfway.texture = load(halfway_path)
-		_halfway.size = Vector2(swap_box, swap_box)
-		_halfway.position = Vector2(-swap_box * 0.5, -swap_box * 0.5)
-		_halfway.pivot_offset = Vector2(swap_box * 0.5, swap_box * 0.5)
-		_halfway.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_halfway.modulate = Color(1, 1, 1, 0.0)
-		_halfway.z_index = 6
-		_stage_group.add_child(_halfway)
-
-	var finished_path: String = ArtRegistry.get_roll_asset("gimbap_roll_finished_content_only")
-	if finished_path != "":
-		_finished_roll = TextureRect.new()
-		_finished_roll.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		_finished_roll.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		_finished_roll.custom_minimum_size = Vector2.ZERO
-		_finished_roll.texture = load(finished_path)
-		_finished_roll.size = Vector2(swap_box, swap_box)
-		_finished_roll.position = Vector2(-swap_box * 0.5, -swap_box * 0.5)
-		_finished_roll.pivot_offset = Vector2(swap_box * 0.5, swap_box * 0.5)
-		_finished_roll.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_finished_roll.modulate = Color(1, 1, 1, 0.0)
-		_finished_roll.visible = false
-		_finished_roll.z_index = 8
-		_stage_group.add_child(_finished_roll)
-
-
-# Layer 4 — 속재료 평행 band (밥 lower-middle, 밥에 살짝 embedded, seaweed 하단 edge에 평행).
-func _build_fillings(_food_id: StringName) -> void:
-	var strips := [
-		{"long": "egg_strip_long",    "old": "gimbap_filling_strip_egg",    "col": Color(0.97, 0.80, 0.26),
-			"bw": 0.82, "bh": 0.24},
-		{"long": "carrot_strip_long", "old": "gimbap_filling_strip_carrot", "col": Color(0.93, 0.52, 0.18),
-			"bw": 0.76, "bh": 0.31},
-		{"long": "green_strip_long",  "old": "gimbap_filling_strip_green",  "col": Color(0.36, 0.62, 0.24),
-			"bw": 0.81, "bh": 0.25},
-		{"long": "beef_strip_long",   "old": "",                            "col": Color(0.55, 0.32, 0.18),
-			"bw": 0.89, "bh": 0.43},
-	]
-	var seaweed_vis_w: float = SEAWEED_BOX_W * 0.86
-	var target_bar_w: float = STRIP_BAR_RATIO * seaweed_vis_w
-	var aspect: float = 1024.0 / 1536.0
-	var parent_node: Node = _stage_group if _stage_group != null else self
-
-	var rows: Array = []
-	for spec in strips:
-		var bw_ratio: float = float(spec["bw"])
-		var bh_ratio: float = float(spec["bh"])
-		var box_w: float = target_bar_w / bw_ratio
-		var box_h: float = box_w * aspect
-		var bar_vis_h: float = box_h * bh_ratio * STRIP_SQUASH_Y
-		rows.append({"spec": spec, "box_w": box_w, "box_h": box_h, "bar_h": bar_vis_h})
-
-	var total_h: float = 0.0
-	for r in rows:
-		total_h += float(r["bar_h"])
-	total_h -= STRIP_OVERLAP * float(rows.size() - 1)
-	var cur_top: float = STRIP_BAND_CENTER_Y - total_h * 0.5
-
-	for r in rows:
-		var spec: Dictionary = r["spec"]
-		var box_w: float = float(r["box_w"])
-		var box_h: float = float(r["box_h"])
-		var bar_h: float = float(r["bar_h"])
-		var center_y: float = cur_top + bar_h * 0.5
-		var node: Control
-		var path: String = ArtRegistry.get_roll_asset(String(spec["long"]))
-		if path == "" and String(spec["old"]) != "":
-			path = ArtRegistry.get_roll_asset(String(spec["old"]))
-		if path != "":
-			var t := TextureRect.new()
-			t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			t.custom_minimum_size = Vector2.ZERO
-			t.texture = load(path)
-			t.size = Vector2(box_w, box_h)
-			t.pivot_offset = Vector2(box_w * 0.5, box_h * 0.5)
-			t.scale = Vector2(1.0, STRIP_SQUASH_Y)
-			node = t
-			node.position = Vector2(-box_w * 0.5, center_y - box_h * 0.5)
-		else:
-			var c := ColorRect.new()
-			c.color = spec["col"]
-			c.size = Vector2(target_bar_w, maxf(bar_h, 30.0))
-			node = c
-			node.position = Vector2(-target_bar_w * 0.5, center_y - node.size.y * 0.5)
-		node.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		node.z_index = L3_INGREDIENT + 2   # 밥 위 (살짝 embedded — 밥이 둘레로 보임)
-		parent_node.add_child(node)
-		_fillings.append({"node": node, "base_y": center_y, "size": node.size})
-		cur_top = center_y + bar_h * 0.5 - STRIP_OVERLAP
+# Layer 1 — strict top-down procedural stage (사선/twist/floating 0).
+#
+# 사용자 거부 교정: AI staged curl sprite(oblique + end-cap baked)를 폐기하고 gimbap_slice_module과
+# 동일하게 custom-draw 노드로 강제 top-down을 보장한다. mat은 화면과 평행한 수평 직사각, fold는
+# bottom→top, 완성 cylinder는 항상 수평(rotation 0). 단면(end-cap)은 절대 안 보인다(slice 단계 OK).
+func _build_top_down_stage() -> void:
+	_stage = _TopDownRollStage.new()
+	_stage.name = "TopDownRollStage"
+	_stage.position = MAT_RECT.position
+	_stage.setup(MAT_RECT.size)
+	_stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stage.z_index = L3_INGREDIENT
+	add_child(_stage)
 
 
 # Layer 5 — two-finger UI: 좌·우 원형 target + ghost finger + 위 화살표 2개 + balance meter.5
@@ -552,45 +347,19 @@ func _sample_motion() -> void:
 
 
 # =====================================================================================
-# Roll visual — 두 손가락 push → curl → cylinder. uneven=crooked / weak=loose / strong=burst.
+# Roll visual — bottom-to-top fold → 수평 cylinder. uneven=crooked / weak=loose / strong=tight.
+# 시각은 전부 _stage(custom-draw)가 담당. roll axis = 가로 고정, cylinder rotation 0 (수평 유지).
 # =====================================================================================
 
 func _apply_roll_visual() -> void:
 	var avg_p: float = (_left_progress + _right_progress) * 0.5
 	var roundness: float = clampf(avg_p, 0.0, 1.0)
-	# tilt = 좌우 진행 차 (양수 = 좌가 빠름 → 왼쪽 기울기).
+	# tilt = 좌우 진행 차 (양수 = 좌가 빠름 → 왼쪽이 더 말림 = crooked).
 	# §8.3 arrange→roll: arrange 불균형이면 균등 push여도 tilt가 offset만큼 bias된다(비뚤어 보임).
 	var tilt: float = (_left_progress - _right_progress) + _vs_tilt_offset * roundness
-	# 김발 받침: near edge(하단)가 들리며 위로 말아 올림 + 균형에 따라 기울임.
-	if is_instance_valid(_mat_node2d):
-		_mat_node2d.position.y = _mat_base_y - roundness * 64.0
-		_mat_node2d.rotation = -tilt * 0.34
-	# stage group(김+밥+속): 말릴수록 가로폭 줄고(원통화) 위로 들림. tilt → 비뚤.
-	if is_instance_valid(_stage_group):
-		var base_sx: float = 1.0 - roundness * 0.42
-		var base_sy: float = (1.0 + roundness * 0.10) * FRONTAL_SQUASH_Y
-		_stage_group.scale = Vector2(base_sx, base_sy)
-		_stage_group.rotation = -tilt * 0.40            # uneven → cylinder 비뚤/angled
-		_stage_group.position.y = _stage_base_y - roundness * 44.0
-		# pressure 과다(양손 모두 sweet 넘김) → 옆으로 부풀음(터짐 직전).
-		if avg_p > 1.0:
-			var over: float = clampf((avg_p - 1.0) / 0.2, 0.0, 1.0)
-			_stage_group.scale = Vector2(base_sx + over * 0.16, base_sy + over * 0.12)
-	# halfway swap — avg_p≥HALFWAY_SWAP_P이면 평평 layer를 반쯤 말린 sprite로 교체.
-	if is_instance_valid(_halfway):
-		var hf: float = clampf((avg_p - HALFWAY_SWAP_P) / maxf(1.0 - HALFWAY_SWAP_P, 0.01), 0.0, 1.0)
-		_halfway.modulate.a = hf
-		var flat_a: float = clampf(1.0 - hf, 0.0, 1.0)
-		if is_instance_valid(_seaweed):
-			_seaweed.modulate.a = clampf(flat_a + 0.15, 0.0, 1.0)
-		if is_instance_valid(_rice):
-			_rice.modulate.a = flat_a
-	# 재료 strips — 말리며 안으로 빨려 들어감(투명화).
-	for f in _fillings:
-		var node: Control = f["node"]
-		if not is_instance_valid(node):
-			continue
-		node.modulate.a = clampf(1.0 - roundness * 0.9, 0.05, 1.0)
+	# _stage가 fold 진행(bottom→top) + 좌우 비대칭(tilt)을 custom-draw로 그린다. cylinder는 항상 수평.
+	if is_instance_valid(_stage):
+		_stage.set_roll(roundness, tilt)
 	# balance meter / target UI 갱신.
 	if is_instance_valid(_balance_meter):
 		_balance_meter.left_p = _left_progress
@@ -618,21 +387,21 @@ func _update_hint() -> void:
 	var both_down: bool = (_left_id != -1 or _kb_left_held) and (_right_id != -1 or _kb_right_held)
 	var msg: String
 	if not both_down and _rolling:
-		msg = "Push both sides together"
+		msg = "Drag both sides upward together"
 	elif tilt_ratio > TILT_BAD:
-		msg = "Too much left pressure" if _left_progress > _right_progress else "Too much right pressure"
+		msg = "Left side too far ahead" if _left_progress > _right_progress else "Right side too far ahead"
 	elif avg_p > 1.05:
 		msg = "Too much pressure!" if diff < TILT_WARN else "Fillings squeezed out"
 	elif tilt_ratio > TILT_WARN:
-		msg = "Too much left pressure" if _left_progress > _right_progress else "Too much right pressure"
+		msg = "Keep both sides even"
 	elif avg_p < 0.35:
-		msg = "Roll is loose"
+		msg = "Keep rolling upward"
 	elif avg_p >= 0.78 and diff <= TILT_WARN:
 		msg = "Tight roll!"
 	elif diff <= TILT_WARN * 0.6 and avg_p >= 0.45:
 		msg = "Perfect Balance!"
 	else:
-		msg = "Roll evenly from both edges"
+		msg = "Drag both sides upward evenly"
 	_hint.text = msg
 
 
@@ -660,49 +429,35 @@ func _finalize_roll(_legacy_ignored: bool = false) -> void:
 	var loose: bool = avg_p < loose_thresh2
 	if is_instance_valid(_hint):
 		if score >= 80.0:
-			_hint.text = "Perfect Balance!"
+			_hint.text = "Perfect, tight roll!"
 		elif crooked:
 			_hint.text = "Crooked roll - uneven push"
 		elif burst:
 			_hint.text = "Fillings squeezed out"
 		elif loose:
-			_hint.text = "Roll is loose"
+			_hint.text = "Roll is a bit loose"
 		else:
-			_hint.text = "Done"
+			_hint.text = "Rolled!"
 
-	# 완성 김밥(content_only)은 SUCCESS에서만 (score≥60, 안 터짐, 안 비뚤).
+	# 완성 김밥은 SUCCESS에서만 둥근 tight cylinder (score≥60, 안 터짐, 안 비뚤).
 	var well_rolled: bool = score >= 60.0 and not burst and not crooked
-	if well_rolled and is_instance_valid(_finished_roll):
-		_finished_roll.visible = true
-		var fr_tw := _finished_roll.create_tween()
-		fr_tw.tween_property(_finished_roll, "modulate:a", 1.0, 0.22)
-		if is_instance_valid(_halfway):
-			_halfway.create_tween().tween_property(_halfway, "modulate:a", 0.0, 0.18)
-		if is_instance_valid(_seaweed):
-			_seaweed.create_tween().tween_property(_seaweed, "modulate:a", 0.0, 0.18)
-		if is_instance_valid(_rice):
-			_rice.create_tween().tween_property(_rice, "modulate:a", 0.0, 0.18)
-		for f in _fillings:
-			var fn: Control = f["node"]
-			if is_instance_valid(fn):
-				fn.create_tween().tween_property(fn, "modulate:a", 0.0, 0.18)
-	# stage group settle — 잘 말렸으면 똑바른 원통, 비뚤면 기울어진 채.
-	if is_instance_valid(_stage_group):
-		var tw := _stage_group.create_tween()
-		tw.set_parallel(true)
-		tw.tween_property(_stage_group, "scale", Vector2(0.92, 0.92 * FRONTAL_SQUASH_Y), 0.18)
-		if well_rolled:
-			tw.tween_property(_stage_group, "rotation", 0.0, 0.18)
-	# 김발 받침 살짝 내리며 페이드 — 완성 roll이 위로 드러남.
-	if is_instance_valid(_mat_node2d):
-		var mat_tw := _mat_node2d.create_tween()
-		mat_tw.set_parallel(true)
-		mat_tw.tween_property(_mat_node2d, "position:y", _mat_base_y + 92.0, 0.32)\
-			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
-		if well_rolled:
-			mat_tw.tween_property(_mat_node2d, "rotation", 0.0, 0.28)
-		if is_instance_valid(_mat):
-			mat_tw.tween_property(_mat, "modulate:a", 0.35, 0.30)
+
+	# ── 끝 상태 확정 (procedural _stage가 result shape를 그린다 — 가짜 sprite 없음) ──────────
+	# 기존 burst/loose/well_rolled 플래그 1:1 매핑 (scoring 무변경). cylinder는 항상 **수평**
+	# (well_rolled면 tilt 0으로 settle, crooked면 기운 채 유지). 단면(end-cap) 노출 0 — 완성
+	# log는 위에서 본 수평 원통일 뿐(spiral 단면은 다음 Slice 단계에서만).
+	#   well_rolled → finished(둥근 tight, tilt 0) / burst → tight(rice 삐져나옴) / loose → loose(느슨).
+	var result_state: int = _TopDownRollStage.RESULT_FINISHED
+	if burst:
+		result_state = _TopDownRollStage.RESULT_TIGHT
+	elif loose:
+		result_state = _TopDownRollStage.RESULT_LOOSE
+	elif not well_rolled:
+		result_state = _TopDownRollStage.RESULT_LOOSE
+	if is_instance_valid(_stage):
+		# 완성 = roundness 1.0 고정. well_rolled면 tilt 0(똑바른 수평 원통)으로 settle.
+		var settle_tilt: float = 0.0 if well_rolled else diff * signf((_left_progress - _right_progress) + _vs_tilt_offset)
+		_stage.finalize_roll(result_state, settle_tilt)
 	# two-finger UI 페이드 (역할 종료).
 	for ui in [_ui_left, _ui_right, _balance_meter]:
 		if is_instance_valid(ui):
@@ -814,6 +569,298 @@ func _compute_roll_score(left_p: float, right_p: float,
 
 	var score: float = (balance * 40.0) + (pressure * 25.0) + (distance * 20.0) + (smooth * 15.0)
 	return clampf(score, 0.0, 100.0)
+
+
+# =====================================================================================
+# STRICT TOP-DOWN procedural roll stage (사선/twist/floating 0 보장 — gimbap_slice 철학과 동일).
+#
+# 한 custom-draw Control이 (1) 수평 김발 mat (2) 김+밥+가로 strip 속 (3) bottom→top fold 진행
+# (4) 완성 수평 cylinder를 전부 그린다. roll axis = 가로 고정. cylinder rotation 0(항상 수평).
+# 시각 입력은 set_roll(roundness, tilt) 1개 + finalize_roll(result_state, settle_tilt).
+#   roundness 0~1 : fold 진행(0=평평 setup, 1=완전히 말린 수평 log).
+#   tilt          : 좌우 비대칭(균등=0, 다르면 near edge가 한쪽이 더 올라와 비뚤 — 단 cylinder 자체는 수평).
+# end-cap(spiral 단면) 절대 안 그림 — 완성도 위에서 본 둥근 외피 수평 원통일 뿐.
+# =====================================================================================
+class _TopDownRollStage extends Control:
+	enum { RESULT_NONE, RESULT_FINISHED, RESULT_LOOSE, RESULT_TIGHT }
+
+	var _box: Vector2 = Vector2(840, 560)
+	var _round: float = 0.0          # fold 진행 0~1.
+	var _tilt: float = 0.0           # 좌우 비대칭(균등=0).
+	var _result: int = RESULT_NONE   # 끝 상태(완성/loose/tight). rolling 중 NONE.
+
+	# === PAINTERLY SWAP (gimbap-visual-quality-rebuild §5/§6, 2026-06-13) ===
+	# procedural capsule _draw를 high-angle painterly 6-state sprite cross-fade로 교체.
+	# roundness 0~1 → flat_setup → edge_lift → first_fold → curling → compression → finished.
+	# result 분기: well_rolled→roll_finished / loose→roll_finished_loose / burst→roll_finished_burst.
+	# tilt(좌우 불균형)는 sprite 살짝 회전/offset만(mat twist 금지, high-angle 수평 유지).
+	# 입력/scoring/consequence 무변경 — set_roll/finalize_roll 시그니처 동일, _draw는 fallback만.
+	# painterly 미존재 시 _painterly=false → 기존 procedural _draw로 graceful fallback.
+	var _painterly: bool = false
+	var _stage_sprites: Array = []    # 6 진행 state TextureRect (cross-fade).
+	var _result_sprites: Dictionary = {}   # result_state → 완성 variant TextureRect.
+	const _STAGE_KEYS := [
+		"roll_flat_setup", "roll_edge_lift", "roll_first_fold",
+		"roll_curling", "roll_compression", "roll_finished",
+	]
+
+	# 김밥 속 색 — danmuji 노랑 / spinach 녹 / carrot 주황 / egg 노랑(GimbapSlice와 정합).
+	const FILL_COLS := [
+		Color(0.98, 0.82, 0.20),  # danmuji
+		Color(0.24, 0.46, 0.18),  # spinach
+		Color(0.93, 0.52, 0.18),  # carrot
+		Color(0.97, 0.80, 0.26),  # egg
+	]
+	const SEAWEED := Color(0.13, 0.17, 0.11)
+	const SEAWEED_LO := Color(0.08, 0.11, 0.07)
+	const RICE := Color(0.97, 0.95, 0.88)
+	const MAT_BAMBOO := Color(0.80, 0.62, 0.34)
+	const MAT_BAMBOO_LO := Color(0.66, 0.48, 0.24)
+
+	func setup(box: Vector2) -> void:
+		_box = box
+		size = box
+		_build_painterly_sprites()
+		queue_redraw()
+
+	## 6 진행 state + 3 result variant painterly sprite를 한 번 깔고 alpha로 cross-fade한다.
+	## 전 sprite는 box를 가득 채우는 high-angle painterly(KEEP_ASPECT_CENTERED, 수평 유지).
+	func _build_painterly_sprites() -> void:
+		var any: bool = false
+		for key in _STAGE_KEYS:
+			var path: String = ArtRegistry.get_painterly(key)
+			var tr := TextureRect.new()
+			tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			tr.size = _box
+			tr.position = Vector2.ZERO
+			tr.pivot_offset = _box * 0.5
+			tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			tr.modulate = Color(1, 1, 1, 0.0)
+			if path != "":
+				tr.texture = load(path)
+				any = true
+			add_child(tr)
+			_stage_sprites.append(tr)
+		# result variant — well_rolled/loose/burst (state 6 분기). 미존재 시 roll_finished로 fallback.
+		for pair in [[RESULT_FINISHED, "roll_finished"], [RESULT_LOOSE, "roll_finished_loose"],
+				[RESULT_TIGHT, "roll_finished_burst"]]:
+			var rpath: String = ArtRegistry.get_painterly(String(pair[1]))
+			if rpath == "":
+				rpath = ArtRegistry.get_painterly("roll_finished")
+			var rt := TextureRect.new()
+			rt.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			rt.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			rt.size = _box
+			rt.position = Vector2.ZERO
+			rt.pivot_offset = _box * 0.5
+			rt.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			rt.modulate = Color(1, 1, 1, 0.0)
+			if rpath != "":
+				rt.texture = load(rpath)
+				any = true
+			add_child(rt)
+			_result_sprites[int(pair[0])] = rt
+		_painterly = any
+		if _painterly:
+			_show_stage(0)
+
+	## roundness 0~1 → 6 진행 state index. flat(0)→edge_lift→first_fold→curling→compression→finished.
+	func _stage_index_for(r: float) -> int:
+		if r < 0.16: return 0
+		elif r < 0.34: return 1
+		elif r < 0.52: return 2
+		elif r < 0.72: return 3
+		elif r < 0.90: return 4
+		return 5
+
+	## 한 진행 state만 보이게 cross-fade (alpha swap) + tilt를 sprite 회전/offset으로(mat twist 금지).
+	func _show_stage(idx: int) -> void:
+		for i in range(_stage_sprites.size()):
+			var tr: TextureRect = _stage_sprites[i]
+			if not is_instance_valid(tr):
+				continue
+			tr.modulate.a = 1.0 if i == idx else 0.0
+		for k in _result_sprites:
+			var rt: TextureRect = _result_sprites[k]
+			if is_instance_valid(rt):
+				rt.modulate.a = 0.0
+		_apply_tilt_transform()
+
+	## tilt(좌우 불균형) = sprite 살짝 회전 + x offset만 (수평 painterly 유지, mat 회전/twist 아님).
+	func _apply_tilt_transform() -> void:
+		var rot: float = clampf(_tilt, -1.0, 1.0) * 0.06   # 최대 ~3.4° (crooked 표현, 미세).
+		var dx: float = clampf(_tilt, -1.0, 1.0) * 18.0
+		for tr in _stage_sprites:
+			if is_instance_valid(tr):
+				(tr as Control).rotation = rot
+				(tr as Control).position = Vector2(dx, 0.0)
+		for k in _result_sprites:
+			var rt: TextureRect = _result_sprites[k]
+			if is_instance_valid(rt):
+				rt.rotation = rot
+				rt.position = Vector2(dx, 0.0)
+
+	## roll 진행 갱신 — fold(bottom→top) + 좌우 비대칭. painterly면 state swap, 아니면 procedural _draw.
+	func set_roll(roundness: float, tilt: float) -> void:
+		_round = clampf(roundness, 0.0, 1.0)
+		_tilt = clampf(tilt, -1.0, 1.0)
+		if _painterly and _result == RESULT_NONE:
+			_show_stage(_stage_index_for(_round))
+		queue_redraw()
+
+	## 끝 상태 확정 — result shape + settle tilt(well_rolled면 0=똑바른 수평 원통).
+	func finalize_roll(result_state: int, settle_tilt: float) -> void:
+		_result = result_state
+		_round = 1.0
+		_tilt = clampf(settle_tilt, -1.0, 1.0)
+		if _painterly:
+			# 진행 sprite 전부 숨기고 result variant 1개만 표시.
+			for tr in _stage_sprites:
+				if is_instance_valid(tr):
+					(tr as TextureRect).modulate.a = 0.0
+			for k in _result_sprites:
+				var rt: TextureRect = _result_sprites[k]
+				if is_instance_valid(rt):
+					rt.modulate.a = 1.0 if int(k) == result_state else 0.0
+			_apply_tilt_transform()
+		queue_redraw()
+
+	func _draw() -> void:
+		# painterly가 있으면 sprite layer가 시각을 담당 → procedural draw 생략(중복 방지).
+		if _painterly:
+			return
+		var w: float = _box.x
+		var h: float = _box.y
+		# ── 1. 김발 mat — 화면과 평행한 수평 직사각 (oblique 0). bamboo strip = 가로 line들.
+		# fold 진행에 따라 near edge(하단)가 위로 접혀 올라가므로 mat의 "아직 안 접힌" 부분만 남는다.
+		var mat_top: float = 0.0
+		var mat_bot: float = h
+		# near edge(하단)가 roll 진행만큼 위로 접힘 → mat 보이는 하단 경계가 위로 올라온다.
+		var fold_y: float = lerpf(mat_bot, mat_top + h * 0.30, _round)
+		_draw_mat(0.0, mat_top, w, fold_y)
+		# ── 2. 말리는 김밥 — bottom→top fold. roundness가 낮으면 평평 layer(김+밥+가로 strip),
+		# 높으면 위쪽에 수평 cylinder(log)가 형성된다. axis = 가로 고정.
+		if _result != RESULT_NONE or _round >= 0.999:
+			_draw_finished_log(w, h)
+		elif _round < 0.42:
+			_draw_flat_setup(w, h, _round)
+		else:
+			_draw_rolling(w, h, _round)
+
+	# 수평 김발 — bamboo 가로결 (mat이 비스듬하지 않게 화면과 평행한 직사각).
+	func _draw_mat(x0: float, y0: float, w: float, y1: float) -> void:
+		if y1 <= y0:
+			return
+		draw_rect(Rect2(x0, y0, w, y1 - y0), MAT_BAMBOO)
+		# 가로 bamboo strip line (top-down 결 — 세로결이면 oblique처럼 보임 방지, 가로 유지).
+		var lines: int = 12
+		var step: float = (y1 - y0) / float(lines)
+		var yy: float = y0
+		while yy < y1:
+			draw_line(Vector2(x0 + 8.0, yy), Vector2(x0 + w - 8.0, yy), MAT_BAMBOO_LO, 3.0)
+			yy += step
+		# 접힌 near edge highlight (mat이 위로 말려 올라간 fold line).
+		draw_line(Vector2(x0 + 6.0, y1), Vector2(x0 + w - 6.0, y1), Color(0.95, 0.84, 0.55, 0.9), 6.0, true)
+
+	# 평평 setup — 김(직사각) 위 밥(얇게) 위 가로 평행 strip 4줄. near edge가 살짝 들림(tilt).
+	func _draw_flat_setup(w: float, h: float, r: float) -> void:
+		var pad: float = 60.0
+		var sw_x0: float = pad
+		var sw_x1: float = w - pad
+		# 김이 fold 진행만큼 아래(near)에서 위로 말려 올라가므로 보이는 김 하단이 올라온다.
+		var sw_top: float = h * 0.16
+		var sw_bot: float = lerpf(h * 0.92, h * 0.50, r)
+		# 김 (dark 직사각).
+		draw_rect(Rect2(sw_x0, sw_top, sw_x1 - sw_x0, sw_bot - sw_top), SEAWEED)
+		# 밥 (김 안 얇게 균등, far edge=위 김 노출 = seal).
+		var ri_x0: float = sw_x0 + 36.0
+		var ri_x1: float = sw_x1 - 36.0
+		var ri_top: float = sw_top + (sw_bot - sw_top) * 0.22
+		var ri_bot: float = sw_bot - 14.0
+		draw_rect(Rect2(ri_x0, ri_top, ri_x1 - ri_x0, ri_bot - ri_top), RICE)
+		# 가로 평행 strip 4줄 (밥 lower-middle, 가로 band = roll axis와 평행).
+		var band_top: float = lerpf(ri_top, ri_bot, 0.42)
+		var bar_h: float = (ri_bot - band_top) / 5.2
+		for i in range(4):
+			var by: float = band_top + float(i) * bar_h * 1.05
+			draw_rect(Rect2(ri_x0 + 20.0, by, (ri_x1 - ri_x0) - 40.0, bar_h * 0.82), FILL_COLS[i])
+
+	# 말리는 중 — 위쪽에 형성되는 수평 log(원통) + 아직 안 말린 평평 김+밥이 아래에 남음.
+	# log는 화면 X축에 평행한 capsule (axis 가로 고정, rotation 0). 단면 노출 0.
+	func _draw_rolling(w: float, h: float, r: float) -> void:
+		var pad: float = 60.0
+		# 아직 안 말린 평평 부분(아래) — 점점 줄어든다.
+		var flat_top: float = lerpf(h * 0.40, h * 0.66, r)
+		var flat_bot: float = h * 0.80
+		if flat_bot > flat_top:
+			draw_rect(Rect2(pad + 24.0, flat_top, w - 2.0 * (pad + 24.0), flat_bot - flat_top), SEAWEED)
+			draw_rect(Rect2(pad + 56.0, flat_top + 10.0, w - 2.0 * (pad + 56.0), (flat_bot - flat_top) - 20.0), RICE)
+		# 위쪽 수평 log — 말릴수록 두꺼워진다. capsule, 가로축 고정.
+		var log_cy: float = lerpf(h * 0.42, h * 0.40, r)
+		var log_w: float = w - 2.0 * pad
+		var log_h: float = lerpf(h * 0.22, h * 0.40, r)
+		# tilt = near edge 좌우 비대칭 → log를 살짝 위/아래로 기울임(단 본체는 수평 capsule).
+		var tilt_dy: float = _tilt * h * 0.10
+		_draw_log_capsule(Vector2(w * 0.5, log_cy), log_w, log_h, tilt_dy)
+
+	# 완성 수평 원통 — 둥근 tight log(success) / 느슨(loose) / 갈라짐(tight burst).
+	func _draw_finished_log(w: float, h: float) -> void:
+		var pad: float = 60.0
+		var log_cy: float = h * 0.46
+		var log_w: float = w - 2.0 * pad
+		var log_h: float = h * 0.46
+		var tilt_dy: float = _tilt * h * 0.12   # crooked면 한쪽이 더 올라온 채 (수평 capsule + 기운 near edge).
+		match _result:
+			RESULT_LOOSE:
+				log_h *= 0.88                     # 느슨 = 덜 단단(약간 납작).
+			RESULT_TIGHT:
+				log_h *= 1.06                     # 강압 = rice 삐져나옴(약간 부풀음).
+		_draw_log_capsule(Vector2(w * 0.5, log_cy), log_w, log_h, tilt_dy, _result)
+
+	# 수평 capsule log — 화면 X축에 평행(axis 가로 고정). 김 dark 외피 + 위쪽 sheen. end-cap 0.
+	# result != NONE이면 상태별 디테일(loose=틈 / tight=rice 삐짐).
+	func _draw_log_capsule(center: Vector2, lw: float, lh: float, tilt_dy: float, result: int = RESULT_NONE) -> void:
+		var r: float = lh * 0.5
+		var cx: float = center.x
+		var cy: float = center.y
+		# 정하향 soft contact shadow (top-down 통일).
+		_capsule(Vector2(cx, cy + r * 0.5 + 12.0), lw, lh * 0.92, Color(0, 0, 0, 0.16), tilt_dy * 0.5)
+		# 김 외피 (dark). tilt_dy = near edge 좌우 높이차(crooked) — capsule을 살짝 기운 평행사변형 느낌이
+		# 아니라, 좌우 끝 y를 다르게 줘 "한쪽이 더 말려 올라간" 비대칭만 표현(본체 axis는 수평).
+		_capsule(Vector2(cx, cy + 4.0), lw, lh, SEAWEED_LO, tilt_dy)
+		_capsule(Vector2(cx, cy), lw, lh - 8.0, SEAWEED, tilt_dy)
+		# 위쪽 절반 sheen (volumetric 원기둥감 — 단면 아님, 길이 방향 가로).
+		_capsule(Vector2(cx, cy - r * 0.30), lw - 50.0, lh * 0.40, Color(0.30, 0.36, 0.24, 0.55), tilt_dy)
+		# sesame-oil 가로 highlight 라인 (길이 방향).
+		draw_line(Vector2(cx - lw * 0.5 + r, cy - r * 0.46),
+				Vector2(cx + lw * 0.5 - r, cy - r * 0.46 + tilt_dy * 0.4),
+				Color(0.52, 0.58, 0.44, 0.45), 5.0, true)
+		# 상태 디테일.
+		if result == RESULT_LOOSE:
+			# 느슨 — 외피에 살짝 벌어진 틈(연한 밥색).
+			draw_line(Vector2(cx - lw * 0.28, cy + r * 0.30), Vector2(cx + lw * 0.10, cy + r * 0.34),
+					Color(0.90, 0.86, 0.74, 0.6), 6.0, true)
+		elif result == RESULT_TIGHT:
+			# 강압 — rice가 외피 밖으로 삐져나온 작은 흰 덩이.
+			draw_circle(Vector2(cx + lw * 0.30, cy + r * 0.10), 14.0, Color(0.96, 0.93, 0.82, 0.9))
+			draw_circle(Vector2(cx - lw * 0.34, cy - r * 0.04), 11.0, Color(0.96, 0.93, 0.82, 0.85))
+
+	# (0,0) 중심 수평 capsule. tilt_dy = 우측 끝을 좌측보다 tilt_dy만큼 올림(좌우 비대칭만, 본체 수평).
+	func _capsule(center: Vector2, cw: float, ch: float, col: Color, tilt_dy: float = 0.0) -> void:
+		var r: float = ch * 0.5
+		var cx: float = center.x
+		var cyl: float = center.y - tilt_dy * 0.5    # 좌측 끝 y
+		var cyr: float = center.y + tilt_dy * 0.5    # 우측 끝 y
+		# 가운데 본체 — 좌우 끝 y가 다르면 살짝 기운 띠(quad)로 그려 비대칭 표현. 본체 길이축은 가로.
+		var x_l: float = cx - cw * 0.5 + r
+		var x_r: float = cx + cw * 0.5 - r
+		draw_colored_polygon(PackedVector2Array([
+			Vector2(x_l, cyl - r), Vector2(x_r, cyr - r),
+			Vector2(x_r, cyr + r), Vector2(x_l, cyl + r)]), col)
+		# 양끝 둥근 반원 (위에서 본 둥근 외피 — end-cap 단면 아님).
+		draw_circle(Vector2(x_l, cyl), r, col)
+		draw_circle(Vector2(x_r, cyr), r, col)
 
 
 # =====================================================================================

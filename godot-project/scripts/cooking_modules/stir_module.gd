@@ -230,7 +230,13 @@ func _build_spoon(food_id: StringName) -> Node2D:
 		tex.custom_minimum_size = Vector2.ZERO
 		tex.texture = load(tool_path)
 		tex.size = Vector2(170, 250)
-		tex.position = Vector2(-85, -190)   # 손잡이 위, 머리 아래(stir 중심 쪽)
+		# Player-POV (player-pov-camera-v1.md §3): spoon/spatula **handle 하단**(near, 플레이어 쪽),
+		# 머리는 위(bowl 안)로. 도구 sprite는 손잡이가 위(upper)에 baked → 180° 회전해 손잡이를
+		# 화면 아래(near)로 내린다. origin(0,0)=stir 중심(머리 닿는 곳)에 머리가 오도록 offset.
+		# (이전: 손잡이가 위/far side = 남이 젓는 느낌. 회전으로 player-POV 정합.)
+		tex.position = Vector2(-85, -190)
+		tex.pivot_offset = Vector2(85, 190)   # origin 기준 회전점 = 머리쪽(stir 중심).
+		tex.rotation = PI                      # 180° — 손잡이를 아래(near)로.
 		tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		spoon.add_child(tex)
 		return spoon

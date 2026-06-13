@@ -87,28 +87,30 @@ func _shot_julienne(perfect: bool) -> void:
 	get_tree().root.add_child(jul)
 	jul.start(_params("t1_004"))
 	await get_tree().create_timer(0.5).timeout
-	# cut 표본을 직접 주입해 결정적 grade를 만든다 (입력 sim 없이).
-	#   perfect = 고른 간격(rhythm/spacing 일관) + 높은 cut score.
-	#   bad     = 들쭉날쭉 간격 + 낮은 cut score → chunky/uneven 시각.
+	# RHYTHM REBUILD (2026-06-12): cut 표본을 새 rhythm 변수로 직접 주입해 결정적 grade를 만든다.
+	#   perfect = 고른 박자(times) + 작고 일관된 offset + 높은 grade → 얇은 균일 strip.
+	#   bad     = 들쭉날쭉 박자 + 큰/제각각 offset + 낮은 grade → chunky/uneven.
+	#   변수 매핑: _cut_times_ms(rhythm) / _cut_offsets(spacing) / _cut_grades(thickness/angle).
 	var times: Array = []
-	var xs: Array = []
-	var scores: Array = []
+	var offsets: Array = []
+	var grades: Array = []
 	var base_t: float = float(Time.get_ticks_msec())
 	if perfect:
 		for i in range(6):
-			times.append(base_t + float(i) * 320.0)            # 고른 320ms 간격
-			xs.append(440.0 + float(i) * 26.0)                 # 고른 26px 간격
-			scores.append(96.0)
+			times.append(base_t + float(i) * 320.0)            # 고른 320ms 간격(rhythm).
+			offsets.append(8.0 + float(i % 2) * 4.0)           # 작고 고른 offset(spacing).
+			grades.append(100.0)                                # Perfect(얇은 균일).
 	else:
-		var jitter_t: Array = [0.0, 180.0, 760.0, 900.0, 1700.0, 1760.0]   # 들쭉날쭉
-		var jitter_x: Array = [430.0, 520.0, 470.0, 700.0, 540.0, 760.0]
+		var jitter_t: Array = [0.0, 180.0, 760.0, 900.0, 1700.0, 1760.0]   # 들쭉날쭉(rhythm).
+		var jitter_o: Array = [12.0, 80.0, 40.0, 90.0, 20.0, 88.0]         # 제각각 offset(spacing).
 		for i in range(6):
 			times.append(base_t + float(jitter_t[i]))
-			xs.append(float(jitter_x[i]))
-			scores.append(38.0)
+			offsets.append(float(jitter_o[i]))
+			grades.append(60.0)                                 # Good 위주(chunky).
 	jul.set("_cut_times_ms", times)
-	jul.set("_cut_x", xs)
-	jul.set("_cut_scores", scores)
+	jul.set("_cut_offsets", offsets)
+	jul.set("_cut_grades", grades)
+	jul.set("_cut_scores", grades.duplicate())   # 부모 _cut_scores 호환(angle 축 원천).
 	jul.set("_cuts_done", 6)
 	if jul.has_method("_finalize"):
 		jul.call("_finalize")

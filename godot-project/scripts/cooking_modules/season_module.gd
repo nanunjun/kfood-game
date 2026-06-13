@@ -91,6 +91,7 @@ var _gesture = null   # TouchGestureRecognizer (preloaded TouchGesture)
 var _food_content: TextureRect = null   # FoodContentSprite (tint OK)
 var _season_overlay: _BrothMask = null  # SeasoningOverlay (bowl 안 broth mask, tint OK)
 var _vessel_only: bool = false          # _food_hero가 vessel(그릇 포함) 단일 이미지인가
+var _food_center: Vector2 = Vector2(540, 816)   # particle 낙하 목표(음식 중앙) — player-POV pour.
 # 기본 양념 style = bottle 가루(gochugaru). seasoning param 미지정 dish는 양념병 연출.
 # gochujang dollop은 seasoning="gochujang"을 명시한 dish(비빔밥·떡볶이)에서만 (P0 #3: silent dollop 방지).
 var _style: Dictionary = SEASONING_STYLES["gochugaru"]
@@ -151,6 +152,7 @@ func _start_simple() -> void:
 	var content_img: String = ArtRegistry.food_content_only(food_id_s)
 	var food_rect: Rect2 = Composition.rect_in_zone(
 		Composition.ZONE_ACTION, Composition.CLAMP_DISH_HERO, Vector2(0.5, 0.5))
+	_food_center = food_rect.position + food_rect.size * 0.5   # particle 낙하 목표.
 	if ArtRegistry.file_exists(food_img):
 		# VesselSprite — dish-with-bowl 단일 이미지(그릇 포함). 절대 modulate하지 않는다.
 		_food_hero = TextureRect.new()
@@ -178,12 +180,13 @@ func _start_simple() -> void:
 			_vessel_only = true
 			_build_season_overlay(food_rect)
 
-	# 양념병 — upper-right에 음식 향해 기울인 채 대기. drag로 더 기울여 뿌림.
-	# action zone 중앙(864) 위쪽-우측에 대기 — food을 향해 angled (어떤 양념/동작인지 즉시 인지).
+	# Player-POV (player-pov-camera-v1.md §3): 양념병은 화면 **하단-우(NEAR zone, 플레이어 손)**
+	# 에서 진입해 음식(중앙)을 향해 기울인다. far side floating 금지 — 손이 든 듯 아래에서.
+	# particle은 음식(중앙) 위로 낙하 (병 위치가 아래라도 food center를 향해 뿌림).
 	_bottle = _build_bottle()
-	_bottle_home = Vector2(760, 620)
+	_bottle_home = Vector2(820, 1190)     # 하단-우(NEAR) — 플레이어 손에 든 위치.
 	_bottle.position = _bottle_home
-	_bottle.rotation = deg_to_rad(28.0)   # food 향해 기울임 (즉시 인지).
+	_bottle.rotation = deg_to_rad(-34.0)  # 음식(좌상)을 향해 기울임 — 입구가 food 쪽으로.
 	add_child(_bottle)
 	# simple mode 실시간 hint = instruction band (별도 _hint label 제거 — 일관 위치).
 	_hint = null
@@ -332,8 +335,8 @@ func _on_drag_updated(pos: Vector2, _vel: Vector2) -> void:
 		_massage_at(pos)
 		return
 	if _pouring and is_instance_valid(_bottle):
-		# 병이 손가락 X를 따라감 (음식 위에서 좌우 이동하며 뿌림).
-		_bottle.position.x = clampf(pos.x, 300.0, 780.0)
+		# 병이 손가락 X를 따라감 (NEAR zone에서 좌우 이동하며 음식 위로 뿌림). y는 하단 유지.
+		_bottle.position.x = clampf(pos.x, 360.0, 880.0)
 
 
 func _on_tilt_changed(angle_deg: float, _hold_ms: float) -> void:
@@ -346,8 +349,10 @@ func _on_tilt_changed(angle_deg: float, _hold_ms: float) -> void:
 	# 병 기울임 = drag 각도. 더 기울일수록(아래로 향할수록) 더 많이 쏟아짐.
 	_bottle.rotation = deg_to_rad(clampf(angle_deg, 0.0, 75.0))
 	if angle_deg > 18.0:
-		# 입자 낙하 + 양 누적.
-		_emit_particles(_bottle.position + Vector2(0, 220), 2)
+		# 입자 낙하 + 양 누적. player-POV: 병이 하단에 있어도 양념은 음식(중앙) 위로 떨어진다
+		# (병 입구에서 food center로 — far side floating 금지). 약간 위에서 낙하 시작.
+		var pour_at := Vector2(_bottle.position.x * 0.35 + _food_center.x * 0.65, _food_center.y - 120.0)
+		_emit_particles(pour_at, 2)
 		_poured = clampf(_poured + 0.018, 0.0, 1.3)
 		_apply_food_tint()
 		_update_simple_hint()

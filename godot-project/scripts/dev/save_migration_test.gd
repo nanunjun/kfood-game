@@ -33,7 +33,7 @@ func _ready() -> void:
 	# 기존 progression 무변경 확인 (level/money/stock 보존).
 	_assert("legacy level preserved (3)", int(sm.data.get("level", 0)), 3)
 	_assert("legacy money preserved (12000)", int(sm.data.get("money", 0)), 12000)
-	# set + reload round-trip: 선택 저장 후 has_chosen_chef true.
+	# set + reload round-trip: 선택 저장 후 has_chosen_chef true. (legacy gender alias path)
 	sm.set_player_chef_gender("m")
 	sm.callv("_load", [])
 	_assert("player_chef_gender persists across reload ('m')", sm.player_chef_gender(), "m")
@@ -41,6 +41,18 @@ func _ready() -> void:
 	# invalid gender ignored.
 	sm.set_player_chef_gender("x")
 	_assert("invalid gender ignored (stays 'm')", sm.player_chef_gender(), "m")
+	# Choose-Your-Chef 재설계 (2026-06-12): 신규 preset(leo/amara)도 같은 슬롯에 저장·reload 유지.
+	sm.set_player_chef_preset("leo")
+	sm.callv("_load", [])
+	_assert("preset 'leo' persists across reload", sm.player_chef_preset(), "leo")
+	_assert("has_chosen_chef() true after leo", sm.has_chosen_chef(), true)
+	sm.set_player_chef_preset("amara")
+	sm.callv("_load", [])
+	_assert("preset 'amara' persists across reload", sm.player_chef_preset(), "amara")
+	# legacy "f"/"m" save 값이 신규 코드에서도 valid preset으로 그대로 해석되는지 (backward-compat).
+	sm.data["player_chef_gender"] = "f"
+	_assert("legacy 'f' save still valid preset", sm.has_chosen_chef(), true)
+	_assert("legacy 'f' reads as preset 'f'", sm.player_chef_preset(), "f")
 	# Player-Name: set + reload round-trip + trim/squash/length sanitization.
 	sm.set_player_name("  Bob  ")
 	sm.callv("_load", [])

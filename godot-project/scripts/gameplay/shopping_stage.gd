@@ -24,6 +24,10 @@ const ArtRegistry := preload("res://scripts/gameplay/art_registry.gd")
 const CookingFX := preload("res://scripts/ui/cooking_fx.gd")
 const MarketBG := preload("res://scripts/ui/market_bg.gd")
 
+# F5 before/after 검증 전용 (gameplay 무관) — true면 Issue 1/5 수정 *전* 동작(빈 슬롯 "!" 마크,
+# 카드 check/X badge 없음)을 재현해 before 스크린샷을 같은 코드 경로로 캡처한다. 기본 false.
+static var shot_legacy_basket: bool = false
+
 # 공통 타이머 (design §2.3 — balance-config §2.2.2 25s). vertical slice는 관대 band.
 const SHOP_SECONDS: float = 25.0
 const WRONG_PENALTY: float = 0.15      # 함정 선택 -0.15/개 (design §2.4)
@@ -34,10 +38,10 @@ const WRONG_TIME_HIT: float = 1.0      # 함정 선택 시 -1s (cooking-mechanic
 const CORRECT_ITEMS := [
 	{"id": "seaweed",  "label": "Seaweed",  "sprite": ["seaweed_sheet_rect", "roll"], "key": true},
 	{"id": "rice",     "label": "Rice",     "sprite": ["rice_bowl", ""],              "key": true},
-	{"id": "danmuji",  "label": "Danmuji",  "sprite": ["carrot_sliced", ""],          "key": true},
+	{"id": "danmuji",  "label": "Danmuji",  "sprite": ["danmuji_strip", ""],          "key": true},
 	{"id": "carrot",   "label": "Carrot",   "sprite": ["carrot_whole", ""],           "key": false},
 	{"id": "egg",      "label": "Egg",      "sprite": ["egg_whole", ""],              "key": false},
-	{"id": "spinach",  "label": "Spinach",  "sprite": ["green_onion_whole", ""],      "key": false},
+	{"id": "spinach",  "label": "Spinach",  "sprite": ["spinach_cooked", ""],         "key": false},
 ]
 
 # 함정(틀린) 재료 (id, label, sprite). matrix 김밥 banned — 매운 재료/면류/두부/떡.
@@ -62,6 +66,7 @@ var _shelf_tiles: Dictionary = {}      # id -> tile Control (그레이아웃/sha
 var _timer_lbl: Label = null
 var _basket_lbl: Label = null
 var _basket_slots: Control = null
+var _done_btn: Button = null
 
 
 ## runner entry — module과 같은 start(params) 시그니처로 호출 가능.
@@ -206,16 +211,21 @@ func _build_shelf_tile(data: Dictionary, is_correct: bool, rect: Rect2) -> Contr
 	sb.shadow_size = 6
 	sb.shadow_color = Color(0.30, 0.20, 0.10, 0.28)
 	tile.add_theme_stylebox_override("panel", sb)
-	# 재료 sprite (clip된 카드 안에 aspect-fit, 미존재 시 색 원 placeholder).
+	# Issue 1 FIX (2026-06-12): 재료 sprite가 카드에 *또렷이* 보이도록 한다. 이전엔 expand_mode/
+	#   custom_minimum_size를 texture 할당 *후*에 설정해, 1024px 원본이 custom_minimum_size를 박아
+	#   sprite가 카드(clip_contents) 밖으로 넘쳐 거의 안 보였다 → 카드가 "텍스트만"으로 보이던 근본
+	#   원인(vocabulary quiz 느낌). 이제 expand_mode/custom_minimum_size를 texture *전에* 설정해
+	#   카드 안에 aspect-fit 한다(basket 아이콘과 동일 패턴).
 	var sprite_spec: Array = data["sprite"]
 	var path: String = _resolve_sprite(sprite_spec)
 	if path != "":
 		var tex := TextureRect.new()
+		tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		tex.custom_minimum_size = Vector2.ZERO
 		tex.texture = load(path)
 		tex.position = Vector2(20, 14)
 		tex.size = Vector2(rect.size.x - 40, rect.size.y - 84)
-		tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		tile.add_child(tex)
 	else:
@@ -266,18 +276,58 @@ func _on_tile_tapped(data: Dictionary, is_correct: bool, tile: Control, hit: But
 			return   # 이미 담음 — 중복 무시.
 		_collected.append(id)
 		hit.disabled = true                          # tap 재입력 차단.
-		tile.modulate = Color(0.6, 1.0, 0.6, 0.55)   # 담김 = 초록 그레이아웃.
+		tile.modulate = Color(0.72, 1.0, 0.72, 0.85) # 담김 = 초록 selected state.
+		_mark_tile(tile, true)                       # Issue 1 — check(✓) 피드백.
 		CookingFX.serving_sparkle(self, tile.global_position + tile.size * 0.5, 6)
 		_update_basket()
 		_safe_feedback(true, tile.global_position + tile.size * 0.5)
 		if _collected.size() >= CORRECT_ITEMS.size():
 			_finish()   # 모든 정답 수집 — 자동 완료.
 	else:
-		# 함정 — 빨간 shake + 시간 -1s + 감점.
+		# 함정 — 빨간 shake + X 마크 + 시간 -1s + 감점.
 		_wrong_count += 1
 		_time_left = maxf(0.0, _time_left - WRONG_TIME_HIT)
 		_shake(tile)
+		_mark_tile(tile, false)                      # Issue 1 — wrong(X) 피드백.
 		_safe_feedback(false, tile.global_position + tile.size * 0.5)
+
+
+# Issue 1 — tap 후 카드에 check(✓, 정답) / X(오답) 피드백을 띄운다. 정답은 selected state로 남고,
+# 오답은 잠깐 보였다 사라진다(basket 미추가). 텍스트를 못 읽어도 결과를 즉시 인지.
+func _mark_tile(tile: Control, correct: bool) -> void:
+	if shot_legacy_basket:
+		return   # before 동작 — check/X badge 없음.
+	var badge := Panel.new()
+	badge.position = Vector2(tile.size.x - 64.0, 10.0)
+	badge.size = Vector2(54, 54)
+	var bsb := StyleBoxFlat.new()
+	bsb.bg_color = Color(0.30, 0.72, 0.34) if correct else Color(0.86, 0.32, 0.26)
+	bsb.set_corner_radius_all(27)
+	bsb.set_border_width_all(3)
+	bsb.border_color = Color(1, 1, 1, 0.92)
+	bsb.shadow_size = 5
+	bsb.shadow_color = Color(0, 0, 0, 0.30)
+	badge.add_theme_stylebox_override("panel", bsb)
+	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tile.add_child(badge)
+	var mark := Label.new()
+	mark.text = "✓" if correct else "✕"
+	mark.set_anchors_preset(Control.PRESET_FULL_RECT)
+	mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	mark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	mark.add_theme_font_size_override("font_size", 36)
+	mark.add_theme_color_override("font_color", Color.WHITE)
+	mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	badge.add_child(mark)
+	badge.scale = Vector2(0.4, 0.4)
+	badge.pivot_offset = badge.size * 0.5
+	var tw := badge.create_tween()
+	tw.tween_property(badge, "scale", Vector2(1.0, 1.0), 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	if not correct:
+		# 오답 X는 잠깐 보였다 사라진다(카드는 그대로 — 재시도 가능).
+		tw.tween_interval(0.45)
+		tw.tween_property(badge, "modulate:a", 0.0, 0.2)
+		tw.tween_callback(badge.queue_free)
 
 
 func _shake(node: Control) -> void:
@@ -321,6 +371,9 @@ func _build_basket() -> void:
 func _update_basket() -> void:
 	if is_instance_valid(_basket_lbl):
 		_basket_lbl.text = "Basket  %d / %d" % [_collected.size(), CORRECT_ITEMS.size()]
+	# Issue 5 — Done enable는 필수 6 재료 전부 수집 시.
+	if is_instance_valid(_done_btn):
+		_style_done(_collected.size() >= CORRECT_ITEMS.size())
 	if not is_instance_valid(_basket_slots):
 		return
 	for c in _basket_slots.get_children():
@@ -344,45 +397,90 @@ func _update_basket() -> void:
 		slot.add_theme_stylebox_override("panel", ssb)
 		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_basket_slots.add_child(slot)
-		if filled:
-			var path: String = _resolve_sprite(item["sprite"])
-			if path != "":
-				var tex := TextureRect.new()
-				tex.texture = load(path)
-				tex.set_anchors_preset(Control.PRESET_FULL_RECT)
-				tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-				tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-				tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
-				slot.add_child(tex)
-		else:
-			# 빈 슬롯 표시 — 핵심 재료면 ! 강조.
+		# before 스크린샷 전용: legacy(빈 슬롯 "!"/"+" 마크 main 시각, filled만 sprite) 재현.
+		if shot_legacy_basket:
+			if filled:
+				var p: String = _resolve_sprite(item["sprite"])
+				if p != "":
+					var tx := TextureRect.new()
+					tx.texture = load(p)
+					tx.set_anchors_preset(Control.PRESET_FULL_RECT)
+					tx.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+					tx.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+					tx.mouse_filter = Control.MOUSE_FILTER_IGNORE
+					slot.add_child(tx)
+			else:
+				var q0 := Label.new()
+				q0.text = "!" if bool(item["key"]) else "+"
+				q0.set_anchors_preset(Control.PRESET_FULL_RECT)
+				q0.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+				q0.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+				q0.add_theme_font_size_override("font_size", 48)
+				q0.add_theme_color_override("font_color",
+					Color(0.92, 0.45, 0.30, 0.75) if bool(item["key"]) else Color(0.85, 0.72, 0.50, 0.55))
+				q0.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				slot.add_child(q0)
+			continue
+		# Issue 5 — slot 안 ingredient 아이콘. filled = 또렷한 sprite(선택됨), empty = dim ghost
+		#   sprite(아직 필요한 재료). ! 마크를 main 시각으로 쓰지 않는다 — 실제 ingredient 아이콘 표시.
+		var path: String = _resolve_sprite(item["sprite"])
+		if path != "":
+			var tex := TextureRect.new()
+			tex.texture = load(path)
+			tex.set_anchors_preset(Control.PRESET_FULL_RECT)
+			tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			# empty slot = 흐릿한 회색 ghost(아직 안 담음). filled = full color(담김).
+			tex.modulate = Color(1, 1, 1, 1.0) if filled else Color(0.45, 0.45, 0.45, 0.40)
+			slot.add_child(tex)
+		elif not filled:
+			# sprite 미존재 fallback일 때만 작은 + 표시(핵심 재료 강조 ! 폐기).
 			var q := Label.new()
-			q.text = "!" if bool(item["key"]) else "+"
+			q.text = "+"
 			q.set_anchors_preset(Control.PRESET_FULL_RECT)
 			q.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			q.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-			q.add_theme_font_size_override("font_size", 48)
-			q.add_theme_color_override("font_color",
-				Color(0.92, 0.45, 0.30, 0.75) if bool(item["key"]) else Color(0.85, 0.72, 0.50, 0.55))
+			q.add_theme_font_size_override("font_size", 40)
+			q.add_theme_color_override("font_color", Color(0.85, 0.72, 0.50, 0.45))
 			q.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			slot.add_child(q)
 
 
 func _build_done_button() -> void:
-	var btn := Button.new()
-	btn.text = "Done"
-	btn.position = Vector2(440, 1840)
-	btn.size = Vector2(200, 64)
+	_done_btn = Button.new()
+	_done_btn.text = "Done"
+	_done_btn.position = Vector2(440, 1840)
+	_done_btn.size = Vector2(200, 64)
+	_done_btn.add_theme_font_size_override("font_size", 32)
+	_done_btn.focus_mode = Control.FOCUS_NONE
+	_done_btn.pressed.connect(_on_done_pressed)
+	add_child(_done_btn)
+	_style_done(false)
+
+
+# Issue 5 — Done은 6 필수 재료 전부 선택 전 disabled(gold↔grey), 6개 다 담으면 enabled.
+func _style_done(enabled: bool) -> void:
+	if not is_instance_valid(_done_btn):
+		return
+	_done_btn.disabled = not enabled
 	var dsb := StyleBoxFlat.new()
-	dsb.bg_color = Color(0.96, 0.62, 0.18)
+	dsb.bg_color = Color(0.96, 0.62, 0.18) if enabled else Color(0.55, 0.50, 0.44, 0.85)
 	dsb.set_corner_radius_all(32)
-	btn.add_theme_stylebox_override("normal", dsb)
-	btn.add_theme_stylebox_override("hover", dsb)
-	btn.add_theme_stylebox_override("pressed", dsb)
-	btn.add_theme_font_size_override("font_size", 32)
-	btn.add_theme_color_override("font_color", Color(0.20, 0.10, 0.04))
-	btn.pressed.connect(_finish)
-	add_child(btn)
+	_done_btn.add_theme_stylebox_override("normal", dsb)
+	_done_btn.add_theme_stylebox_override("hover", dsb)
+	_done_btn.add_theme_stylebox_override("pressed", dsb)
+	_done_btn.add_theme_stylebox_override("disabled", dsb)
+	_done_btn.add_theme_color_override("font_color",
+		Color(0.20, 0.10, 0.04) if enabled else Color(0.85, 0.82, 0.78))
+	_done_btn.add_theme_color_override("font_disabled_color", Color(0.85, 0.82, 0.78))
+
+
+func _on_done_pressed() -> void:
+	# 필수 6 재료 미수집이면 무시(버튼은 disabled라 정상 경로에선 닿지 않음).
+	if _collected.size() < CORRECT_ITEMS.size():
+		return
+	_finish()
 
 
 func _safe_feedback(good: bool, pos: Vector2) -> void:

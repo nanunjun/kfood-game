@@ -200,115 +200,53 @@ func get_chosen_tier() -> String:
 
 
 # =====================================================================================
-# Gimbap Vertical Slice — drag-arrange plating (design §5.3, Success Criteria #6).
-# 김밥 8조각을 wooden_tray의 target row에 drag로 배치. spacing 균일 + 중앙 안착 + orientation
-# (단면 위로)이 plate_quality를 결정한다. slice_quality 낮으면 조각이 wobble(제각각 단면).
-# "plating이 static이 아니다 — 조각 배치/간격이 완성 비주얼을 바꾼다."
+# Gimbap Vertical Slice — STRICT TOP-DOWN tray plating (design §5.3 / §8.5, Success #6).
+#
+# 사용자 거부 교정 (2026-06-12 top-down rebuild): 기존 plating이 불명확(wooden_tray sprite +
+# 가로 1줄 ghost). 교정 = "잘린 김밥을 도시락 접시에 예쁘게 담는다"가 즉시 읽히게:
+#   - tray = strict top-down **직사각 도시락**(procedural, 사선 0).
+#   - tray 안 **6개 명확한 circular placement slot** + 각 slot에 **faint gimbap silhouette**
+#     (어디에 무엇을 놓을지 명확).
+#   - bottom basket = **cut-side-up 김밥 조각만**(단면 위로 — _GimbapCutPiece procedural).
+#   - 조각을 하나씩 slot에 drag → 올바른 slot 근처 **snap** / 잘못 놓으면 **살짝 튕김(bounce)**.
+# 점수: center accuracy(snap 오차) + spacing(slot 등간격) + angle + cut-side-up 여부 → plate_quality.
+# "plating이 static이 아니다 — 조각 배치/정렬이 완성 비주얼을 바꾼다." (scoring 무변경 — §9.2)
 # =====================================================================================
 
-const VS_PIECE_COUNT: int = 6        # 김밥 조각 수 (8조각이 이상이나 화면/난이도 균형 6).
-const VS_SNAP_RADIUS: float = 120.0  # target에 이 거리 안이면 snap.
+const VS_PIECE_COUNT: int = 6        # 김밥 조각 수 = slot 수 (2x3 grid).
+const VS_SNAP_RADIUS: float = 110.0  # 빈 slot에 이 거리 안이면 snap.
+const VS_PIECE_D: float = 132.0      # cut-side-up 조각 지름.
+# top-down 도시락 tray box (화면 1080x1920 중앙 action zone, 사선 0).
+const VS_TRAY_RECT := Rect2(150, 720, 780, 560)
+# slot grid = 2 row x 3 col.
+const VS_SLOT_COLS: int = 3
+const VS_SLOT_ROWS: int = 2
 
 func _start_vs_plating(params: Dictionary) -> void:
 	_vs_plate = true
 	_attach_cooking_bg(1030.0)
-	_build_header("Plating", "Drag each gimbap piece onto the tray")
-	_build_instruction_band("Place pieces evenly, cut-side up", "↓")
+	_build_header("Plating", "Arrange the pieces on the tray, cut-side up")
+	_build_instruction_band("Arrange the pieces evenly on the tray, cut-side up.", "↓")
 
-	# wooden_tray vessel(L2) — 완성 dish를 담는 받침.
-	var tray_rect := Rect2(150, 760, 780, 360)
-	var tray_path: String = ArtRegistry.get_vessel("wooden_tray")
-	if tray_path != "":
-		var tray := TextureRect.new()
-		tray.texture = load(tray_path)
-		tray.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		tray.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		tray.position = tray_rect.position
-		tray.size = tray_rect.size
-		tray.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		tray.z_index = L2_BASE
-		add_child(tray)
-	else:
-		var tray_fb := Panel.new()
-		tray_fb.position = tray_rect.position
-		tray_fb.size = tray_rect.size
-		var tsb := StyleBoxFlat.new()
-		tsb.bg_color = Color(0.78, 0.58, 0.34)
-		tsb.set_corner_radius_all(36)
-		tsb.set_border_width_all(8)
-		tsb.border_color = Color(0.55, 0.38, 0.20)
-		tray_fb.add_theme_stylebox_override("panel", tsb)
-		tray_fb.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		tray_fb.z_index = L2_BASE
-		add_child(tray_fb)
-	_attach_dish_shadow(Vector2(540, tray_rect.position.y + tray_rect.size.y * 0.95), 540.0)
+	# top-down 도시락 tray (procedural 직사각 — 사선 0). 정하향 shadow.
+	_attach_dish_shadow(Vector2(540, VS_TRAY_RECT.position.y + VS_TRAY_RECT.size.y + 6.0), 720.0)
+	_build_vs_tray()
 
-	# target row — tray 안 고른 간격(spacing 정답). ghost ring으로 표시.
-	var row_y: float = tray_rect.position.y + tray_rect.size.y * 0.46
-	var span: float = tray_rect.size.x * 0.80
-	var x0: float = 540.0 - span * 0.5
-	for i in range(VS_PIECE_COUNT):
-		var tx: float = x0 + span * (float(i) / float(VS_PIECE_COUNT - 1))
-		var tpos := Vector2(tx, row_y)
-		_vs_targets.append(tpos)
-		var ghost := Panel.new()
-		ghost.position = tpos - Vector2(56, 56)
-		ghost.size = Vector2(112, 112)
-		var gsb := StyleBoxFlat.new()
-		gsb.bg_color = Color(1, 1, 1, 0.06)
-		gsb.set_corner_radius_all(56)
-		gsb.set_border_width_all(3)
-		gsb.border_color = Color(1.0, 0.92, 0.55, 0.45)
-		ghost.add_theme_stylebox_override("panel", gsb)
-		ghost.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		ghost.z_index = L2_BASE + 1
-		add_child(ghost)
+	# 6 circular placement slot (2x3 grid) + 각 slot faint gimbap silhouette.
+	_build_vs_slots()
 
-	# 조각 sprite(content_only 완성 김밥의 단면) — 하단 tray 밖 pile에서 시작, drag로 배치.
-	var piece_path: String = ArtRegistry.get_roll_asset("gimbap_roll_finished_content_only")
-	var wobble: float = clampf(1.0 - _vs_slice_quality, 0.0, 1.0)   # slice 나쁨 → 단면 제각각.
-	for i in range(VS_PIECE_COUNT):
-		var home := Vector2(180.0 + float(i) * 130.0, 1480.0)
-		var piece := Control.new()
-		piece.size = Vector2(120, 120)
-		piece.position = home - piece.size * 0.5
-		piece.pivot_offset = piece.size * 0.5
-		piece.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		piece.z_index = L3_INGREDIENT
-		if piece_path != "":
-			var t := TextureRect.new()
-			t.texture = load(piece_path)
-			t.set_anchors_preset(Control.PRESET_FULL_RECT)
-			t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			t.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			piece.add_child(t)
-		else:
-			var c := Panel.new()
-			c.set_anchors_preset(Control.PRESET_FULL_RECT)
-			var csb := StyleBoxFlat.new()
-			csb.bg_color = Color(0.18, 0.20, 0.16)
-			csb.set_corner_radius_all(60)
-			csb.set_border_width_all(8)
-			csb.border_color = Color(0.95, 0.95, 0.90)
-			c.add_theme_stylebox_override("panel", csb)
-			c.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			piece.add_child(c)
-		# §8.5 slice→plating: slice_quality 낮으면 조각이 처음부터 wobble(기울고 크기 제각각).
-		if wobble > 0.05:
-			piece.rotation = deg_to_rad(randf_range(-20.0, 20.0) * wobble)
-			var sj: float = 1.0 + randf_range(-0.18, 0.18) * wobble
-			piece.scale = Vector2(sj, sj)
-		add_child(piece)
-		_vs_pieces.append({"node": piece, "home": home, "placed": false, "idx": i, "wobble": wobble})
+	# bottom basket — cut-side-up 김밥 조각만 (단면 위로). drag로 slot에 배치.
+	_build_vs_pieces()
 
 	_vs_hint = Label.new()
-	_vs_hint.position = Vector2(0, 1640)
+	_vs_hint.position = Vector2(0, 1660)
 	_vs_hint.size = Vector2(1080, 60)
 	_vs_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_vs_hint.add_theme_font_size_override("font_size", 38)
 	_vs_hint.add_theme_color_override("font_color", Color(0.45, 0.32, 0.18))
-	_vs_hint.text = "Drag the pieces onto the tray row"
+	_vs_hint.add_theme_color_override("font_outline_color", Color(1, 1, 1, 0.85))
+	_vs_hint.add_theme_constant_override("outline_size", 6)
+	_vs_hint.text = "Drag each piece onto a silhouette slot"
 	add_child(_vs_hint)
 
 	_vs_gesture = TouchGesture.new()
@@ -317,6 +255,134 @@ func _start_vs_plating(params: Dictionary) -> void:
 	_vs_gesture.drag_started.connect(_on_vs_drag_started)
 	_vs_gesture.drag_updated.connect(_on_vs_drag_updated)
 	_vs_gesture.drag_released.connect(_on_vs_drag_released)
+
+
+## strict top-down 직사각 도시락 tray. PAINTERLY SWAP (2026-06-13): procedural box(box corner) 폐기
+## → wooden_tray_topdown (real 나무 tray, high-angle painterly). 6 slot silhouette는 위에 유지(painterly).
+## 미존재 시 기존 procedural Panel box로 fallback. drag/snap/plate_quality 무변경.
+func _build_vs_tray() -> void:
+	var tray_path: String = ArtRegistry.get_painterly("wooden_tray_topdown")
+	if tray_path != "":
+		var timg := TextureRect.new()
+		timg.name = "VsTrayPainterly"
+		timg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		timg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		timg.texture = load(tray_path)
+		timg.position = VS_TRAY_RECT.position - Vector2(40, 40)
+		timg.size = VS_TRAY_RECT.size + Vector2(80, 80)
+		timg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		timg.z_index = L2_BASE
+		add_child(timg)
+		return
+	var tray := Panel.new()
+	tray.name = "VsTray"
+	tray.position = VS_TRAY_RECT.position
+	tray.size = VS_TRAY_RECT.size
+	var tsb := StyleBoxFlat.new()
+	tsb.bg_color = Color(0.80, 0.62, 0.36)           # 밝은 나무 도시락.
+	tsb.set_corner_radius_all(40)
+	tsb.set_border_width_all(14)
+	tsb.border_color = Color(0.58, 0.40, 0.20)        # 진한 테두리(도시락 벽).
+	tsb.shadow_size = 10
+	tsb.shadow_color = Color(0, 0, 0, 0.22)
+	tray.add_theme_stylebox_override("panel", tsb)
+	tray.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tray.z_index = L2_BASE
+	add_child(tray)
+	# 안쪽 바닥(살짝 진한 inset — 담는 공간 깊이감, top-down 평면 유지).
+	var inner := Panel.new()
+	inner.position = Vector2(22, 22)
+	inner.size = VS_TRAY_RECT.size - Vector2(44, 44)
+	var isb := StyleBoxFlat.new()
+	isb.bg_color = Color(0.73, 0.55, 0.31)
+	isb.set_corner_radius_all(28)
+	inner.add_theme_stylebox_override("panel", isb)
+	inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# 자식 z는 부모 기준 상대 — 0으로 두어 tray와 같은 plane(슬롯/조각 위에 안 올라오게).
+	inner.z_index = 0
+	tray.add_child(inner)
+
+
+## 6 circular placement slot (2x3 grid). 각 slot = faint ring + faint gimbap silhouette
+## (어디에 무엇을 놓을지 명확). slot 등간격 → spacing 점수와 시각 일치.
+func _build_vs_slots() -> void:
+	var ix0: float = VS_TRAY_RECT.position.x + 70.0
+	var ix1: float = VS_TRAY_RECT.position.x + VS_TRAY_RECT.size.x - 70.0
+	var iy0: float = VS_TRAY_RECT.position.y + 80.0
+	var iy1: float = VS_TRAY_RECT.position.y + VS_TRAY_RECT.size.y - 80.0
+	for r in range(VS_SLOT_ROWS):
+		for c in range(VS_SLOT_COLS):
+			var tx: float = lerpf(ix0, ix1, float(c) / float(VS_SLOT_COLS - 1))
+			var ty: float = lerpf(iy0, iy1, float(r) / float(VS_SLOT_ROWS - 1))
+			var tpos := Vector2(tx, ty)
+			_vs_targets.append(tpos)
+			# faint gimbap silhouette — 단면 윤곽(김 ring + 흰 밥 + 속 점)을 흐리게.
+			# z = L4_TOOL(30) — tray subtree(L2_BASE~+) 위에 또렷이(자식 상대 z에 묻히지 않게).
+			var sil := _VsSlotSilhouette.new()
+			sil.setup(VS_PIECE_D)
+			sil.position = tpos - Vector2(VS_PIECE_D, VS_PIECE_D) * 0.5
+			sil.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			sil.z_index = L4_TOOL
+			add_child(sil)
+
+
+## bottom basket — cut-side-up 김밥 조각만 (단면 위로 = _GimbapCutPiece). 2 row pile에서 시작.
+func _build_vs_pieces() -> void:
+	# 하단 basket 라벨 (어디서 조각을 집는지).
+	var basket := Panel.new()
+	basket.name = "VsBasket"
+	basket.position = Vector2(120, 1420)
+	basket.size = Vector2(840, 200)
+	var bsb := StyleBoxFlat.new()
+	bsb.bg_color = Color(0.27, 0.18, 0.10, 0.40)
+	bsb.set_corner_radius_all(24)
+	bsb.set_border_width_all(3)
+	bsb.border_color = Color(0.95, 0.72, 0.30, 0.50)
+	basket.add_theme_stylebox_override("panel", bsb)
+	basket.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	basket.z_index = L2_BASE
+	add_child(basket)
+	var cap := Label.new()
+	cap.text = "조각 · Cut pieces"
+	cap.position = Vector2(18, 6)
+	cap.size = Vector2(360, 30)
+	cap.add_theme_font_size_override("font_size", 24)
+	cap.add_theme_color_override("font_color", Color(1.0, 0.95, 0.82, 0.88))
+	cap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	basket.add_child(cap)
+
+	# §8.5 slice→plating: slice_quality 낮으면 조각이 처음부터 wobble(단면 제각각/기울).
+	var wobble: float = clampf(1.0 - _vs_slice_quality, 0.0, 1.0)
+	# PAINTERLY SWAP (2026-06-13): 조각 = gimbap_piece_good. broken(slice 나쁨 → wobble 큼) →
+	# gimbap_piece_collapse (filling 쏟아짐 시각). §8.3 "잘 못 썰면 담을 때도 무너진다" 인과를 시각으로.
+	var broken_count: int = 0
+	if wobble >= 0.40:
+		broken_count = clampi(int(round(wobble * float(VS_PIECE_COUNT) * 0.6)), 1, VS_PIECE_COUNT)
+	# 6 조각을 basket 안 2x3로 정렬해 둔다(집기 쉽게).
+	for i in range(VS_PIECE_COUNT):
+		var col: int = i % 3
+		var row: int = i / 3
+		var home := Vector2(260.0 + float(col) * 280.0, 1490.0 + float(row) * 84.0)
+		# painterly 조각(good/collapse) 우선 → 미존재 시 procedural _GimbapCutPiece fallback.
+		var is_broken: bool = i < broken_count
+		var piece: Control = _make_painterly_plate_piece(is_broken)
+		if piece == null:
+			var pp := _GimbapCutPiece.new()        # cut-side-up 단면 (단면 위로 보장).
+			pp.setup(VS_PIECE_D)
+			pp.size = Vector2(VS_PIECE_D, VS_PIECE_D)
+			piece = pp
+		piece.position = home - piece.size * 0.5
+		piece.pivot_offset = piece.size * 0.5
+		piece.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		# z = L5_VFX(40) — silhouette/tray 위에 또렷이(조각이 가장 위 plane).
+		piece.z_index = L5_VFX
+		# slice 나쁨 → 조각이 처음부터 wobble(기울고 크기 제각각 = 단면 정렬 어려움).
+		if wobble > 0.05:
+			piece.rotation = deg_to_rad(randf_range(-22.0, 22.0) * wobble)
+			var sj: float = 1.0 + randf_range(-0.18, 0.18) * wobble
+			piece.scale = Vector2(sj, sj)
+		add_child(piece)
+		_vs_pieces.append({"node": piece, "home": home, "placed": false, "idx": i, "wobble": wobble})
 
 
 func _on_vs_drag_started(pos: Vector2) -> void:
@@ -371,28 +437,51 @@ func _on_vs_drag_released(_info: Dictionary) -> void:
 			best_d = d
 			best_t = ti
 	if best_t < 0:
-		# target 근처 아님 — 홈 복귀.
-		node.z_index = L3_INGREDIENT
+		# 빈 slot 근처 아님(잘못 놓음) — **살짝 튕김(bounce)** 후 basket home 복귀.
+		# 사용자가 "여긴 아니야"를 즉시 느끼게 — 작게 뒤로 튕겼다가 home으로.
+		node.z_index = L5_VFX     # 조각은 항상 tray/silhouette 위 plane 유지.
+		var bounce_dir: Vector2 = (center - _nearest_slot_pos(center)).normalized()
+		if bounce_dir == Vector2.ZERO:
+			bounce_dir = Vector2(0, 1)
+		var bounce_pos: Vector2 = node.position + bounce_dir * 46.0
+		var home_pos: Vector2 = _vs_pieces[idx]["home"] - node.size * 0.5
 		var tw := node.create_tween()
-		tw.tween_property(node, "position", _vs_pieces[idx]["home"] - node.size * 0.5, 0.16)
+		tw.tween_property(node, "position", bounce_pos, 0.10).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw.tween_property(node, "position", home_pos, 0.20).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
+		_safe_feedback(RhythmJudge.MISS, center)
+		if is_instance_valid(_vs_hint):
+			_vs_hint.text = "Place it on a slot"
 		return
-	# snap settle — target에 안착. placement 오차(snap 전 거리)를 plate_quality에 반영.
+	# snap settle — slot에 안착. placement 오차(snap 전 거리)를 plate_quality에 반영.
 	_vs_pieces[idx]["placed"] = true
 	_vs_pieces[idx]["target_idx"] = best_t
 	_vs_pieces[idx]["err"] = best_d
 	_vs_placed_count += 1
-	node.z_index = 9
+	node.z_index = L4_TOOL + 1    # 안착 조각 — silhouette(L4_TOOL) 위, tray 위.
 	var target_pos: Vector2 = _vs_targets[best_t]
 	var tw2 := node.create_tween()
 	tw2.tween_property(node, "position", target_pos - node.size * 0.5, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	# orientation 정렬 — slice 좋으면 단면 위로 똑바로, 나쁘면 wobble 잔존.
+	# orientation 정렬 — slice 좋으면 단면 위로 똑바로(cut-side up), 나쁘면 wobble 잔존.
 	if float(_vs_pieces[idx]["wobble"]) <= 0.15:
 		tw2.parallel().tween_property(node, "rotation", 0.0, 0.16)
+		tw2.parallel().tween_property(node, "scale", Vector2.ONE, 0.16)
 	_safe_feedback(RhythmJudge.GOOD, target_pos)
 	if is_instance_valid(_vs_hint):
 		_vs_hint.text = "%d / %d placed" % [_vs_placed_count, VS_PIECE_COUNT]
 	if _vs_placed_count >= VS_PIECE_COUNT:
 		_finalize_vs_plating()
+
+
+## center에서 가장 가까운 slot 좌표(bounce 방향 산정용 — 점유 무관).
+func _nearest_slot_pos(center: Vector2) -> Vector2:
+	var best: Vector2 = center
+	var best_d: float = 1e9
+	for t in _vs_targets:
+		var d: float = center.distance_to(t)
+		if d < best_d:
+			best_d = d
+			best = t
+	return best
 
 
 func _target_taken(ti: int) -> bool:
@@ -436,3 +525,89 @@ func _finalize_vs_plating() -> void:
 ## gimbap VS plate_quality [0,1] — runner가 quality-state로 읽음(guest reaction §8.6).
 func get_vs_plate_quality() -> float:
 	return _vs_quality
+
+
+## PAINTERLY 조각 1개 — broken=true면 gimbap_piece_collapse(filling 쏟아짐), false면 gimbap_piece_good.
+## 미존재 시 null → caller가 procedural _GimbapCutPiece fallback. cut-side-up 단면 painterly.
+func _make_painterly_plate_piece(broken: bool) -> Control:
+	var key: String = "gimbap_piece_collapse" if broken else "gimbap_piece_good"
+	var path: String = ArtRegistry.get_painterly(key)
+	if path == "":
+		return null
+	var tr := TextureRect.new()
+	tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tr.texture = load(path)
+	tr.size = Vector2(VS_PIECE_D, VS_PIECE_D)
+	return tr
+
+
+# =====================================================================================
+# STRICT TOP-DOWN procedural draw nodes — cut-side-up 조각 + slot silhouette (사선 0).
+# gimbap_slice_module._GimbapCutPiece와 동일 철학(둥근 정면 단면). 여기 자체 정의로 중복 의존 0.
+# =====================================================================================
+
+## cut-side-up 김밥 조각 — 둥근 정면 단면(spiral cross-section). 김 ring + 흰 밥 + 색색 속.
+## 항상 단면이 위로(cut-side up) 보이는 procedural draw → 비스듬/뒤집힘 0. 균일 크기.
+class _GimbapCutPiece extends Control:
+	var _d: float = 132.0
+
+	func setup(diam: float) -> void:
+		_d = diam
+		size = Vector2(diam, diam)
+		queue_redraw()
+
+	func _draw() -> void:
+		var c: Vector2 = Vector2(_d, _d) * 0.5
+		var r: float = _d * 0.5
+		# 정하향 soft shadow.
+		draw_circle(c + Vector2(0, r * 0.16), r, Color(0, 0, 0, 0.14))
+		# 김 바깥 ring (dark green-black).
+		draw_circle(c, r, Color(0.10, 0.13, 0.09))
+		draw_circle(c, r - 6.0, Color(0.16, 0.21, 0.13))
+		# 흰 밥 ring.
+		draw_circle(c, r - 12.0, Color(0.97, 0.95, 0.88))
+		# 속재료 — danmuji 노랑 / spinach 녹 / carrot 주황 / egg 노랑(중앙 십자 배치).
+		var fr: float = r * 0.42
+		var cols := [
+			Color(0.98, 0.82, 0.20), Color(0.24, 0.46, 0.18),
+			Color(0.93, 0.52, 0.18), Color(0.97, 0.80, 0.26),
+		]
+		var positions := [
+			c + Vector2(-fr * 0.6, -fr * 0.6), c + Vector2(fr * 0.6, -fr * 0.6),
+			c + Vector2(-fr * 0.6, fr * 0.6), c + Vector2(fr * 0.6, fr * 0.6),
+		]
+		for i in range(4):
+			draw_circle(positions[i], r * 0.21, cols[i])
+		# 중앙 밥 코어 + top-left sheen (단면 윤기).
+		draw_circle(c, r * 0.14, Color(0.99, 0.97, 0.90))
+		draw_circle(c + Vector2(-r * 0.32, -r * 0.34), r * 0.18, Color(1, 1, 1, 0.12))
+
+
+## slot faint gimbap silhouette — "여기 조각을 놓아라" 안내. 흐린 ring + 흐린 속 점.
+## 단면 윤곽을 옅게 그려 어디에 무엇을 cut-side-up으로 놓을지 명확.
+class _VsSlotSilhouette extends Control:
+	var _d: float = 132.0
+
+	func setup(diam: float) -> void:
+		_d = diam
+		size = Vector2(diam, diam)
+		queue_redraw()
+
+	func _draw() -> void:
+		var c: Vector2 = Vector2(_d, _d) * 0.5
+		var r: float = _d * 0.5
+		# slot well (살짝 파인 자리 — 어디에 놓을지 명확).
+		draw_circle(c, r, Color(0.0, 0.0, 0.0, 0.18))
+		# 김 ring 윤곽 (faint silhouette — 또렷한 외곽 ring).
+		draw_arc(c, r - 4.0, 0.0, TAU, 48, Color(1.0, 0.95, 0.66, 0.70), 5.0, true)
+		draw_circle(c, r - 10.0, Color(0.18, 0.22, 0.15, 0.30))     # faint 김 silhouette
+		draw_circle(c, r - 18.0, Color(0.96, 0.94, 0.86, 0.28))     # faint 흰 밥
+		# 흐린 속 점(어떤 단면이 들어갈지 hint).
+		var fr: float = r * 0.42
+		var positions := [
+			c + Vector2(-fr * 0.6, -fr * 0.6), c + Vector2(fr * 0.6, -fr * 0.6),
+			c + Vector2(-fr * 0.6, fr * 0.6), c + Vector2(fr * 0.6, fr * 0.6),
+		]
+		for p in positions:
+			draw_circle(p, r * 0.16, Color(1, 1, 1, 0.22))

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bbggfuq1gcx4"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_roll_topdown.gd" id="1_rtd"]
+
+[node name="ShotRollTopdown" type="Node"]
+script = ExtResource("1_rtd")

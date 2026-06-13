@@ -10,6 +10,29 @@ extends Node
 signal level_up(new_level)
 signal money_changed(amount)
 
+# ─────────────────────────────────────────────────────────────────────────────
+# DEBUG / TEST UNLOCK — 본인 개발 게임의 디버그/테스트 언락 (production 아님).
+#   ON 이면 menu_select에서 (1) 레벨 게이트 + (2) 재고(stock) 게이트 + (3) ready 게이트를
+#   모두 우회하여 12 음식 전부를 자유롭게 선택·플레이할 수 있다. 테스트 편의 전용.
+#
+#   *** 무엇을 바꾸지 않는가 (중요) ***
+#   - save / scoring / economy / CSV 데이터는 절대 변경하지 않는다. 표시·선택 게이트만 우회.
+#   - 레벨/XP/unlock progression 로직(_try_level_up, CLEARS_REQ 등)은 그대로 보존된다.
+#     이 토글은 그 로직을 "지우는" 게 아니라 "표시/진입 게이트 앞에서 우회"할 뿐이다.
+#
+#   *** production 복원법 (사용자가 나중에 끄는 법) ***
+#   - 아래 값을 false 로 바꾸면 원래의 레벨 잠금 동작으로 100% 복원된다. (코드 1줄)
+#       const DEBUG_UNLOCK_ALL: bool = false
+#   - 끄면 menu_select가 다시 unlock_level/stock/ready 게이트를 정상 적용한다.
+# ─────────────────────────────────────────────────────────────────────────────
+const DEBUG_UNLOCK_ALL: bool = true
+
+## 테스트 언락이 켜져 있는지. UI 게이트(레벨/재고/ready)를 우회할지 판단하는 단일 진입점.
+## scoring/economy/save 무관 — 순수 표시·선택 게이트용. false 면 production 동작.
+func debug_unlock_all() -> bool:
+	return DEBUG_UNLOCK_ALL
+
+
 const SAVE_PATH: String = "user://kfood_save.json"
 const SCHEMA_VERSION: int = 2
 const SEED_MONEY: int = 50000
@@ -59,9 +82,12 @@ func _default_data() -> Dictionary:
 		# data/recipe_xp.csv; level is derived (not stored).
 		"recipe_xp": {},
 		"player_char": "",
-		# Player-Chef Integration (2026-06-08): 플레이어가 선택한 본인 셰프 아바타 성별.
-		# "" = 미선택(최초 진입 시 gender select 화면), "f" = 여 셰프, "m" = 남 셰프.
-		# 신규 1필드 — 기존 save는 _merge()로 backward-compatible(필드 없으면 default "" 유지).
+		# Player-Chef Integration (2026-06-08) → Choose-Your-Chef 재설계 (2026-06-12):
+		# 플레이어가 선택한 본인 셰프 아바타 preset id. 성별 이분법 폐기 → 이름·성격 preset.
+		# "" = 미선택(최초 진입 시 chef select 화면). 유효값:
+		#   "f"(Hana) / "m"(Joon) / "leo"(Leo) / "amara"(Amara).
+		# *** 필드명은 player_chef_gender 유지 (backward-compat): 기존 save의 "f"/"m" 값이
+		#     _merge로 그대로 보존되어 Hana/Joon으로 해석된다. 신규 leo/amara만 추가. ***
 		# scoring/economy/progression 무관 — 순수 visual 선택.
 		"player_chef_gender": "",
 		# Player-Name Personalization (2026-06-08): 플레이어가 직접 입력한 본인 셰프 이름.
@@ -258,24 +284,42 @@ func add_recipe_xp(food_id: String, xp_delta: int) -> int:
 	return nv
 
 
-# --- player chef avatar (성별 선택, visual only) ---
-## 선택된 플레이어 셰프 성별: "f"/"m", 미선택 시 "". scoring/economy 무관.
-func player_chef_gender() -> String:
+# --- player chef avatar (Choose-Your-Chef preset, visual only) ---
+# Choose-Your-Chef 재설계 (2026-06-12): 성별 이분법 폐기 → 이름·성격 preset.
+#   유효 preset: "f"(Hana) / "m"(Joon) / "leo"(Leo) / "amara"(Amara) / "min"(Min) / "ari"(Ari).
+# *** save 필드명은 player_chef_gender 유지 — 기존 "f"/"m" save가 그대로 로드되어 backward-
+#     compatible. preset 함수가 canonical, gender 함수는 호환 alias. ***
+# Choose-Your-Chef 6 preset (2026-06-13): min/ari 추가 (gimbap-visual-quality-rebuild 작업 2).
+#   기존 4 preset save 값은 그대로 보존(backward-compat). min/ari만 신규 valid id 추가.
+const CHEF_PRESETS: Array = ["f", "m", "leo", "amara", "min", "ari"]
+
+## 선택된 플레이어 셰프 preset id: "f"/"m"/"leo"/"amara", 미선택 시 "". scoring/economy 무관.
+func player_chef_preset() -> String:
 	return String(data.get("player_chef_gender", ""))
 
 
-## 플레이어가 gender select에서 셰프 성별을 골랐는지(최초 1회 게이트용).
+## (backward-compat alias) 기존 호출부 호환. 의미는 preset id. 신규 코드는 player_chef_preset 사용.
+func player_chef_gender() -> String:
+	return player_chef_preset()
+
+
+## 플레이어가 chef select에서 셰프 preset을 골랐는지(최초 1회 게이트용).
 func has_chosen_chef() -> bool:
-	var g: String = player_chef_gender()
-	return g == "f" or g == "m"
+	return CHEF_PRESETS.has(player_chef_preset())
 
 
-## 셰프 성별 저장 ("f"/"m"). 잘못된 값은 무시. 재선택(설정)도 이 경로로.
-func set_player_chef_gender(gender: String) -> void:
-	if gender != "f" and gender != "m":
+## 셰프 preset 저장 ("f"/"m"/"leo"/"amara"). 잘못된 값은 무시. 재선택(설정)도 이 경로로.
+## 필드는 player_chef_gender 키에 저장(backward-compat) — 기존 "f"/"m" save와 동일 슬롯.
+func set_player_chef_preset(preset: String) -> void:
+	if not CHEF_PRESETS.has(preset):
 		return
-	data["player_chef_gender"] = gender
+	data["player_chef_gender"] = preset
 	_save()
+
+
+## (backward-compat alias) 기존 호출부 호환. 신규 코드는 set_player_chef_preset 사용.
+func set_player_chef_gender(gender: String) -> void:
+	set_player_chef_preset(gender)
 
 
 # --- player name (입력 개인화, visual only) ---

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://c8gimbplay01a"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_gimbap_playable.gd" id="1_gplay"]
+
+[node name="ShotGimbapPlayable" type="Node"]
+script = ExtResource("1_gplay")

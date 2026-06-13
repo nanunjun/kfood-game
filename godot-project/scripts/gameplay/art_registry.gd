@@ -75,6 +75,21 @@ const ROLL_KEYS := [
 	# long-strip wide layout (2026-06-07) — 실제 김밥 마는 composition.
 	"bamboo_mat_large", "seaweed_sheet_rect", "rice_layer_flat_rect",
 	"carrot_strip_long", "egg_strip_long", "green_strip_long", "beef_strip_long",
+	# STAGED physical-curl roll — 4-state REBUILD (2026-06-10, gimbap-vertical-slice-v2 §5).
+	# 사용자 거부 교정: first_fold/cylinder_forming 은 spiral 단면(end-cap)을 조기노출 → DROP.
+	# 신 4-state(단면 중간 절대 금지, player-POV bottom→top, 평면 mat):
+	#   flat_setup(s1, 평면 김+밥+가로 strip) → edge_lift(s2, near edge 들림) →
+	#   half_roll(s3, 절반 log + 상단 평평 김) → 끝/압축:
+	#     finished_cylinder(s4 success, 완성 통 log — end-cap은 끝 상태만 OK) /
+	#     compressed_loose(약압) / compressed_tight(강압).
+	# 중간 state(flat/edge_lift/half_roll)는 단면 0 — 완성 김밥 조기노출 해소.
+	# 미존재 시 get_roll_asset()이 "" → roll module이 procedural/기존 자산 fallback(무해).
+	"gimbap_roll_flat_setup", "gimbap_roll_edge_lift", "gimbap_roll_half_roll",
+	"gimbap_roll_finished_cylinder",
+	"gimbap_roll_compressed_loose", "gimbap_roll_compressed_tight",
+	# DEPRECATED (단면 조기노출 — 신 roll 경로 미사용, graceful fallback만 유지):
+	#   first_fold / cylinder_forming / halfway_pov 는 더 이상 swap 대상이 아니다.
+	"gimbap_roll_first_fold", "gimbap_roll_cylinder_forming", "gimbap_roll_halfway_pov",
 ]
 
 ## get_roll_asset("seaweed_sheet") → res://art/sprites/roll/seaweed_sheet.png
@@ -82,6 +97,51 @@ const ROLL_KEYS := [
 static func get_roll_asset(key: String) -> String:
 	var path: String = _ROLL_DIR + key + ".png"
 	return path if ResourceLoader.exists(path) else ""
+
+
+# =====================================================================================
+# Gimbap painterly swap (2026-06-13, gimbap-visual-quality-rebuild-v1 §5) — high-angle
+# painterly sprite로 procedural geometry를 교체한다. food/tool/surface 시각 layer만 교체
+# (입력/scoring/4-factor/save/consequence contract 무변경). UI HUD(target/meter/marker)는
+# vector 유지. 미존재 시 "" → 각 module이 기존 procedural _draw로 graceful fallback(무해).
+#
+# painterly 25장 (assets-raw/gimbap_painterly_m2 → art/sprites/painterly):
+#   roll 6 state  : roll_flat_setup / roll_edge_lift / roll_first_fold / roll_curling /
+#                   roll_compression / roll_finished (+ result variant loose/burst)
+#   build 7       : mat_painterly / seaweed_painterly / rice_painterly /
+#                   filling_{carrot,egg,spinach,danmuji}_painterly
+#   carrot 4      : carrot_whole / carrot_on_board / carrot_strips_good / carrot_strips_bad
+#   slice 3       : gimbap_roll_for_slice / gimbap_piece_good / gimbap_piece_collapse
+#   plate 1       : wooden_tray_topdown
+#   tool 2        : board_topdown_painterly / knife_topdown_painterly
+# =====================================================================================
+const _PAINTERLY_DIR := "res://art/sprites/painterly/"
+const PAINTERLY_KEYS := [
+	# roll 6 state (single-shot cross-fade swap).
+	"roll_flat_setup", "roll_edge_lift", "roll_first_fold",
+	"roll_curling", "roll_compression", "roll_finished",
+	"roll_finished_loose", "roll_finished_burst",
+	# build layers (mat/김/밥/filling 4).
+	"mat_painterly", "seaweed_painterly", "rice_painterly",
+	"filling_carrot_painterly", "filling_egg_painterly",
+	"filling_spinach_painterly", "filling_danmuji_painterly",
+	# julienne carrot 4 state.
+	"carrot_whole", "carrot_on_board", "carrot_strips_good", "carrot_strips_bad",
+	# slice / plate / tool.
+	"gimbap_roll_for_slice", "gimbap_piece_good", "gimbap_piece_collapse",
+	"wooden_tray_topdown", "board_topdown_painterly", "knife_topdown_painterly",
+]
+
+## get_painterly("roll_finished") → res://art/sprites/painterly/roll_finished.png
+## 파일 미존재 시 "" → caller가 기존 procedural _draw로 fallback(시각만 영향, scoring 무관).
+static func get_painterly(key: String) -> String:
+	var path: String = _PAINTERLY_DIR + key + ".png"
+	return path if ResourceLoader.exists(path) else ""
+
+
+## Gimbap filling id(danmuji/spinach/carrot/egg) → painterly filling band sprite. 미존재 시 "".
+static func gimbap_painterly_filling(filling_id: String) -> String:
+	return get_painterly("filling_%s_painterly" % filling_id)
 
 
 # =====================================================================================
@@ -108,6 +168,11 @@ const INGREDIENT_KEYS := [
 	#   fish_cake       : 어묵(어슷 갈색 slice)      — 떡볶이 slice 정답(대파 대체 제거).
 	#   gochujang_dollop: 고추장 paste 한 덩이       — 비빔밥 season 정답(고춧가루병 아님).
 	"rice_cake", "fish_cake", "gochujang_dollop",
+	# Gimbap Build/Slice sprite 배선 (2026-06-12, 당근/파 혼동 제거) — dish-correct 김밥 속.
+	#   danmuji_strip : 단무지(밝은 노랑 strip) — 당근/계란 노랑과 구분되는 단무지 정체성.
+	#   spinach_cooked: 시금치 나물(진녹 잎채소) — 대파(green_onion) 대체 제거(파 아님).
+	# (당근=carrot_julienne / 계란=egg_strip(egg_strip_long whole-egg 아님)는 기존 키 사용.)
+	"danmuji_strip", "spinach_cooked",
 ]
 const TOOL_KEYS := [
 	"chef_knife", "cutting_board", "ladle", "spatula", "tongs",
@@ -177,7 +242,7 @@ static func get_vessel(name: String) -> String:
 const SLICE_INGREDIENT := {
 	"t1_002": ["green_onion", "chopped"],   # 라면 — 대파 송송 (정답)
 	"t1_003": ["fish_cake", ""],            # 떡볶이 — 어묵 어슷썰기 (P0: 대파 substitute 제거)
-	"t1_004": ["carrot", "julienne"],       # 김밥 — 당근 채썰기 (단무지 sprite 미존재 → placeholder)
+	"t1_004": ["danmuji_strip", ""],        # 김밥 — 단무지(밝은 노랑, sprite 배선 2026-06-12). 통썰기는 GimbapSliceModule이 담당.
 	"t1_005": ["kimchi", "chopped"],        # 김치볶음밥 — 김치 깍둑 (정답)
 	"t1_006": ["green_onion", "chopped"],   # 해물파전 — 쪽파 송송 (정답)
 	"t1_007": ["green_onion", "chopped"],   # 콘도그 — batter dip 정답이나 cut placeholder
@@ -219,6 +284,54 @@ const TIMING_FOOD := {
 
 ## roll module 재료(김밥 속). standalone ingredient 이름 배열.
 const ROLL_INGREDIENTS := ["rice_bowl", "carrot_julienne", "green_onion_julienne", "egg_cooked"]
+
+
+# =====================================================================================
+# Gimbap filling 배선 (2026-06-12, 당근/파 혼동 제거) — Build/Roll/Slice/Plate 공유 SSOT.
+#   "단무지=당근, 시금치=파" 오매핑을 제거하고 dish-correct 정체성을 한 곳에서 해석한다:
+#     danmuji  → danmuji_strip(밝은 노랑)         — 당근/계란 노랑과 구분.
+#     spinach  → spinach_cooked(진녹 잎채소)       — 대파(green_onion) 아님.
+#     carrot   → carrot_strip_long(긴 주황 strip)  — carrot_julienne fallback.
+#     egg      → egg_strip_long(긴 노랑 지단)       — whole egg icon 아님.
+# 각 spec: {id, label, roll_key(긴 strip 우선), ing(state ingredient fallback), col(폴백색), bh(시각 두께비)}.
+# Build/Slice 가 이 배열을 slice(0, n)로 잘라 정답 김밥 속을 순서대로 사용한다(랜덤 아이콘 금지).
+const GIMBAP_FILLINGS := [
+	{"id": "danmuji", "label": "단무지 Danmuji", "roll_key": "",
+		"ing": "danmuji_strip", "col": Color(0.98, 0.82, 0.20), "bh": 0.30},
+	{"id": "spinach", "label": "시금치 Spinach", "roll_key": "",
+		"ing": "spinach_cooked", "col": Color(0.24, 0.46, 0.18), "bh": 0.32},
+	{"id": "carrot",  "label": "당근 Carrot",   "roll_key": "carrot_strip_long",
+		"ing": "carrot_julienne", "col": Color(0.93, 0.52, 0.18), "bh": 0.31},
+	{"id": "egg",     "label": "계란 Egg",      "roll_key": "egg_strip_long",
+		"ing": "egg_cooked", "col": Color(0.97, 0.80, 0.26), "bh": 0.24},
+]
+
+
+## 김밥 속 spec n개(정답 순서 danmuji→spinach→carrot→egg). 각 spec에 해석된 sprite 경로(tex) 부착.
+## roll_key(긴 strip) 우선, 미존재 시 ing(state ingredient)로 fallback. 둘 다 없으면 "" (procedural col).
+static func gimbap_filling_specs(count: int = 4) -> Array:
+	var n: int = clampi(count, 1, GIMBAP_FILLINGS.size())
+	var out: Array = []
+	for i in range(n):
+		var base: Dictionary = (GIMBAP_FILLINGS[i] as Dictionary).duplicate()
+		base["tex"] = gimbap_filling_tex(base)
+		out.append(base)
+	return out
+
+
+## 한 filling spec → sprite 경로. roll long-strip 우선 → ingredient fallback → "".
+static func gimbap_filling_tex(spec: Dictionary) -> String:
+	var rk: String = String(spec.get("roll_key", ""))
+	if rk != "":
+		var rp: String = get_roll_asset(rk)
+		if rp != "":
+			return rp
+	var ing: String = String(spec.get("ing", ""))
+	if ing != "":
+		var ip: String = get_ingredient(ing)
+		if ip != "":
+			return ip
+	return ""
 
 
 ## food_id → 조리 vessel/tool base (L2). primary_cooking_method 매핑.
@@ -307,29 +420,50 @@ static func active_tool_for(food_id: StringName, fallback: String = "spatula") -
 	return get_tool(FOOD_ACTIVE_TOOL.get(String(food_id), fallback))
 
 
-# --- protagonist (플레이어 셰프 아바타) — 성별 선택(여/남) × 4 감정 ---
+# --- protagonist (플레이어 셰프 아바타) — "Choose Your Chef" preset × 4 감정 ---
 # Player-Chef Integration (2026-06-08): 플레이어가 선택한 본인 아바타. 손님(먹는 쪽, character/)과
 # 역할 분리 — 주인공은 "요리하는 나". north star 톤(cocoa outline / soft volumetric / warm).
-#   gender  : "f"(크림 자켓+테라코타 앞치마+헤어밴드) / "m"(navy 자켓+sand 앞치마+반다나)
+#
+# Choose-Your-Chef 재설계 (2026-06-12): 성별 이분법(Female/Male) 폐기 → 이름·성격 preset 4종.
+# preset id(저장값, backward-compat):
+#   "f"     → Hana  (Calm & careful, 크림 자켓+테라코타 앞치마)    파일: chef_f_*
+#   "m"     → Joon  (Fast & bold, navy 자켓+sand 앞치마)           파일: chef_m_*
+#   "leo"   → Leo   (Eager & humble, 외국인)                       파일: leo_*
+#   "amara" → Amara (Confident & graceful, 외국인)                 파일: amara_*
+# 기존 save의 "f"/"m" 값은 그대로 Hana/Joon으로 해석(backward-compat). 신규 leo/amara 추가.
 #   emotion : "neutral"(메뉴/타이틀 host) / "cheer"(result 성공) / "think"(tutorial/가이드) /
 #             "cook"(now cooking/present)
-# 8장 transparent: art/sprites/protagonist/chef_{f|m}_{neutral|cheer|think|cook}.png
+# 16장 transparent: chef_{f|m}_{emotion}.png + {leo|amara}_{emotion}.png
 const PROTAGONIST_EMOTIONS := ["neutral", "cheer", "think", "cook"]
-const PROTAGONIST_GENDERS := ["f", "m"]
+# 유효 preset id (저장값). f/m는 기존 chef_f/chef_m 파일 prefix, leo/amara/min/ari는 bare id prefix.
+# Choose-Your-Chef 6 preset (2026-06-13): min/ari 추가 (gimbap-visual-quality-rebuild 작업 2).
+#   "min" → Min  (Creative & balanced)  파일: min_*
+#   "ari" → Ari  (Cheerful & curious)   파일: ari_*
+const PROTAGONIST_PRESETS := ["f", "m", "leo", "amara", "min", "ari"]
+# Backward-compat alias — 기존 코드(protagonist_smoke 등)가 참조하던 성별 상수. 의미는 preset.
+const PROTAGONIST_GENDERS := ["f", "m", "leo", "amara", "min", "ari"]
 const _PROTAGONIST_DIR := "res://art/sprites/protagonist/"
+# preset id → 파일 prefix. f/m는 "chef_f"/"chef_m"(기존 자산 호환), leo/amara/min/ari는 bare id.
+const _PROTAGONIST_PREFIX := {
+	"f": "chef_f", "m": "chef_m", "leo": "leo", "amara": "amara",
+	"min": "min", "ari": "ari",
+}
 
 
 ## get_protagonist("f", "cheer") → res://art/sprites/protagonist/chef_f_cheer.png
-## gender: "f"/"m" (그 외 값은 "f"로 폴백). emotion: neutral/cheer/think/cook (미존재 시 neutral 폴백).
+## get_protagonist("leo", "cook") → res://art/sprites/protagonist/leo_cook.png
+## preset: "f"/"m"/"leo"/"amara" (그 외 값은 "f"로 폴백 — backward-compat). 인자명은 호환 위해
+## gender 유지(의미는 preset id). emotion: neutral/cheer/think/cook (미존재 시 neutral 폴백).
 ## 파일 미존재 시 ResourceLoader.exists() == false면 "" (caller가 procedural/이니셜 폴백).
 static func get_protagonist(gender: String, emotion: String = "neutral") -> String:
-	var g: String = gender if gender in PROTAGONIST_GENDERS else "f"
+	var p: String = gender if gender in PROTAGONIST_PRESETS else "f"
 	var e: String = emotion if emotion in PROTAGONIST_EMOTIONS else "neutral"
-	var path: String = "%schef_%s_%s.png" % [_PROTAGONIST_DIR, g, e]
+	var prefix: String = _PROTAGONIST_PREFIX.get(p, "chef_f")
+	var path: String = "%s%s_%s.png" % [_PROTAGONIST_DIR, prefix, e]
 	if ResourceLoader.exists(path):
 		return path
-	# emotion 미존재 시 같은 gender의 neutral로 graceful fallback.
-	var fallback: String = "%schef_%s_neutral.png" % [_PROTAGONIST_DIR, g]
+	# emotion 미존재 시 같은 preset의 neutral로 graceful fallback.
+	var fallback: String = "%s%s_neutral.png" % [_PROTAGONIST_DIR, prefix]
 	return fallback if ResourceLoader.exists(fallback) else ""
 
 

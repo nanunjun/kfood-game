@@ -201,12 +201,17 @@ func _ready() -> void:
 	grid.add_theme_constant_override("v_separation", 40)
 	scroll.add_child(grid)
 
+	# DEBUG_UNLOCK_ALL (테스트): 켜져 있으면 모든 dish의 레벨 잠금을 우회 → 12 음식 전부 활성
+	# 카드(faded/locked stamp 없이 선택 가능). progression(unlock_level) 데이터는 그대로 두고
+	# 표시 게이트만 끈다. OFF면 원래의 unlock_level > lvl 잠금 동작으로 복원.
+	var unlock_all: bool = sm != null and sm.has_method("debug_unlock_all") and sm.debug_unlock_all()
+
 	# Alternate the card tilt (left cards lean left, right cards lean right) so the board
 	# reads as hand-pinned recipe cards, not a rigid product grid.
 	var col_idx := 0
 	for id in MenuDB.all_menu_ids():
 		var menu: Dictionary = MenuDB.get_menu(id)
-		var locked: bool = int(menu.get("unlock_level", 1)) > lvl
+		var locked: bool = (int(menu.get("unlock_level", 1)) > lvl) and not unlock_all
 		var tilt: float = -1.4 if (col_idx % 2 == 0) else 1.4
 		grid.add_child(_make_card(menu, locked, sm, tilt))
 		col_idx += 1
@@ -555,10 +560,18 @@ func _make_card(menu: Dictionary, locked: bool, sm, tilt: float = 0.0) -> Contro
 	# footer recipe-action cue — NOT a filled buy-button bar. Quiet ink-on-paper line,
 	# the WHOLE card is the press target (recipe-journal "begin" feel).
 	var out_of_stock := stock <= 0
-	_add_recipe_footer(card, locked, out_of_stock, lvl)
+	# DEBUG_UNLOCK_ALL (테스트): 켜져 있으면 재고(stock) 게이트도 우회 → stock 0 dish도 바로 진입.
+	# economy 데이터는 변경하지 않는다(restock 안 함). consume_stock은 0에서 false 반환하므로
+	# 진입해도 재고가 음수로 가지 않고 크래시도 없다. OFF면 원래의 out-of-stock 잠금으로 복원.
+	var unlock_all: bool = sm != null and sm.has_method("debug_unlock_all") and sm.debug_unlock_all()
+	# unlock_all 일 때는 stock 게이트가 우회되므로 footer 도 "Start Cooking" 으로 표기
+	# (재고 0이어도 진입 가능 — 테스트 일관성). locked 만 "Discover at Lv N" 유지.
+	_add_recipe_footer(card, locked, out_of_stock and not unlock_all, lvl)
 
 	# Whole-card press target (transparent overlay button) — cook routes to runner.
 	# Disabled when locked/out so the gameplay/economy gating is byte-identical.
+	# 단, unlock_all 일 때는 stock 게이트를 우회(테스트 진입 허용).
+	var press_disabled: bool = locked or (out_of_stock and not unlock_all)
 	var hit := Button.new()
 	hit.position = Vector2(0, 0)
 	hit.size = card.size
@@ -570,10 +583,12 @@ func _make_card(menu: Dictionary, locked: bool, sm, tilt: float = 0.0) -> Contro
 	hit.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	hit.add_theme_stylebox_override("disabled", StyleBoxEmpty.new())
 	card.add_child(hit)
-	_wire_card_button(hit, card, String(menu.get("id", "t1_002")), locked or out_of_stock)
+	_wire_card_button(hit, card, String(menu.get("id", "t1_002")), press_disabled)
 
 	# Out of stock (not locked): small "Visit Market" link in the footer-right corner.
-	if out_of_stock and not locked:
+	# unlock_all(테스트) 일 때는 stock 게이트를 우회하므로 Visit-Market 링크를 숨기고
+	# 카드 전체가 cooking 으로 진입하게 둔다(restock 강제 없이 자유 진입).
+	if out_of_stock and not locked and not unlock_all:
 		var market := Button.new()
 		market.position = Vector2(266, 452)
 		market.size = Vector2(186, 52)
@@ -1107,9 +1122,17 @@ func _add_best_guest_badge(card: Panel, menu: Dictionary, halo_on: bool) -> void
 	mini.add_child(cap)
 
 
+## Gimbap vertical slice (t1_004) — routes to gimbap_slice_runner.tscn instead of the
+## generic cooking_module_runner. Only this one dish; the other 11 keep the legacy flow.
+const GIMBAP_VS_ID := "t1_004"
+const GIMBAP_VS_RUNNER_SCENE := "res://scenes/gimbap_slice_runner.tscn"
+
+
 func _on_pick(menu_id: String) -> void:
 	# Cooking Framework 2.0 — route to the data-driven module runner. The legacy
 	# rhythm_proto.gd is kept in tree for git history but no longer entered from the UI.
+	# Gimbap vertical slice (t1_004) uses GimbapSliceRunner (extends the base runner, so the
+	# same static pending_menu_id / pending_guest_id slots carry the selection through).
 	var RunnerScript := preload("res://scripts/gameplay/cooking_module_runner.gd")
 	RunnerScript.pending_menu_id = menu_id
 	RunnerScript.pending_guest_id = ""
@@ -1117,7 +1140,12 @@ func _on_pick(menu_id: String) -> void:
 	var lv_data: Dictionary = MenuDB.get_level(int(menu.get("unlock_level", 1)))
 	# evaluator levels skip guest selection
 	if String(lv_data.get("evaluator", "")) != "":
-		get_tree().change_scene_to_file("res://scenes/cooking_module_runner.tscn")
+		# Gimbap is non-evaluator today, but branch defensively so an evaluator-level config
+		# change can't silently route gimbap into the generic runner.
+		if menu_id == GIMBAP_VS_ID:
+			get_tree().change_scene_to_file(GIMBAP_VS_RUNNER_SCENE)
+		else:
+			get_tree().change_scene_to_file("res://scenes/cooking_module_runner.tscn")
 	else:
 		var GuestSelectScript := preload("res://scripts/ui/guest_select.gd")
 		GuestSelectScript.pending_menu_id = menu_id
@@ -1167,12 +1195,12 @@ func _redirect_to_name_entry() -> void:
 # silent skip(폴백 없음). world BG 위 layer — 손님(먹는 쪽) 시스템과 역할 분리. visual only.
 func _add_chef_host_badge(sm, emotion: String, pos: Vector2, sz: float,
 		caption: String, ring: Color) -> void:
-	if sm == null or not sm.has_method("player_chef_gender"):
+	if sm == null or not sm.has_method("player_chef_preset"):
 		return
-	var gender: String = sm.player_chef_gender()
-	if gender != "f" and gender != "m":
+	var preset: String = sm.player_chef_preset()
+	if not ArtRegistry.PROTAGONIST_PRESETS.has(preset):
 		return
-	var path := ArtRegistry.get_protagonist(gender, emotion)
+	var path := ArtRegistry.get_protagonist(preset, emotion)
 	if path == "" or not ResourceLoader.exists(path):
 		return
 	# 원형 프레임 (north star warm 톤 + ring)

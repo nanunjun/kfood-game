@@ -313,12 +313,12 @@ func _chef_display_name() -> String:
 ## 선택한 셰프 아바타 경로(emotion)를 SaveManager 성별로 해석. 미선택/미존재 시 "".
 func _chef_host_path(emotion: String) -> String:
 	var sm := get_node_or_null("/root/SaveManager")
-	if sm == null or not sm.has_method("player_chef_gender"):
+	if sm == null or not sm.has_method("player_chef_preset"):
 		return ""
-	var gender: String = sm.player_chef_gender()
-	if gender != "f" and gender != "m":
+	var preset: String = sm.player_chef_preset()
+	if not ArtRegistry.PROTAGONIST_PRESETS.has(preset):
 		return ""
-	var path := ArtRegistry.get_protagonist(gender, emotion)
+	var path := ArtRegistry.get_protagonist(preset, emotion)
 	return path if (path != "" and ResourceLoader.exists(path)) else ""
 
 
@@ -472,6 +472,10 @@ func _build_module_params(mod_id: String) -> Dictionary:
 		"module_id": mod_id,
 		# runner가 이미 KitchenBackground를 깔았으므로 module 자체 bg 생략 (chrome 가림 방지).
 		"skip_bg": true,
+		# runner가 이미 좌하단에 큰 guest mini를 _layer에 깔았으므로 module 자체 reaction mini 생략
+		# (DUP-GUEST FIX 2026-06-11 — 같은 손님 2번 표시 제거, 사용자 불만 A-2). 격리 shot은 이 키가
+		# 없어 module mini가 그대로 표시된다(맥락 보존).
+		"skip_guest_mini": true,
 	}
 	# Per-module tweaks (CSV-driven would land in a v2 dish_modules.csv schema column).
 	match mod_id:

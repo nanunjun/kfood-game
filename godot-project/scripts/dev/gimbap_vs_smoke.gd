@@ -16,6 +16,8 @@ const RollScript := preload("res://scripts/cooking_modules/roll_module.gd")
 const SliceScript := preload("res://scripts/cooking_modules/slice_module.gd")
 const ArrangeScript := preload("res://scripts/cooking_modules/arrange_module.gd")
 const PlateScript := preload("res://scripts/cooking_modules/plate_module.gd")
+const GimbapSliceScript := preload("res://scripts/cooking_modules/gimbap_slice_module.gd")
+const ArtRegistry := preload("res://scripts/gameplay/art_registry.gd")
 const Runner := preload("res://scripts/gameplay/gimbap_slice_runner.gd")
 const MenuDB := preload("res://scripts/gameplay/menu_db.gd")
 
@@ -33,6 +35,8 @@ func _ready() -> void:
 	_test_arrange_balance()
 	_test_runner_filling_slots()
 	_test_plate_vs_activation()
+	_test_gimbap_slice_module()
+	_test_filling_sprite_wiring()
 	print("=== summary: %d PASS / %d FAIL ===" % [_pass, _fail])
 	get_tree().quit()
 
@@ -133,6 +137,52 @@ func _test_plate_vs_activation() -> void:
 	p2.start({"food_id": "t1_004", "menu": MenuDB.get_menu("t1_004")})
 	_assert_bool("legacy tier path when no vs_quality_state", not bool(p2.get("_vs_plate")))
 	p2.queue_free()
+
+
+# §8.4 GimbapSliceModule(통썰기) — roll_quality가 cut window를 좁히고, slice_quality 출력 + default
+# (no vs) 보존. generic slice_module 대체가 contract(§8.4/§8.5)를 동일하게 유지하는지 검증.
+func _test_gimbap_slice_module() -> void:
+	print("\n[8] GimbapSliceModule 통썰기 — window narrowing + contract 보존")
+	# default (no vs) → window_scale 1.0.
+	var g1: Node = GimbapSliceScript.new()
+	add_child(g1)
+	g1.start({"food_id": "t1_004", "step_no": 5, "step_total": 7})
+	_assert_bool("default (no vs) window_scale == 1.0", absf(float(g1.get("_vs_window_scale")) - 1.0) < 0.01)
+	_assert_bool("default vs_active == false", not bool(g1.get("_vs_active")))
+	g1.queue_free()
+	# bad roll(roll_q 낮음) → window 좁아짐(lerp(0.6,1.0,roll_q)).
+	var g2: Node = GimbapSliceScript.new()
+	add_child(g2)
+	g2.start({"food_id": "t1_004", "vs_quality_state": {"roll_quality": 0.0}})
+	_assert_bool("roll_q=0 → window_scale == 0.6 (narrow)", absf(float(g2.get("_vs_window_scale")) - 0.6) < 0.01)
+	_assert_bool("vs_active == true with vs_quality_state", bool(g2.get("_vs_active")))
+	g2.queue_free()
+	# routing — runner가 slice step을 GimbapSliceScene으로, build를 GimbapBuildScene으로 라우팅.
+	_assert_bool("runner GimbapSliceScene 존재", ResourceLoader.exists(Runner.GimbapSliceScene))
+	_assert_bool("runner GimbapBuildScene 존재", ResourceLoader.exists(Runner.GimbapBuildScene))
+
+
+# Gimbap filling sprite 배선(2026-06-12) — danmuji/spinach/carrot/egg 정확 sprite, 당근·파 혼동 0.
+func _test_filling_sprite_wiring() -> void:
+	print("\n[9] Gimbap filling sprite 배선 (당근/파 혼동 제거)")
+	# 신규 ingredient 키가 등록됐는지.
+	_assert_bool("danmuji_strip in INGREDIENT_KEYS", ArtRegistry.INGREDIENT_KEYS.has("danmuji_strip"))
+	_assert_bool("spinach_cooked in INGREDIENT_KEYS", ArtRegistry.INGREDIENT_KEYS.has("spinach_cooked"))
+	# sprite 파일이 실제로 import됐는지.
+	_assert_bool("danmuji_strip.png resolves", ArtRegistry.get_ingredient("danmuji_strip") != "")
+	_assert_bool("spinach_cooked.png resolves", ArtRegistry.get_ingredient("spinach_cooked") != "")
+	# 4 filling spec 순서 = danmuji→spinach→carrot→egg (정답 정체성).
+	var specs: Array = ArtRegistry.gimbap_filling_specs(4)
+	_assert_bool("4 filling specs", specs.size() == 4)
+	_assert_bool("spec[0] = danmuji", String(specs[0]["id"]) == "danmuji")
+	_assert_bool("spec[1] = spinach", String(specs[1]["id"]) == "spinach")
+	_assert_bool("spec[2] = carrot", String(specs[2]["id"]) == "carrot")
+	_assert_bool("spec[3] = egg", String(specs[3]["id"]) == "egg")
+	# danmuji는 danmuji_strip로(당근/계란 아님), spinach는 spinach_cooked로(파/green_onion 아님).
+	_assert_bool("danmuji tex = danmuji_strip (not carrot)", String(specs[0]["tex"]).contains("danmuji_strip"))
+	_assert_bool("spinach tex = spinach_cooked (not green_onion)", String(specs[1]["tex"]).contains("spinach_cooked"))
+	_assert_bool("carrot tex resolves", String(specs[2]["tex"]) != "")
+	_assert_bool("egg tex resolves (not whole egg)", String(specs[3]["tex"]).contains("egg_strip_long"))
 
 
 # --- helpers ---

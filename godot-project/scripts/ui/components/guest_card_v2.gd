@@ -30,6 +30,9 @@ const AVATAR_TINT := {
 	"riley": Color(0.55, 0.72, 0.85), "mrs_lee": Color(0.70, 0.80, 0.62),
 	"seoyeon": Color(0.80, 0.62, 0.85),
 	"mother_01": Color(0.85, 0.60, 0.70), "father_01": Color(0.55, 0.45, 0.40),
+	# 외국인 손님 2 (2026-06-12) — character/{guest_id}_neutral.png 노출. friend role(CSV selectable).
+	"sofia": Color(0.96, 0.72, 0.55),   # Sofia 테라코타
+	"kenji": Color(0.60, 0.78, 0.70),   # Kenji 그린
 }
 
 var _guest: Dictionary = {}

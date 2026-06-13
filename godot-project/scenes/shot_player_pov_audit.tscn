@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://d7p0vp0vaud1t0"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_player_pov_audit.gd" id="1_pov"]
+
+[node name="ShotPlayerPovAudit" type="Node"]
+script = ExtResource("1_pov")

@@ -232,9 +232,16 @@ func _set_instruction(text: String) -> void:
 ## 손님 reaction mini — bottom-left feedback zone. "누가 기다리는지" + idle 표정.
 ## runner의 큰 guest mini와 별개로, 격리된 module shot에서도 한식 정체성+손님 맥락을 보장.
 ## guest sprite(neutral)가 있으면 사용, 없으면 색 원 + 이니셜. 작아서 action을 안 가린다.
+##
+## DUP-GUEST FIX (2026-06-11): CookingModuleRunner는 이미 좌하단에 큰 guest mini를 _layer에
+## 깐다. module이 또 좌하단 reaction mini를 깔면 같은 손님이 2번 보인다(사용자 불만 A-2). runner가
+## skip_guest_mini=true를 넘기면 module-level mini를 생략 — runner mini 1개만 남는다. 격리 shot/일반
+## flow(runner mini 없음)는 skip_guest_mini 미지정 → 기존대로 module mini 1개 표시(맥락 보존).
 func _build_guest_reaction_mini() -> void:
 	var guest_id: String = String(_params.get("guest_id", ""))
 	if guest_id == "":
+		return
+	if bool(_params.get("skip_guest_mini", false)):
 		return
 	var rect: Rect2 = Composition.guest_mini_rect()
 	var holder := Control.new()

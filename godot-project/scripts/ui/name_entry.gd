@@ -27,6 +27,15 @@ const NAME_MAX := 12
 var _name_edit: LineEdit = null
 var _hint: Label = null
 
+# Choose-Your-Chef 재설계 (2026-06-12): preset id → warm tint (gender 이분법 폐기).
+const PRESET_TINT := {
+	"f": Color(0.86, 0.52, 0.34), "m": Color(0.34, 0.42, 0.58),
+	"leo": Color(0.82, 0.55, 0.34), "amara": Color(0.55, 0.40, 0.62),
+}
+
+static func _tint_for(preset: String) -> Color:
+	return PRESET_TINT.get(preset, Color(0.86, 0.52, 0.34))
+
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -78,15 +87,15 @@ func _ready() -> void:
 	sub.add_theme_color_override("font_color", Color(0.92, 0.78, 0.50))
 	sign.add_child(sub)
 
-	# 선택한 셰프 미리보기 카드 (gender select 톤과 정합)
-	var gender: String = sm.player_chef_gender() if (sm and sm.has_method("player_chef_gender")) else "f"
-	_build_chef_preview(gender, Vector2(315, 360))
+	# 선택한 셰프 미리보기 카드 (chef select 톤과 정합)
+	var preset: String = sm.player_chef_preset() if (sm and sm.has_method("player_chef_preset")) else "f"
+	_build_chef_preview(preset, Vector2(315, 360))
 
 	# 이름 입력 필드 (LineEdit) — 모바일 가상 키보드 자동 노출
 	_build_name_input(Vector2(140, 1110))
 
 	# Confirm CTA (glossy)
-	var tint: Color = Color(0.86, 0.52, 0.34) if gender == "f" else Color(0.34, 0.42, 0.58)
+	var tint: Color = _tint_for(preset)
 	var cta = GlossyButtonScript.new()
 	cta.position = Vector2(290, 1320)
 	cta.size = Vector2(500, 110)
@@ -106,9 +115,9 @@ func _ready() -> void:
 	add_child(note)
 
 
-# 선택한 셰프(neutral) bust 미리보기 — gender select 카드 plate 톤과 정합. 작게(가운데 위).
-func _build_chef_preview(gender: String, pos: Vector2) -> void:
-	var tint: Color = Color(0.86, 0.52, 0.34) if gender == "f" else Color(0.34, 0.42, 0.58)
+# 선택한 셰프(neutral) bust 미리보기 — chef select 카드 plate 톤과 정합. 작게(가운데 위).
+func _build_chef_preview(preset: String, pos: Vector2) -> void:
+	var tint: Color = _tint_for(preset)
 	var plate := Panel.new()
 	plate.position = pos
 	plate.size = Vector2(450, 560)
@@ -145,7 +154,7 @@ func _build_chef_preview(gender: String, pos: Vector2) -> void:
 	av.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	av.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	av.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var av_path := ArtRegistry.get_protagonist(gender, "neutral")
+	var av_path := ArtRegistry.get_protagonist(preset, "neutral")
 	if av_path != "" and ResourceLoader.exists(av_path):
 		av.texture = load(av_path)
 	plate.add_child(av)

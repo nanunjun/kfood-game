@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://b8rqg7n2vplk1"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_gimbap_roll_plate.gd" id="1_grp"]
+
+[node name="ShotGimbapRollPlate" type="Node"]
+script = ExtResource("1_grp")

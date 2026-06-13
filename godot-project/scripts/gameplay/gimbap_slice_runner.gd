@@ -27,6 +27,11 @@ extends "res://scripts/gameplay/cooking_module_runner.gd"
 
 const ShoppingStage := preload("res://scripts/gameplay/shopping_stage.gd")
 const JulienneScene := "res://scenes/cooking/julienne_module.tscn"
+# Gimbap rebuild (2026-06-10) — generic color-slot arrange 폐기 → 실제 김밥 조립(Build Gimbap).
+const GimbapBuildScene := "res://scenes/cooking/gimbap_build_module.tscn"
+# Gimbap slice 교정 (2026-06-12) — generic carrot-chopping Slice 폐기 → 실제 김밥 통썰기(top-down
+# cylinder + 6 cut guide). slice_quality 출력 + §8.4/§8.5 consequence 동일(generic slice와 contract 호환).
+const GimbapSliceScene := "res://scenes/cooking/gimbap_slice_module.tscn"
 
 # vertical slice는 김밥(t1_004) 전용. runner 진입 시 강제.
 const GIMBAP_ID := "t1_004"
@@ -51,10 +56,13 @@ var collected_fillings: Array = []
 # kind: "shopping" | "julienne" | "module"(기존 module 호출) | "guest"
 #   module step은 mod_id로 기존 MODULE_SCENES를 호출(roll/slice/plate stub).
 #   factor: 이 step 결과가 들어갈 4-factor bucket(MODULE_TO_FACTOR override).
+# 교정 step 구조 (gimbap-vertical-slice-v2 §1.1 — 실제 조리 순서):
+#   Shopping → Prep(julienne) → Build Gimbap → Roll → Slice → Plate → Guest.
+# 기존 generic color-slot "arrange" 를 실제 김밥 조립 "build" 로 교체 (color matching 폐기).
 const STEP_PLAN := [
 	{"kind": "shopping",  "factor": "prep",    "quality_key": "shopping_quality", "title": "Market"},
-	{"kind": "julienne",  "factor": "prep",    "quality_key": "prep_quality",     "title": "Julienne"},
-	{"kind": "module", "mod": "arrange", "factor": "prep",    "quality_key": "",               "title": "Arrange"},
+	{"kind": "julienne",  "factor": "prep",    "quality_key": "prep_quality",     "title": "Prep Fillings"},
+	{"kind": "module", "mod": "build",   "factor": "prep",    "quality_key": "",               "title": "Build Gimbap"},
 	{"kind": "module", "mod": "roll",    "factor": "cook",    "quality_key": "roll_quality",   "title": "Roll"},
 	{"kind": "module", "mod": "slice",   "factor": "timing",  "quality_key": "slice_quality",  "title": "Slice"},
 	{"kind": "module", "mod": "plate",   "factor": "plating", "quality_key": "plate_quality",  "title": "Plating"},
@@ -81,6 +89,12 @@ func _run_next_module() -> void:
 	if _plan_idx >= STEP_PLAN.size():
 		_finish()
 		return
+	# 노드 lifecycle 안전망 (2026-06-11 stage-잔존 버그 수정):
+	# 직전 stage(shopping/julienne/build/roll/slice/plate/guest)가 남긴 자식 노드를 다음 stage
+	# 진입 *전에* 전부 제거한다. 각 done-handler가 자기 모듈을 free하지만, shopping stage는
+	# 자체 free를 하지 않아 mat 뒤로 시장 좌판 카드가 비쳐 보였다(F5 확인). 여기서 host를
+	# 일괄 clear → 7-step 전 전환에서 이전 화면 잔존 0 보장. (scoring/save/4-factor 무관.)
+	_clear_module_host()
 	_vs_step = STEP_PLAN[_plan_idx]
 	_plan_idx += 1
 	_step_no = _plan_idx
@@ -107,6 +121,11 @@ func _on_shopping_done(quality: float, fillings: Array) -> void:
 	collected_fillings = fillings
 	# 4-factor: shopping → 재료(prep bucket의 ingredients 대표). 0~1 → 0~100 contract 정합.
 	_record_vs_factor(quality * 100.0)
+	# shopping stage 명시적 정리 (다른 done-handler와 동일 패턴). _module_host 자식이므로 다음
+	# step 진입 시 _clear_module_host()가 한 번 더 안전망으로 제거한다 — 이중으로 잔존 0 보장.
+	if is_instance_valid(_current_module):
+		_current_module.queue_free()
+	_current_module = null
 	_advance_after_step()
 
 
@@ -140,11 +159,19 @@ func _on_julienne_done(score_pct: float) -> void:
 	_advance_after_step()
 
 
-# --- STAGE 3/4: 기존 module 호출 (arrange/roll/slice/plate stub) ---
-# Pass A는 기존 module을 그대로 호출하고 결과 score만 quality-state에 carry(consequence hook 예약).
+# --- STAGE 2~5: module 호출 (build/roll/slice/plate) ---
+# build = 실제 김밥 조립(gimbap_build_module, color-slot arrange 대체). roll/slice/plate 는
+# 기존 module 재사용. 결과 score + consequence 신호를 quality-state에 carry.
 func _run_module_step() -> void:
 	var mod_id: String = String(_vs_step.get("mod", ""))
-	var scene_path: String = String(MODULE_SCENES.get(mod_id, ""))
+	# build = gimbap 전용 조립 stage (color-slot arrange 대체).
+	# slice = gimbap 전용 통썰기 stage (generic carrot-chopping slice 대체, top-down cylinder).
+	# 그 외(roll/plate)는 기존 MODULE_SCENES.
+	var scene_path: String
+	match mod_id:
+		"build": scene_path = GimbapBuildScene
+		"slice": scene_path = GimbapSliceScene
+		_:       scene_path = String(MODULE_SCENES.get(mod_id, ""))
 	if scene_path == "" or not ResourceLoader.exists(scene_path):
 		push_warning("[gimbap-vs] module '%s' missing — skipping" % mod_id)
 		_advance_after_step()
@@ -161,12 +188,12 @@ func _run_module_step() -> void:
 	#   roll  : vs_quality_state.prep_quality(§8.2) + arrange_balance(§8.3) 소비.
 	#   slice : vs_quality_state.roll_quality(§8.4) 소비 → cut window 보정.
 	#   plate : vs_quality_state.slice_quality(§8.5) 소비 → 조각 단면 visual.
-	#   arrange: vs_collected_fillings(§8.1) 소비 → 누락 재료만큼 filling 슬롯 제한.
+	#   build:  vs_collected_fillings(§8.1) 소비 → 누락 재료만큼 strip 사용 제한.
 	var params: Dictionary = _build_module_params(mod_id)
 	params["vs_quality_state"] = quality_state.duplicate()
 	params["vs_collected_fillings"] = collected_fillings.duplicate()
-	# §8.1 shopping→arrange: 수집한 정답 재료 수만큼만 filling 슬롯 생성(누락 재료 = 빈 김밥).
-	if mod_id == "arrange":
+	# §8.1 shopping→build: 수집한 정답 재료 수만큼만 strip 사용 가능(누락 재료 = 빈 김밥).
+	if mod_id == "build":
 		params["vs_available_slots"] = _available_filling_slots()
 	if _current_module.has_method("start"):
 		_current_module.start(params)
@@ -194,9 +221,10 @@ func _on_vs_module_done(score_pct: float, mod_id: String) -> void:
 			_dish_choice = String(pm.get_chosen_dish())
 		if pm.has_method("get_chosen_tier"):
 			_dish_tier = String(pm.get_chosen_tier())
-	# §8.3 arrange→roll: arrange가 산출한 좌우 balance/bias를 quality-state에 기록 → 다음 roll
-	#   step의 vs_quality_state 스냅샷에 포함되어 roll tilt offset으로 소비된다.
-	if mod_id == "arrange" and is_instance_valid(_current_module):
+	# §8.3 build→roll: Build Gimbap이 산출한 strip 좌우 balance/bias를 quality-state에 기록 → 다음
+	#   roll step의 vs_quality_state 스냅샷에 포함되어 roll tilt offset으로 소비된다. (arrange 교체
+	#   투명 — getter 시그니처 get_arrange_balance/get_arrange_bias_dir 동일.)
+	if mod_id == "build" and is_instance_valid(_current_module):
 		if _current_module.has_method("get_arrange_balance"):
 			quality_state["arrange_balance"] = clampf(_current_module.get_arrange_balance(), 0.0, 1.0)
 		if _current_module.has_method("get_arrange_bias_dir"):
@@ -336,6 +364,22 @@ func _build_reaction_bubble(text: String) -> Control:
 
 
 # --- shared step machinery ---
+
+## host clear override (2026-06-11) — 부모는 queue_free()만 하므로 free가 다음 idle frame까지
+## 지연돼 새 stage와 1프레임 겹친다. vertical slice는 stage 화면이 전부 _module_host 자식이라
+## 잔존이 곧장 비쳐 보였다(시장 좌판 카드). 여기서 remove_child로 *즉시* 트리에서 떼고(렌더 중단)
+## queue_free로 메모리를 회수 → 같은 프레임에 잔존 0. scoring/save 무관(순수 노드 lifecycle).
+func _clear_module_host() -> void:
+	if _module_host == null:
+		return
+	for c in _module_host.get_children():
+		# 활성 모듈 참조가 이 자식이면 dangling 방지로 끊는다(shopping stage는 자체 free를 안 한다).
+		if c == _current_module:
+			_current_module = null
+		_module_host.remove_child(c)
+		c.queue_free()
+
+
 
 ## 현재 vs_step의 4-factor bucket에 점수(0~100)를 기록 (step-aware override, design §9.3).
 ## 부모 _factor_acc 구조(0~1 배열)를 그대로 재사용 — 신규 scoring system 0.
