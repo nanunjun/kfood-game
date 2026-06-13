@@ -16,6 +16,20 @@
 
 ---
 
+## [2026-06-13] Gimbap procedural→painterly swap + Choose-Your-Chef 6 preset (godot-dev)
+- **무엇**: 김밥(t1_004) 5 조리 stage의 **procedural vector geometry → high-angle painterly sprite** 전면 교체 (시각 layer만) + Chef **Min/Ari** preset 배선(4→6). **입력/scoring(4-factor)/save/consequence contract 전부 무변경 — 순수 시각 swap.**
+- **왜**: `docs/design/gimbap-visual-quality-rebuild-v1.md` 승인 (§3 high-angle 70-80° painterly 해소안, §5 swap 매핑, §6 roll 6-state, §7 slice collapse, §8 real tray). 현 조리 화면이 "vector placeholder prototype"으로 거부됨.
+- **결과/다음 단계**:
+  - **asset**: painterly 25장(`assets-raw/gimbap_painterly_m2`) → `godot-project/art/sprites/painterly/` import. chef Min/Ari ×4 emotion(8장) → `protagonist/`.
+  - **ArtRegistry**: `PAINTERLY_KEYS` + `get_painterly()`/`gimbap_painterly_filling()` helper. PROTAGONIST_PRESETS/_PREFIX에 min/ari 추가. save_manager `CHEF_PRESETS`에 min/ari (backward-compat).
+  - **roll_module** `_TopDownRollStage`: procedural capsule `_draw` → painterly **6-state cross-fade** (flat_setup→edge_lift→first_fold→curling→compression→finished) + result 분기(finished/loose/burst). tilt = sprite 미세 회전/offset만(mat twist 금지). `_draw`는 painterly 미존재 시 fallback. **two-finger 입력/_compute_roll_score(40/25/20/15)/consequence 무변경.**
+  - **julienne_module**: procedural board `Panel` → `board_topdown_painterly`, Polygon2D 칼 → `knife_topdown_painterly`, 당근 → `carrot_on_board` painterly, 완성 채 더미 → `carrot_strips_good`/`_bad` painterly. **rhythm/scoring/prep_quality 무변경, HUD vector 유지.**
+  - **gimbap_build_module**: mat/김/밥/filling 4 → `mat_painterly`/`seaweed_painterly`/`rice_painterly`/`filling_{id}_painterly`. **layer order/snap/arrange consequence 무변경.**
+  - **gimbap_slice_module**: procedural capsule roll → `gimbap_roll_for_slice`, 칼 → `knife_topdown_painterly`, cut 조각 → `gimbap_piece_good` / **bad roll(roll_quality 낮음→wobble≥0.32) → `gimbap_piece_collapse`(filling 쏟아짐 시각, 텍스트 아님)**. **slice_quality/window(§8.4) 무변경.**
+  - **plate_module**: procedural box tray(box corner 폐기) → `wooden_tray_topdown` real 나무 tray + slot silhouette 유지. 조각 good/broken(slice 나쁨 → collapse). **drag/snap/plate_quality 무변경.**
+  - **gender_select**: Choose Your Chef 4→**6 카드**(2×3) — +Min(Creative & balanced)/+Ari(Cheerful & curious). save backward-compat.
+  - **검증**: 전 모듈 painterly 미존재 시 기존 procedural _draw로 graceful fallback(무해). regression **441 PASS / 0 FAIL**(scoring/save/consequence 보존, protagonist_smoke 6 preset 갱신). 실제 F5 9컷 → `assets-raw/_screenshots/gimbap_painterly/`(julienne/build/roll_flat·curling·finished/slice·collapse/plate/chef_select_6).
+
 ## [2026-06-10] Gimbap Vertical Slice — Pass B: cross-stage consequence chain (godot-dev)
 - **무엇**: 김밥(t1_004) vertical slice **Pass B** — Pass A의 stub stage를 실제 wiring해 **"내가 먼저 한 행동이 나중 결과를 바꾼다"** consequence chain 6개를 구현 + Plating drag-arrange 격상 + Guest 5-quality reaction. **economy/save/4-factor scoring contract 전부 무변경, 신규 module 0, 신규 system 최소(transient quality-state carry만).**
 - **왜**: `docs/design/gimbap-vertical-slice-v1.md` §8 — 5-stage loop의 진짜 검증 대상은 cross-stage 인과 체감. Pass A가 carry만 한 quality-state(`vs_quality_state`)를 module이 실제 소비.

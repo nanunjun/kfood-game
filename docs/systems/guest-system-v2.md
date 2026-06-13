@@ -371,11 +371,15 @@ guest_select.gd 카드에 mood badge 추가:
 | seoyeon | friend | hearty, salty, umami, sweet | spicy, sour | 1.20 | happy/hungry/easy/picky/grumpy | 따뜻한 집밥파 친구 — 불고기/된장 |
 | mother_01 | family | mild, sweet, hearty, umami | spicy, oily, bitter | 1.35 | easy/happy/picky/hungry/grumpy | 어머니 — 담백·달콤·푸근함, 매운 거 부담 |
 | father_01 | family | spicy, salty, oily, savory, umami | bitter, sour | 1.25 | hungry/happy/grumpy/easy/picky | 아버지 — 호방하게 다 잘 먹음, 매운/기름진 환영 |
+| **sofia** | **friend** | **sweet, fresh, savory** | **bitter, oily** | **1.18** | happy/easy/hungry/picky/grumpy | **외국인 — 한식 첫 경험, 호기심·모험적. 폭넓게 수용(tol 0.34, 친구 중 최대). 신선/달콤 선호, 과한 쓴맛·기름 부담** |
+| **kenji** | **friend** | **umami, savory, mild, fermented** | **oily, sweet** | **1.28** | picky/easy/happy/grumpy/hungry | **외국인 — 정중한 미식가. 감칠맛·균형 중시, 약간 까다로움(tol 0.24). 과한 단맛·기름 비선호** |
 | (mystery_diner) | evaluator | umami, salty, mild | oily | 1.50 | picky/easy/grumpy | 평가자 (auto-pick, guest_select에서 제외) |
 | (blogger_daniel) | evaluator | savory, umami, spicy, sweet | bitter | 1.50 | picky/happy/easy | 평가자 |
 | (goldspoon) | evaluator | umami, hearty, fermented, mild | oily, sweet | 2.00 | picky/grumpy/easy | 평가자 — 최고 reward, 최고 까다로움 |
 
-> **"8 guests"의 실체** = friends 5 (junho/mina/riley/mrs_lee/seoyeon) + family 2 (mother/father) = **selectable 7명**. evaluators 3은 evaluator 레벨에서 자동 등장 (`guest_select` 제외 — guest-select-ui.md §1 정합).
+> **selectable 풀** = friends 5 (junho/mina/riley/mrs_lee/seoyeon) + family 2 (mother/father) + **외국인 손님 2 (sofia/kenji, 2026-06-12 추가)** = **selectable 9명**. evaluators 3은 evaluator 레벨에서 자동 등장 (`guest_select` 제외 — guest-select-ui.md §1 정합).
+>
+> **외국인 손님 2 추가 (2026-06-12)**: 한식을 처음/즐겨 체험하는 글로벌 손님 합류. 신규 flavor 차원/compat 로직 변경 없음 — 기존 12 flavor 태그 × CompatCalc 공식 그대로 재사용 (CSV 2행 추가만). **Sofia**(forgiving·broad: tol 0.34 최대, sweet/fresh/savory) / **Kenji**(discerning gourmet: tol 0.24 좁음, umami/savory/mild/fermented, oily·sweet 비선호 — 그릇진 단/기름에 실점). 두 손님 모두 기존 selectable의 dominant dish를 빼앗지 않게 밸런스(어떤 dish도 단독 90+ 점유 X).
 
 > **friends-system.md mismatch 해결**: friends-system v0.3 (어머니/아버지 가족 단위 L11 동시 unlock)을 본 v2.0이 흡수. mother/father를 selectable pool에 합류시켜 7 guest 풀. ADR-009에서 정식 lock.
 
