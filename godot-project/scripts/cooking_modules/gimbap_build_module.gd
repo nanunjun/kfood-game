@@ -36,16 +36,23 @@ const MAT_BOX_H: float = 587.0               # 3:2 (880 * 1024/1536).
 const SEAWEED_BOX_W: float = 752.0           # 김 — mat 보다 작게 (mat 이 받침 frame).
 const SEAWEED_BOX_H: float = 501.0
 const RICE_BOX_W: float = 642.0              # 밥 — 김 visible 폭 ~80% 얇게.
-const RICE_BOX_H: float = 428.0
-const RICE_CENTER_Y: float = 40.0            # 밥 중심을 아래로 — 상단(far) 김 노출 = seal margin.
+const RICE_BOX_H: float = 360.0              # 밥을 더 얇게 — far쪽 맨 김 margin을 확보(영상 ground truth §2).
+const RICE_CENTER_Y: float = 70.0            # 밥 중심을 아래로(near) — 상단(far) 김 노출 = seal margin.
+# far쪽 맨 김 margin(밥 없는 봉합 strip) 높이 — 김 상단 ~ 밥 상단 사이. 영상 §2/§4.
+const FAR_NORI_MARGIN: float = 110.0
 
-# strip 정위치 — 밥 lower-third 가로 centered. (group 로컬 y, 양수 = 아래/near 쪽)
-const STRIP_TARGET_Y: float = 96.0           # 정답 strip band 중심 (lower-third).
+# 재료 "한 다발" 정위치 — 밥 near~중앙 가로 한 줄, 틈 없이 서로 맞닿게(영상 §2 LOCK).
+# (group 로컬 y, 양수 = 아래/near 쪽). 다발 = near쪽으로 약간 치우쳐 덮어 말기 좋게.
+const BUNDLE_TARGET_Y: float = 70.0          # 다발 중심 y (밥 near~중앙, lower-middle).
+const STRIP_TARGET_Y: float = BUNDLE_TARGET_Y  # (호환) 기존 scoring/consequence 코드 alias.
 const STRIP_TARGET_TOL_GOOD: float = 70.0    # 이 안이면 위치 perfect.
 const STRIP_TARGET_TOL_OK: float = 150.0     # 이 밖이면 위치 감점 (너무 위/아래).
-const STRIP_W: float = 560.0                 # 긴 strip 가로 길이 (밥 폭 대부분).
-const STRIP_ROW_PITCH: float = 46.0          # 안착된 strip 간 세로 pitch (얇은 평행 band 간격).
-const STRIP_ROW_GAP: float = 8.0             # (호환) 안착된 strip 간 세로 간격.
+const STRIP_W: float = 520.0                 # 한 다발 가로 길이 (밥 폭 대부분, 한 줄).
+# 다발 두께 — 재료가 틈 없이 맞닿게 쌓이는 세로 pitch. band 두께보다 충분히 작게(겹쳐 다발) → 한 덩이.
+const BUNDLE_STRIP_H: float = 52.0           # 각 재료 band 두께(다발 안 한 줄, 두툼하게 겹침).
+const BUNDLE_PITCH: float = 28.0             # 다발 내 재료 간 세로 pitch(<< band 두께 → 크게 겹쳐 한 덩이).
+const STRIP_ROW_PITCH: float = BUNDLE_PITCH  # (호환) 기존 호출부 alias.
+const STRIP_ROW_GAP: float = 0.0             # (호환) 다발 = 틈 0.
 
 # staging tray (하단 near zone) — 준비된 긴 strip 들이 대기.
 const TRAY_Y: float = 1470.0
@@ -83,7 +90,7 @@ func _module_start(params: Dictionary) -> void:
 		_need_strips = clampi(int(params.get("vs_available_slots", 4)), 2, _strip_specs.size())
 	else:
 		_need_strips = clampi(int(params.get("slot_count", 4)), 2, _strip_specs.size())
-	_build_header("Build Gimbap", "Place each filling strip along the lower third of the rice.")
+	_build_header("Build Gimbap", "Gather the fillings into one tight bundle on the rice.")
 
 	_attach_dish_shadow(Vector2(BUILD_X, BUILD_HERO_Y + 200.0), 580.0)
 
@@ -104,7 +111,7 @@ func _module_start(params: Dictionary) -> void:
 	_hint.add_theme_color_override("font_color", Color(0.30, 0.20, 0.12))
 	_hint.add_theme_color_override("font_outline_color", Color(1, 1, 1, 0.85))
 	_hint.add_theme_constant_override("outline_size", 8)
-	_hint.text = "Lay each filling along the lower-third guide line"
+	_hint.text = "Stack the fillings into one tight bundle"
 	add_child(_hint)
 
 	# 입력 인식기 — press-drag-release (색 슬롯 매칭 아님).
@@ -198,6 +205,47 @@ func _build_seaweed_rice(_food_id: StringName) -> void:
 		_rice.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_stage_group.add_child(_rice)
 
+	# far쪽 맨 김 margin 강조 — 밥 없는 김 strip(봉합 자리)을 또렷이(영상 §2/§4 LOCK).
+	# 밥 상단(far) ~ 김 상단 사이 = 노출된 맨 김. 옅은 라벨 dash로 "여기가 봉합 자리"를 읽힌다.
+	_build_far_seal_margin()
+
+
+# far쪽 맨 김 margin(밥 없는 봉합 strip) 시각 강조 — 영상 §2/§4.
+# 밥이 없어 김이 노출된 far쪽 띠를 살짝 어둡게(맨 김 sheen) + "seal" 점선으로 명시.
+func _build_far_seal_margin() -> void:
+	if _stage_group == null:
+		return
+	# 맨 김 margin 영역 — 밥 상단(far) 위쪽. stage 로컬 y(음수 = far/위).
+	var rice_top: float = RICE_CENTER_Y - RICE_BOX_H * 0.5
+	var margin_bot: float = rice_top - 6.0
+	var margin_top: float = margin_bot - FAR_NORI_MARGIN
+	var strip := Panel.new()
+	strip.name = "FarSealMargin"
+	strip.position = Vector2(-RICE_BOX_W * 0.5, margin_top)
+	strip.size = Vector2(RICE_BOX_W, margin_bot - margin_top)
+	strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	strip.z_index = L3_INGREDIENT - 1   # 김 위, 밥 아래(노출된 맨 김 위 sheen만).
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.06, 0.09, 0.05, 0.28)   # 맨 김(밥 없는 어두운 김) sheen.
+	sb.set_corner_radius_all(10)
+	sb.set_border_width_all(0)
+	strip.add_theme_stylebox_override("panel", sb)
+	_stage_group.add_child(strip)
+	# "맨 김 / seal" 점선 — far margin 가운데 가로.
+	var dash_y: float = (margin_top + margin_bot) * 0.5
+	var x: float = -RICE_BOX_W * 0.5 + 40.0
+	while x < RICE_BOX_W * 0.5 - 40.0:
+		var d := Panel.new()
+		d.position = Vector2(x, dash_y - 2.0)
+		d.size = Vector2(22.0, 4.0)
+		var dsb := StyleBoxFlat.new()
+		dsb.bg_color = Color(0.85, 0.90, 0.78, 0.40)
+		dsb.set_corner_radius_all(2)
+		d.add_theme_stylebox_override("panel", dsb)
+		d.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		strip.add_child(d)
+		x += 38.0
+
 
 # Layer 4 — lower-third filling guide line (밥 중앙 아님 — lower third). strip이 여기에 snap.
 # 점선 가로 라인 + "lay fillings here" 캡션. STRIP_TARGET_Y(stage 로컬, lower third)에 위치.
@@ -265,7 +313,7 @@ func _make_strip_node(spec: Dictionary, bar_w: float) -> Control:
 		path = String(spec.get("tex", ""))
 	if path != "":
 		var box_w: float = bar_w
-		var box_h: float = STRIP_ROW_PITCH * 0.94    # 얇은 band 두께(평행 band, 작은 아이콘 아님).
+		var box_h: float = BUNDLE_STRIP_H    # 한 다발 안 각 재료 band 두께(틈 없이 맞닿음).
 		var t := TextureRect.new()
 		t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		# STRETCH_SCALE — 긴 가로 band로 채운다(danmuji/spinach 정사각도 길게 펴짐). carrot/egg long은
@@ -365,11 +413,11 @@ func _settle_strip(idx: int, global_center: Vector2) -> void:
 	node.get_parent().remove_child(node)
 	_stage_group.add_child(node)
 	node.global_position = keep_global
-	node.z_index = L3_INGREDIENT + 3
-	# SNAP — strip을 guide line(lower-third, STRIP_TARGET_Y)에 정확히 가져다 붙이고 한 줄로 가지런히.
-	# 가로는 centered(x=0), 세로는 안착 순서대로 STRIP_ROW_PITCH 간격의 얇은 평행 band로 정렬.
-	# band 전체를 STRIP_TARGET_Y에 centered → lower-third에 가지런한 한 줄 (겹치지 않는 얇은 평행).
-	var row_y: float = STRIP_TARGET_Y + (float(_placed - 1) - float(_need_strips - 1) * 0.5) * STRIP_ROW_PITCH
+	node.z_index = L3_INGREDIENT + 3 + _placed   # 다발 위로 쌓이는 순서대로 살짝 겹쳐 한 덩이.
+	# SNAP — 재료를 **한 다발**로 다진다(영상 §2 LOCK): 색별 따로 펼치지 않고 BUNDLE_PITCH(< band
+	# 두께) 간격으로 **틈 없이 맞닿아 겹쳐** BUNDLE_TARGET_Y(밥 near~중앙) 가로 한 줄에 모은다.
+	# 가로 centered(x=0), 세로는 안착 순서대로 한 덩이로 packed → "재료 한 다발"이 즉시 읽힌다.
+	var row_y: float = BUNDLE_TARGET_Y + (float(_placed - 1) - float(_need_strips - 1) * 0.5) * BUNDLE_PITCH
 	var snap_local := Vector2(0.0, row_y)
 	var target_pos: Vector2 = snap_local - node.size * 0.5
 	var tw := node.create_tween()
@@ -405,11 +453,11 @@ func _update_drag_hint(global_center: Vector2) -> void:
 	if not _is_over_rice(global_center):
 		_hint.text = "Place it onto the rice"
 	elif local.y < STRIP_TARGET_Y - STRIP_TARGET_TOL_OK:
-		_hint.text = "Too high — line it up with the guide"
+		_hint.text = "Too far from the bundle — line it up"
 	elif local.y > STRIP_TARGET_Y + STRIP_TARGET_TOL_OK:
-		_hint.text = "Too low — line it up with the guide"
+		_hint.text = "Too low — bring it up to the bundle"
 	else:
-		_hint.text = "On the guide line — release to snap"
+		_hint.text = "On the bundle line — release to add"
 
 
 func _update_placed_hint() -> void:
@@ -417,7 +465,7 @@ func _update_placed_hint() -> void:
 		return
 	var left: int = _need_strips - _placed
 	if left > 0:
-		_hint.text = "%d placed · %d to go" % [_placed, left]
+		_hint.text = "Bundle: %d added · %d to go" % [_placed, left]
 
 
 func _finalize() -> void:

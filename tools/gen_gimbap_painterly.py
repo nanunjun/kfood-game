@@ -11,10 +11,18 @@ K-Food Master — Gimbap HIGH-ANGLE PAINTERLY asset driver (단면금지·standa
     · 직각 top-down(90°)도 아니고, oblique 3/4(45-55°)도 아닌, "거의 위에서
       내려다본 부드러운 채색" — top-down(위에서 봄) + painterly(volume/highlight/
       contact shadow) 동시. NOT flat vector, NOT rectangle, NOT procedural.
-    · Roll state 1~5 는 단면(end-cap/spiral) 노출 0 — 단면은 finished/slice 만.
+    · Roll state 1~5 는 단면(end-cap/spiral) 노출 0 — 단면은 "썰린 조각(piece)" 에서만.
     · bottom(near, 화면 하단) → top(far, 상단) curl. mat 회전/twist 금지 (player-POV LOCK).
     · standalone transparent — mat/board/그릇/쟁반/손/UI 함께 굽지 않음 (합성은 Godot).
   north star / Style Bible 톤: warm cozy / soft volumetric / cocoa outline / NOT flat.
+
+  ★ 영상 GROUND TRUTH LOCK (2026-06-13, 김밥집 사장 영상 기반):
+    완성 김밥(roll_finished / roll_finished_loose / roll_finished_burst / gimbap_roll_for_slice)
+    = "매끈한 반들반들 검은 김 원통(CLOSED LOG)". 겉은 김 표면 하나 + seam 한 줄만, 단면(spiral/
+    rice-ring/end-cap)은 절대 안 보임. 단면은 "썰었을 때(gimbap_piece_*)" 에만 노출.
+    → 이 4개는 slot_mode="closed" (SMOOTH_CLOSED_LOG). 이전에 완성 roll 을 단면 보이게
+      그린 것은 틀림 — 완성 김밥 겉모습 = 닫힌 매끈한 검은 통. 기법 문서:
+      docs/design/gimbap-rolling-technique-v1.md.
 ═══════════════════════════════════════════════════════════════════════════════
 
 생성 그룹 (계획서 §2/§5/§6/§11):
@@ -105,6 +113,24 @@ as a finished gimbap shown end-on, never as an already-cut slice."""
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# SMOOTH_CLOSED_LOG — 사용자 김밥집 영상 ground truth LOCK (2026-06-13).
+# 실제 완성 김밥 = 매끈한 반들반들 검은 김 원통. 겉은 김 표면 하나(seam 한 줄)만 보이고
+# 단면(spiral / rice-ring / end-cap)은 절대 안 보임 — 단면은 "썰었을 때만" 노출.
+# 내가 계속 틀린 것: 완성 roll 을 단면 보이게 그림 → 완성 김밥 겉모습 = 닫힌 검은 통.
+# roll_finished / loose / burst / gimbap_roll_for_slice 에 부착.
+# ─────────────────────────────────────────────────────────────────────────────
+SMOOTH_CLOSED_LOG = """
+SMOOTH CLOSED LOG — ABSOLUTELY CRITICAL (this is a FINISHED whole gimbap roll, exactly as a Korean
+gimbap shop owner makes it — a smooth glossy dark seaweed (nori) CYLINDER, a CLOSED LOG): show ONLY
+the outer seaweed SKIN of the cylinder plus a single faint SEAM line where the sheet laps shut along
+the length. The round CUT END is NOT facing the camera. There is NO spiral cross-section, NO ring of
+rice, NO ring of fillings, NO pinwheel, NO coiled center, NO visible inside at all — that appears ONLY
+when the roll is sliced. The ends of the log point left and right (off toward the sides), they are not
+turned toward the viewer. It must read as a sealed, sleek, reflective black-green seaweed tube whose
+whole surface is unbroken smooth nori — never as an end-on slice, never as a cut piece."""
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # PHYSICAL_CURL — 실제 물리적 fold (scale 흉내 금지, 계획서 §6). near edge → far 로 wrap.
 # ─────────────────────────────────────────────────────────────────────────────
 PHYSICAL_CURL = """
@@ -174,20 +200,29 @@ BACKGROUND_HINT = (
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# slot 채우기. n_slots:
-#   2 = HIGH_ANGLE → STYLE          (단면/curl 무관 — 평면 setup / 도구 / 표면 / 단면 OK 컷)
-#   4 = NO_CROSS_SECTION → PHYSICAL_CURL → HIGH_ANGLE → STYLE   (Roll 말리는 state 1~5)
+# slot 채우기. slot_mode (item["slot_mode"], 기본은 n_slots 호환):
+#   "ha"     = HIGH_ANGLE → STYLE       (평면 setup / 도구 / 표면 / 썰린 조각 단면 OK 컷)
+#   "roll"   = NO_CROSS_SECTION → PHYSICAL_CURL → HIGH_ANGLE → STYLE  (Roll 말리는 state 2~5)
+#   "closed" = SMOOTH_CLOSED_LOG → HIGH_ANGLE → STYLE   (완성 김밥 = 매끈 검은 통, 단면 0)
+#              ← 사용자 영상 ground truth LOCK (roll_finished/loose/burst/roll_for_slice)
+# 하위호환: slot_mode 없으면 n_slots(2/4) → ha/roll 매핑.
 # ─────────────────────────────────────────────────────────────────────────────
 def build_prompt(item: dict) -> str:
     body = item["body"]
     style = STYLE_SUFFIX.replace("%s", BACKGROUND_HINT)
-    n = item.get("n_slots", 2)
-    if n == 4:
+    mode = item.get("slot_mode")
+    if mode is None:
+        mode = "roll" if item.get("n_slots", 2) == 4 else "ha"
+    if mode == "roll":
         body = body.replace("%s", NO_CROSS_SECTION, 1)
         body = body.replace("%s", PHYSICAL_CURL, 1)
         body = body.replace("%s", HIGH_ANGLE, 1)
         body = body.replace("%s", style, 1)
-    else:
+    elif mode == "closed":
+        body = body.replace("%s", SMOOTH_CLOSED_LOG, 1)
+        body = body.replace("%s", HIGH_ANGLE, 1)
+        body = body.replace("%s", style, 1)
+    else:  # "ha"
         body = body.replace("%s", HIGH_ANGLE, 1)
         body = body.replace("%s", style, 1)
     return body
@@ -285,51 +320,53 @@ mid-rolling, not yet sealed shut.
     },
     {
         "id": "roll_finished",
-        "name": "Roll s6 — 완성 둥근 log (김 바깥면+seam, 검은 log 아님, 단면 0)",
+        "name": "Roll s6 — 완성 매끈 검은 통 (smooth glossy nori cylinder, seam 1줄, 단면 0)",
         "size": "1536x1024",
-        "n_slots": 4,
-        "body": """A painterly HERO illustration of ONE FINISHED tightly-rolled gimbap log, fully
-wrapped and sealed, whole and UNCUT (완성된 김밥 한 줄 통째, 안 썰림). A firm clean ROUNDED horizontal LOG
-wrapped smoothly in dark green-black MATTE seaweed (NOT a flat black bar — real seaweed texture with a
-pebbled matte surface), its long axis running LEFT-TO-RIGHT, the SEAM where the sheet laps closed
-running neatly along the length. A gentle sesame-oil sheen runs along the top of the seaweed skin,
-soft top-left highlight, real round volume. The log is whole and uncut. ONLY the smooth OUTSIDE
-seaweed skin shows along its whole length — the ROUND END / spiral cross-section is HIDDEN and NOT
-facing the camera. A clean tight perfect roll (the GOOD result).
-%s
+        "slot_mode": "closed",
+        "body": """A painterly HERO illustration of ONE FINISHED gimbap roll, exactly as a Korean gimbap
+shop owner presents it — a SMOOTH GLOSSY DARK SEAWEED (NORI) CYLINDER, a sealed closed LOG, whole and
+UNCUT (완성된 김밥 한 줄 통째 — 매끈하고 반들반들한 검은 김 원통, 안 썰림). A firm clean ROUNDED horizontal log of
+deep dark green-black seaweed with a sleek reflective sesame-oil SHEEN running along its top, its long
+axis running LEFT-TO-RIGHT, and a single faint SEAM line where the sheet laps shut along the length.
+Real round volume, soft top-left highlight. The whole outer surface is unbroken smooth nori — ONLY
+the outer seaweed skin and that one seam show; the ROUND CUT END is NOT facing the camera and there is
+NO spiral, NO rice ring, NO filling ring visible (that appears only when sliced). A clean tight
+perfect roll, a sleek black-green seaweed tube (the GOOD result).
 %s
 %s
 %s""",
     },
     {
         "id": "roll_finished_loose",
-        "name": "Roll s6 variant — 헐겁게 말린 log (loose seam, 단면 0)",
+        "name": "Roll s6 variant — 헐거운 매끈 검은 통 (살짝 우는 표면, seam 살짝 뜸, 단면 0)",
         "size": "1536x1024",
-        "n_slots": 4,
-        "body": """A painterly HERO illustration of a gimbap log rolled LOOSE with too little pressure
-(헐겁게 말린 완성 log — 약한 압력). A horizontal LOG (running left-to-right) wrapped in dark seaweed but
-clearly LOOSE and a bit LUMPY / slack — the seaweed wraps slackly, the body looks slightly slumped and
-uneven, the seam along the length is a little OPEN / gaping, soft gaps along the wrap, under-pressed
-and floppy. Only the OUTSIDE seaweed skin shows — the round end / spiral cross-section is HIDDEN. A
-soft loose rounded log, clearly NOT a clean tight roll, but NOT torn (the LOOSE result).
-%s
+        "slot_mode": "closed",
+        "body": """A painterly HERO illustration of a FINISHED gimbap roll rolled LOOSE with too little
+pressure — still a CLOSED smooth dark seaweed (nori) LOG, just under-pressed (헐겁게 말린 완성 김밥 통 —
+약한 압력, 살짝 우는 표면). A horizontal CYLINDER (running left-to-right) wrapped in dark glossy seaweed but
+clearly SLACK and a bit LUMPY — the outer nori skin looks slightly slumped, softly wavy and uneven, and
+the single SEAM along the length gapes a little OPEN, under-pressed and floppy. The surface is still
+the unbroken outer seaweed skin — the ROUND CUT END is NOT facing the camera, NO spiral / rice ring /
+filling ring is visible (that only shows when sliced). A soft loose closed log, clearly NOT a clean
+tight roll, but NOT torn open (the LOOSE result).
 %s
 %s
 %s""",
     },
     {
         "id": "roll_finished_burst",
-        "name": "Roll s6 variant — 터진 log (over-pressed, rice 삐져나옴, 단면 0)",
+        "name": "Roll s6 variant — 과압축 갈라진 통 (김 split + rice 삐져나옴, 단면은 아님)",
         "size": "1536x1024",
-        "n_slots": 4,
-        "body": """A painterly HERO illustration of a gimbap log rolled with TOO MUCH pressure and burst
-(너무 세게 눌러 터진 완성 log). A horizontal LOG (running left-to-right) but CRUSHED too hard — the dark
-seaweed has SPLIT and CRACKED along the top of the wrap and warm cream-white rice is being SQUEEZED
-OUT / bulging through the split, the log FLATTENED / deformed (pressed wider and lower, not a clean
-round tube), over-compressed and blown-out. Only the OUTSIDE seaweed skin and the split bulging rice
-show along the length — the round END / spiral cross-section is HIDDEN. Still a gimbap, just
-over-pressured and ruptured (the BURST result).
-%s
+        "slot_mode": "closed",
+        "body": """A painterly HERO illustration of a FINISHED gimbap roll squeezed with TOO MUCH pressure
+so the wrap has burst — still a CLOSED log shown along its length, not an end-on slice (너무 세게 눌러
+터진 완성 김밥 통 — 김이 갈라지고 밥이 삐져나옴, 단면 노출은 아님). A horizontal CYLINDER (running left-to-right) of
+dark seaweed CRUSHED too hard: the glossy nori skin has SPLIT and CRACKED along the TOP of the wrap and
+warm cream-white rice is being SQUEEZED OUT, bulging up through the split; the log is FLATTENED and
+deformed (pressed wider and lower, not a clean round tube), over-compressed and blown-out. The split
+and bulging rice are along the TOP surface — the ROUND CUT END is NOT facing the camera, this is NOT
+a sliced spiral cross-section, NO pinwheel rice-ring is shown. Still a whole gimbap, just over-pressured
+and ruptured along its length (the BURST result).
 %s
 %s
 %s""",
@@ -502,15 +539,20 @@ just badly cut). Real volume and highlights, NOT a flat band, NOT vector. Clearl
 SLICE = [
     {
         "id": "gimbap_roll_for_slice",
-        "name": "Slice — 완성 roll (volume+texture+shadow 가로 cylinder)",
+        "name": "Slice — 썰기 전 완성 roll (매끈한 검은 통 가로로 누움, seam 1줄, 단면 0)",
         "size": "1536x1024",
-        "n_slots": 2,
-        "body": """A painterly HERO illustration of ONE finished whole gimbap LOG ready to be sliced,
-seen from a high overhead angle: a firm clean ROUNDED horizontal cylinder wrapped in dark green-black
-matte seaweed (real pebbled texture + sesame-oil sheen), long axis running LEFT-TO-RIGHT, the seam
-along the length, real round VOLUME, a soft contact shadow cast straight down beneath it. The log is
-whole and UNCUT — only the smooth outside seaweed skin shows, the round end / spiral is HIDDEN (this
-log is about to be cut, not yet sliced). A premium appetizing roll, NOT a flat capsule, NOT vector.
+        "slot_mode": "closed",
+        "body": """A painterly HERO illustration of ONE finished whole gimbap roll LYING HORIZONTALLY,
+ready to be sliced — a SMOOTH GLOSSY DARK SEAWEED (NORI) CYLINDER, a sealed closed LOG, as a Korean
+gimbap shop owner sets it on the board before cutting (썰기 전 완성 김밥 — 가로로 누운 매끈한 검은 김 통). A
+firm clean ROUNDED horizontal cylinder of deep dark green-black seaweed with a sleek sesame-oil sheen,
+long axis running LEFT-TO-RIGHT, a single faint SEAM along the length, real round VOLUME, and a soft
+contact shadow cast straight down beneath it. The log is whole and UNCUT — the whole outer surface is
+unbroken smooth nori, ONLY the outer skin and seam show; the round CUT END is NOT facing the camera and
+NO spiral / rice ring is visible (it is about to be cut, not yet sliced — the cross-section appears only
+once it is sliced into pieces). A premium appetizing sleek black-green roll, NOT a flat capsule, NOT
+vector.
+%s
 %s
 %s""",
     },

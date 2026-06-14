@@ -397,7 +397,7 @@ func _update_hint() -> void:
 	elif avg_p < 0.35:
 		msg = "Keep rolling upward"
 	elif avg_p >= 0.78 and diff <= TILT_WARN:
-		msg = "Tight roll!"
+		msg = "Press the mat to compact it!"   # 눌러 다지기 beat 안내(영상 §6).
 	elif diff <= TILT_WARN * 0.6 and avg_p >= 0.45:
 		msg = "Perfect Balance!"
 	else:
@@ -604,6 +604,12 @@ class _TopDownRollStage extends Control:
 		"roll_curling", "roll_compression", "roll_finished",
 	]
 
+	# === 눌러 다지기(press to compact) 시각 beat (영상 §3/§6 LOCK) ===
+	# 굴린 뒤 김발로 통을 꼭꼭 눌러 다지는 동작 — compression stage 진입 + finalize에서 짧은
+	# "mat이 통을 감싸 누르는" pulse. 순수 시각(set_roll/finalize_roll 시그니처·scoring 무변경).
+	var _press_overlay: _PressMatBand = null   # 통 위를 감싸 누르는 김발 band 오버레이.
+	var _pressed_stage: bool = false           # compression(idx>=4) 진입 시 1회만 press pulse.
+
 	# 김밥 속 색 — danmuji 노랑 / spinach 녹 / carrot 주황 / egg 노랑(GimbapSlice와 정합).
 	const FILL_COLS := [
 		Color(0.98, 0.82, 0.20),  # danmuji
@@ -661,6 +667,14 @@ class _TopDownRollStage extends Control:
 				any = true
 			add_child(rt)
 			_result_sprites[int(pair[0])] = rt
+		# 눌러 다지기 오버레이 — 통 위를 가로로 감싸 누르는 김발 band(처음엔 invisible).
+		# painterly/procedural 무관하게 항상 깔아 둔다(press beat 시각). z 최상단(통 위).
+		_press_overlay = _PressMatBand.new()
+		_press_overlay.size = _box
+		_press_overlay.position = Vector2.ZERO
+		_press_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_press_overlay.modulate = Color(1, 1, 1, 0.0)
+		add_child(_press_overlay)
 		_painterly = any
 		if _painterly:
 			_show_stage(0)
@@ -707,7 +721,37 @@ class _TopDownRollStage extends Control:
 		_tilt = clampf(tilt, -1.0, 1.0)
 		if _painterly and _result == RESULT_NONE:
 			_show_stage(_stage_index_for(_round))
+		# 눌러 다지기 beat — compression stage(idx>=4, roundness>=0.72) 진입 시 1회 김발 press pulse.
+		if not _pressed_stage and _round >= 0.72:
+			_pressed_stage = true
+			_play_press_beat(0.0)
 		queue_redraw()
+
+	## 김발이 통을 감싸 눌러 다지는 짧은 pulse — overlay band가 보였다 사라지며 통이 살짝 눌린다(squash).
+	## 순수 시각. press_dir = settle tilt 방향(crooked면 한쪽을 더 누르는 느낌). scoring 무관.
+	func _play_press_beat(press_tilt: float) -> void:
+		if not is_instance_valid(_press_overlay):
+			return
+		_press_overlay.set_press_tilt(clampf(press_tilt, -1.0, 1.0))
+		_press_overlay.modulate.a = 0.0
+		var tw := _press_overlay.create_tween()
+		# band이 위에서 통으로 내려와 누름(in) → 살짝 머물고 → 들림(out).
+		tw.tween_property(_press_overlay, "modulate:a", 0.92, 0.10).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tw.tween_interval(0.10)
+		tw.tween_property(_press_overlay, "modulate:a", 0.0, 0.16).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		# 통 살짝 눌림(squash) — 진행 sprite/완성 sprite를 세로로 미세 압착 후 복원(다져지는 느낌).
+		var targets: Array = []
+		for tr in _stage_sprites:
+			if is_instance_valid(tr) and (tr as TextureRect).modulate.a > 0.5:
+				targets.append(tr)
+		for k in _result_sprites:
+			var rt: TextureRect = _result_sprites[k]
+			if is_instance_valid(rt) and rt.modulate.a > 0.5:
+				targets.append(rt)
+		for t in targets:
+			var ct := (t as Control).create_tween()
+			ct.tween_property(t, "scale", Vector2(1.015, 0.94), 0.10).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+			ct.tween_property(t, "scale", Vector2(1.0, 1.0), 0.20).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 	## 끝 상태 확정 — result shape + settle tilt(well_rolled면 0=똑바른 수평 원통).
 	func finalize_roll(result_state: int, settle_tilt: float) -> void:
@@ -724,6 +768,8 @@ class _TopDownRollStage extends Control:
 				if is_instance_valid(rt):
 					rt.modulate.a = 1.0 if int(k) == result_state else 0.0
 			_apply_tilt_transform()
+		# 완성 직전 마지막 눌러 다지기 — 김발로 통을 꼭꼭 눌러 매끈 통으로 다진다(영상 §6 LOCK).
+		_play_press_beat(_tilt)
 		queue_redraw()
 
 	func _draw() -> void:
@@ -861,6 +907,56 @@ class _TopDownRollStage extends Control:
 		# 양끝 둥근 반원 (위에서 본 둥근 외피 — end-cap 단면 아님).
 		draw_circle(Vector2(x_l, cyl), r, col)
 		draw_circle(Vector2(x_r, cyr), r, col)
+
+
+# =====================================================================================
+# 눌러 다지기(press to compact) 김발 band 오버레이 — 영상 §3/§6 LOCK.
+# 통을 가로로 감싸 누르는 김발(bamboo mat) 결 band. press beat 동안만 보였다 사라진다(_play_press_beat
+# 가 modulate.a로 제어). 순수 시각 — 입력/scoring 무관. box 중앙 가로에 mat 결 + 누름 압력 라인.
+# =====================================================================================
+class _PressMatBand extends Control:
+	var _box: Vector2 = Vector2(840, 560)
+	var _press_tilt: float = 0.0   # crooked면 한쪽을 더 누르는 미세 기울임.
+
+	func _ready() -> void:
+		_box = size
+		queue_redraw()
+
+	func set_press_tilt(t: float) -> void:
+		_press_tilt = clampf(t, -1.0, 1.0)
+		queue_redraw()
+
+	func _draw() -> void:
+		_box = size
+		var w: float = _box.x
+		var cy: float = _box.y * 0.46            # 완성 통 중심 부근(통 위를 감싸 누름).
+		var band_h: float = _box.y * 0.40        # 통을 감싸는 김발 band 세로 폭.
+		var dy: float = _press_tilt * _box.y * 0.04
+		var x0: float = w * 0.10
+		var x1: float = w * 0.90
+		# 김발 band 본체 — 반투명 따뜻한 대나무 톤(통을 감싸 누름).
+		var mat := Color(0.86, 0.68, 0.36, 0.42)
+		var mat_lo := Color(0.62, 0.45, 0.22, 0.55)
+		draw_colored_polygon(PackedVector2Array([
+			Vector2(x0, cy - band_h * 0.5 - dy), Vector2(x1, cy - band_h * 0.5 + dy),
+			Vector2(x1, cy + band_h * 0.5 + dy), Vector2(x0, cy + band_h * 0.5 - dy)]), mat)
+		# 김발 가로결(bamboo strip) 라인 — 통을 누르는 결.
+		var lines: int = 7
+		for i in range(lines):
+			var t: float = float(i) / float(lines - 1)
+			var ly: float = lerpf(cy - band_h * 0.42, cy + band_h * 0.42, t)
+			var ldy: float = lerpf(-dy, dy, t)
+			draw_line(Vector2(x0 + 12.0, ly - ldy * 0.0 + ldy), Vector2(x1 - 12.0, ly + ldy),
+					mat_lo, 4.0, true)
+		# 누름 압력 화살표 2개(위→아래) — "꼭꼭 누른다" 신호.
+		for ax in [w * 0.34, w * 0.66]:
+			var ay0: float = cy - band_h * 0.5 - 60.0
+			var ay1: float = cy - band_h * 0.5 - 8.0
+			draw_line(Vector2(ax, ay0), Vector2(ax, ay1), Color(1, 1, 1, 0.85), 9.0, true)
+			var tip := Vector2(ax, ay1)
+			draw_colored_polygon(PackedVector2Array([
+				tip + Vector2(0, 6), tip + Vector2(-16, -16), tip + Vector2(16, -16)]),
+				Color(1, 1, 1, 0.9))
 
 
 # =====================================================================================

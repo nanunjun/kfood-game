@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://nayt3aqirg53"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_gimbap_technique.gd" id="1_gtech"]
+
+[node name="ShotGimbapTechnique" type="Node"]
+script = ExtResource("1_gtech")
