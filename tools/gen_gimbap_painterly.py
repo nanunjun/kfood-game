@@ -16,13 +16,15 @@ K-Food Master — Gimbap HIGH-ANGLE PAINTERLY asset driver (단면금지·standa
     · standalone transparent — mat/board/그릇/쟁반/손/UI 함께 굽지 않음 (합성은 Godot).
   north star / Style Bible 톤: warm cozy / soft volumetric / cocoa outline / NOT flat.
 
-  ★ 영상 GROUND TRUTH LOCK (2026-06-13, 김밥집 사장 영상 기반):
+  ★ 영상 GROUND TRUTH LOCK (2026-06-13, 김밥집 사장 영상 기반) + 양끝 OPEN 교정 (2026-06-13):
     완성 김밥(roll_finished / roll_finished_loose / roll_finished_burst / gimbap_roll_for_slice)
-    = "매끈한 반들반들 검은 김 원통(CLOSED LOG)". 겉은 김 표면 하나 + seam 한 줄만, 단면(spiral/
-    rice-ring/end-cap)은 절대 안 보임. 단면은 "썰었을 때(gimbap_piece_*)" 에만 노출.
-    → 이 4개는 slot_mode="closed" (SMOOTH_CLOSED_LOG). 이전에 완성 roll 을 단면 보이게
-      그린 것은 틀림 — 완성 김밥 겉모습 = 닫힌 매끈한 검은 통. 기법 문서:
+    = 도마 위 "통째 안 썬 김밥 한 줄(uncut log)". 김은 **둘레(긴 곡면)만** 감싸고, **양쪽 끝(end
+    faces)은 열려서 단면(흰 밥 ring + 가운데 색색 속재료 cluster)이 보인다.** 김으로 양끝까지 막힌
+    "닫힌 캡슐"이 아니다 (그건 과교정 오류였음). 둘레 = 매끈 glossy 검은 김, 양끝 = open 단면.
+    → 이 4개는 slot_mode="open_log" (OPEN_END_LOG). 기법 문서:
       docs/design/gimbap-rolling-technique-v1.md.
+    ※ 구분: 말리는 *중간* state(roll s1~s5 flat/edge/fold/curling/compression)는 단면 없음 —
+      아직 통이 안 됐으므로 김 바깥면만(NO_CROSS_SECTION 유지). 무변경.
 ═══════════════════════════════════════════════════════════════════════════════
 
 생성 그룹 (계획서 §2/§5/§6/§11):
@@ -98,6 +100,27 @@ to read as "looking down", tilted enough to keep painterly volume."""
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# SETUP_BASE_CAMERA — gimbap_setup_base 전용 카메라 LOCK (사용자 교정 2026-06-14).
+# 일반 HIGH_ANGLE(70-80° + painterly volume)는 oblique 3/4를 금지하되 약간의 tilt를 허용해
+# gpt-image-1 이 diamond/rhombus 사선 배치로 흘렀음 → 사용자 "정면 straight-on" 강제 교정.
+# = 정면에서 약간 위(high but FRONT-facing), mat/김이 frame과 평행한 직사각, 테이블 위 내 앞에
+# 똑바로 놓인 모습. diamond 회전 / oblique receding 절대 금지.
+# ─────────────────────────────────────────────────────────────────────────────
+SETUP_BASE_CAMERA = """
+CAMERA — FRONT-FACING with a GENTLE FORWARD RECLINE (ABSOLUTELY CRITICAL — like looking down at a tray
+of food set on the table directly in front of you): viewed from the front and above, the bamboo mat +
+nori + rice bed are TILTED BACK in depth (a gentle forward recline) so you clearly see the flat top
+rice surface from above — this slight reclining depth-tilt is GOOD and wanted. The rectangle stays
+SQUARE TO THE VIEWER: its near (front) edge is a HORIZONTAL line across the BOTTOM, its far edge is
+horizontal across the TOP, and its left and right edges run roughly vertical (parallel to the frame).
+ABSOLUTELY NOT rotated SIDEWAYS, NOT spun to a DIAMOND / RHOMBUS / PARALLELOGRAM, NOT a corner pointing
+toward or away from the viewer, NOT an oblique 3/4 product / catalog angle turned on a slant. The front
+edge ALWAYS stays parallel to the bottom of the frame — only a forward (backward-in-depth) recline is
+allowed, NEVER a left-right rotation. Like a tray set down straight in front of you, tilted gently back
+so you see the top."""
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # NO_CROSS_SECTION — Roll state 1~5 단면 절대금지 (계획서 §3.2 원리2, §6).
 # gpt-image-1 이 "이미 썰린 김밥의 spiral end-cap"을 그리지 않게 못박음. 단면은 finished/slice만.
 # ─────────────────────────────────────────────────────────────────────────────
@@ -113,21 +136,45 @@ as a finished gimbap shown end-on, never as an already-cut slice."""
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# SMOOTH_CLOSED_LOG — 사용자 김밥집 영상 ground truth LOCK (2026-06-13).
-# 실제 완성 김밥 = 매끈한 반들반들 검은 김 원통. 겉은 김 표면 하나(seam 한 줄)만 보이고
-# 단면(spiral / rice-ring / end-cap)은 절대 안 보임 — 단면은 "썰었을 때만" 노출.
-# 내가 계속 틀린 것: 완성 roll 을 단면 보이게 그림 → 완성 김밥 겉모습 = 닫힌 검은 통.
-# roll_finished / loose / burst / gimbap_roll_for_slice 에 부착.
+# OPEN_END_LOG — 사용자 교정 LOCK (2026-06-13). 완성 김밥 통 = 양끝 OPEN.
+# 실제 도마 위 통김밥 = 김이 둘레(긴 곡면)만 감싸고, 양쪽 끝(end faces)은 열려서 단면
+# (흰 밥 ring + 가운데 색색 속재료 cluster)이 보임. 양끝까지 김으로 막힌 "닫힌 캡슐"이 아님.
+# (내 과교정 오류 = 닫힌 캡슐로 그림 → 사용자 "양쪽 끝은 틔어있어야지" 교정.)
+# roll_finished / loose / burst / gimbap_roll_for_slice 에 부착. (말리는 중간 state 는 미부착.)
 # ─────────────────────────────────────────────────────────────────────────────
-SMOOTH_CLOSED_LOG = """
-SMOOTH CLOSED LOG — ABSOLUTELY CRITICAL (this is a FINISHED whole gimbap roll, exactly as a Korean
-gimbap shop owner makes it — a smooth glossy dark seaweed (nori) CYLINDER, a CLOSED LOG): show ONLY
-the outer seaweed SKIN of the cylinder plus a single faint SEAM line where the sheet laps shut along
-the length. The round CUT END is NOT facing the camera. There is NO spiral cross-section, NO ring of
-rice, NO ring of fillings, NO pinwheel, NO coiled center, NO visible inside at all — that appears ONLY
-when the roll is sliced. The ends of the log point left and right (off toward the sides), they are not
-turned toward the viewer. It must read as a sealed, sleek, reflective black-green seaweed tube whose
-whole surface is unbroken smooth nori — never as an end-on slice, never as a cut piece."""
+OPEN_END_LOG = """
+OPEN-ENDED LOG — ABSOLUTELY CRITICAL (this is a FINISHED whole UNCUT gimbap roll lying on a board, like
+a real uncut gimbap log a Korean gimbap shop owner has just rolled): the roll lies HORIZONTAL with its
+long axis running LEFT-TO-RIGHT, and BOTH ROUND END FACES ARE OPEN and visible (tilted just enough that
+you can see into each end). The long curved SURFACE (the circumference of the tube) is a smooth glossy
+DARK seaweed (nori) skin with a single faint SEAM where the sheet laps shut along the length. The TWO
+END FACES are NOT covered by seaweed — they are OPEN, showing the round CROSS-SECTION: an outer ring of
+warm cream-white RICE around a tight cluster of colorful FILLINGS at the center (orange carrot, golden
+egg, dark-green spinach, bright yellow danmuji). ABSOLUTELY NOT a closed capsule, NOT a sealed pill, NOT
+a log with seaweed capping or covering the ends — the seaweed wraps ONLY the long tube circumference,
+and the ends are OPEN and reveal rice + filling. It is NOT sliced into pieces; it is ONE long whole log
+seen at a slight angle so both open ends show. Like a single uncut gimbap log resting on a board with
+its open ends visible."""
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FLAT_STRIP — 김밥 속재료 4종 교정 LOCK (2026-06-14). 거대 슬랩/3D 더미 금지.
+# 실제 김밥 속(영상) = 계란지단·당근채·시금치·단무지가 각각 "길고 납작한 가로 strip" 으로
+# 좌우 한 줄씩 → 나란히 쌓여 다발. 각 재료 = full-width 로 누운 flat band (5:1~7:1 ≈ 6:1).
+# 현 filling 더미 = 통통한 pile(3D hero) → build 에서 크게 scale 하니 거대 슬랩 → 거부.
+# → filling_{carrot,egg,spinach,danmuji} 에 부착. slot_mode="flat_strip".
+# ─────────────────────────────────────────────────────────────────────────────
+FLAT_STRIP = """
+LONG FLAT HORIZONTAL STRIP — ABSOLUTELY CRITICAL (this ingredient must be a single thin BAND laid down
+flat, NOT a fat pile): the ingredient is a LONG FLAT horizontal STRIP / band laid flat, running
+LEFT-TO-RIGHT all the way across the frame, with an ASPECT RATIO of about 6:1 (very LONG and very THIN
+— roughly six times as wide as it is tall), viewed from a HIGH ANGLE from above so it reads as a FLAT
+strip lying down. It is a single flat band ready to be laid side-by-side with the other filling strips
+into a gimbap filling bundle.
+ABSOLUTELY NOT: a thick 3D MOUND / PILE / HEAP / mountain, a chunky hero BUNDLE, a fat rounded slab, a
+short stubby block, a tall stacked dome, a wide square slab, a brick, a log, a cube. The strip is THIN
+and FLAT and LONG — it lies flat and stretches across the whole width like one lane of filling, not a
+heaped serving."""
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -200,11 +247,67 @@ BACKGROUND_HINT = (
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# SETUP_BASE_STYLE — gimbap_setup_base 전용 STYLE LOCK (사용자 교정 2026-06-14).
+# 일반 STYLE_SUFFIX 는 "NO bamboo mat under the food" 라 mat 을 금지하지만, 이 base 는 사용자가
+# 김발(bamboo mat)을 한 장에 포함하라고 명시 → mat 을 명시 허용하는 변형 STYLE. mat/김/밥 3겹은
+# 의도된 stack 이고, 그 외 board/그릇/쟁반/칼/손/UI 는 여전히 금지(standalone). %s → BACKGROUND_HINT.
+# ─────────────────────────────────────────────────────────────────────────────
+SETUP_BASE_STYLE = """
+STYLE — PAINTERLY HERO GAME-ART (CRITICAL — this must escape the flat-vector placeholder look that was
+rejected): Premium cozy mobile cooking-game illustration in the warm storybook tone of the K-Food
+Master north star (Cooking Diary / Travel Town / Merge Mansion warmth). A single HERO stack with REAL
+VOLUME, soft VOLUMETRIC SHADING, TACTILE TEXTURE and believable thickness — hand-drawn / hand-painted
+2D, NOT flat. Soft 2-to-3-step gradient shading (NEVER a flat single-color fill, NEVER one solid block,
+NEVER a vector clip-art shape).
+
+CONSISTENCY LOCK (one set with the existing gimbap art + north star):
+- LIGHTING: a single warm KEY LIGHT from the TOP-LEFT (consistent), a soft rim light, and ONE or TWO
+  small specular highlights (a gentle sesame-oil / moist-rice sheen — NOT glossy plastic).
+- OUTLINE: a warm dark COCOA outline (#3A2A1E) at ~3-4px, slight hand-drawn weight variation (warm,
+  NOT a cold uniform vector stroke).
+- CONTACT SHADOW: a soft warm contact shadow directly beneath the bamboo mat (cocoa #3A2A1E at ~18-22%
+  alpha) cast straight DOWN for grounded depth — soft, NOT a hard black ellipse.
+- TEXTURE: the FINE small grain of white rice, the matte pebbled sheen of dark seaweed, the warm round
+  bamboo sticks of the mat — real surface texture, not flat color.
+- BAMBOO MAT: warm honey-oak / walnut bamboo (#D8A86A tones), thin round sticks tied side by side
+  running LEFT-TO-RIGHT, soft top-left light on each round stick. SEAWEED: deep dark green-black (very
+  dark forest-green fading to warm near-black, NOT pure flat black), matte pebbled. RICE: warm
+  cream-white (#FAF4E6), VERY FINE SMALL densely-packed grains — many tiny finely-grained kernels, NOT
+  a white rectangle, NOT oversized chunky grains, NOT big lumps.
+- PALETTE: warm cozy muted (mid saturation ~55-78%), appetizing and inviting.
+
+COMPOSITION — STANDALONE STACK (the bamboo mat IS part of this subject by design):
+- The NORI + RICE BED is LARGE and PROMINENT and FILLS MOST of the frame (about 85-90% of it). The
+  BAMBOO MAT (김발) shows only a THIN NARROW border — just a slim strip of bamboo — around the nori; the
+  mat is only SLIGHTLY larger than the nori on all sides, NOT a wide bamboo frame, NOT a large mat
+  margin, NOT a small food on a big mat. The food (nori + rice) is the dominant subject, the bamboo is
+  just a thin edge peeking out behind it.
+- The BAMBOO MAT (김발) IS intentionally included as the bottom layer of this subject. But NO cutting
+  board, NO plate, NO bowl, NO tray, NO knife, NO chopsticks, NO hands, NO fingers, NO arms, NO
+  characters, NO kitchen scene, NO text, NO labels, NO arrows. Only mat + nori + rice.
+
+IMPORTANT — avoid (must read as a PAINTERLY premium hero, NEVER a flat vector placeholder, NEVER a UI
+icon): flat vector, flat single-color fill, flat icon, vector clip-art, sticker, emoji, pictogram,
+glyph, color block, simple geometric shape, rounded-rectangle placeholder, box-corner panel, symbolic
+placeholder, silhouette, infographic, app icon, simplified UI icon, MS-paint, blueprint / schematic /
+dashed-line diagram, a flat sheet merely scaled or squashed, a 2D rectangle pretending to have volume,
+Cookie Run frosting, Toca Boca, over-saturated neon, glossy plastic coating, mirror chrome, cool sage /
+mint / teal / cold background, beige void / kraft / scrapbook / vintage noise texture, golden-hour
+overexposed, photorealistic photo, 3D octane / unreal render, food photography, anime, manga,
+watermark, any English or Korean text, Japanese sushi maki / nigiri, Chinese cuisine leak.
+%s"""
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # slot 채우기. slot_mode (item["slot_mode"], 기본은 n_slots 호환):
-#   "ha"     = HIGH_ANGLE → STYLE       (평면 setup / 도구 / 표면 / 썰린 조각 단면 OK 컷)
-#   "roll"   = NO_CROSS_SECTION → PHYSICAL_CURL → HIGH_ANGLE → STYLE  (Roll 말리는 state 2~5)
-#   "closed" = SMOOTH_CLOSED_LOG → HIGH_ANGLE → STYLE   (완성 김밥 = 매끈 검은 통, 단면 0)
-#              ← 사용자 영상 ground truth LOCK (roll_finished/loose/burst/roll_for_slice)
+#   "ha"       = HIGH_ANGLE → STYLE       (평면 setup / 도구 / 표면 / 썰린 조각 단면 OK 컷)
+#   "roll"     = NO_CROSS_SECTION → PHYSICAL_CURL → HIGH_ANGLE → STYLE  (Roll 말리는 state 2~5)
+#   "open_log" = OPEN_END_LOG → HIGH_ANGLE → STYLE  (완성 통 = 둘레만 김 + 양끝 OPEN 단면)
+#                ← 사용자 교정 LOCK (roll_finished/loose/burst/roll_for_slice)
+#   "flat_strip" = FLAT_STRIP → HIGH_ANGLE → STYLE  (김밥 속재료 = 길고 납작한 가로 strip)
+#                ← 사용자 교정 LOCK (filling_carrot/egg/spinach/danmuji, 거대 슬랩/3D 더미 금지)
+#   "setup_base" = SETUP_BASE_CAMERA → SETUP_BASE_STYLE  (김발+김+밥 한 장, 정면 straight-on, 작은 밥알)
+#                ← 사용자 교정 LOCK (gimbap_setup_base: 김발 포함 + 정면 straight-on + fine 밥알)
 # 하위호환: slot_mode 없으면 n_slots(2/4) → ha/roll 매핑.
 # ─────────────────────────────────────────────────────────────────────────────
 def build_prompt(item: dict) -> str:
@@ -218,10 +321,18 @@ def build_prompt(item: dict) -> str:
         body = body.replace("%s", PHYSICAL_CURL, 1)
         body = body.replace("%s", HIGH_ANGLE, 1)
         body = body.replace("%s", style, 1)
-    elif mode == "closed":
-        body = body.replace("%s", SMOOTH_CLOSED_LOG, 1)
+    elif mode == "open_log":
+        body = body.replace("%s", OPEN_END_LOG, 1)
         body = body.replace("%s", HIGH_ANGLE, 1)
         body = body.replace("%s", style, 1)
+    elif mode == "flat_strip":
+        body = body.replace("%s", FLAT_STRIP, 1)
+        body = body.replace("%s", HIGH_ANGLE, 1)
+        body = body.replace("%s", style, 1)
+    elif mode == "setup_base":
+        setup_style = SETUP_BASE_STYLE.replace("%s", BACKGROUND_HINT)
+        body = body.replace("%s", SETUP_BASE_CAMERA, 1)
+        body = body.replace("%s", setup_style, 1)
     else:  # "ha"
         body = body.replace("%s", HIGH_ANGLE, 1)
         body = body.replace("%s", style, 1)
@@ -229,8 +340,9 @@ def build_prompt(item: dict) -> str:
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-# GROUP: roll — Roll 6-state + 2 variant (최우선 GATE, 단면 조기노출 0). landscape.
-#   state 1 = 평면 setup (n2). state 2~5 = 말리는 중 (n4, 단면금지). state 6 = finished 통째.
+# GROUP: roll — Roll 6-state + 2 variant (최우선 GATE, 말리는 중 단면 조기노출 0). landscape.
+#   state 1 = 평면 setup (n2). state 2~5 = 말리는 중 (n4, 단면금지).
+#   state 6 = 완성 통 (open_log — 둘레만 김 + 양끝 OPEN 단면). loose/burst variant 동일.
 # ═════════════════════════════════════════════════════════════════════════════
 ROLL = [
     {
@@ -246,6 +358,46 @@ egg, a stripe of fresh dark-green spinach, a stripe of bright yellow danmuji —
 across the rice. Everything is OPEN and FLAT — nothing is rolled or curled, no bend anywhere, the
 whole sheet lies flat. A thin seal margin of bare seaweed shows along the far (top) edge. The long
 edges are parallel to the top and bottom of the frame.
+%s
+%s""",
+    },
+    {
+        # ── 사용자 교정 LOCK (2026-06-14, 재생성 v2): 현 base 3대 불만 추가 교정 —
+        #   (1) 김+밥이 작음 → 김+밥이 frame 대부분(85-90%) 채움 (LARGE/PROMINENT, 큰 dominant subject)
+        #   (2) 김발 테두리 너무 넓음 → 김발이 김보다 사방 살짝만 큼, 얇은 테두리 한 줄 (wide bamboo frame 금지)
+        #   (3) 밥알 여전히 큼 → VERY FINE small 촘촘한 밥알 (oversized chunky/big lump 금지)
+        #   (+ 정면 straight-on / 김발 포함 / far 맨김 margin / 재료 0 = 기존 유지)
+        # slot_mode="setup_base" → SETUP_BASE_CAMERA(정면) + SETUP_BASE_STYLE(mat 허용·fine rice·thin border).
+        # Build·Roll 이 이 위에 재료를 placement (이 base 는 재료 0). standalone transparent.
+        "id": "gimbap_setup_base",
+        "name": "Setup base — 김+밥 크게+김발 얇은 테두리 (재료 0, 정면 straight-on, fine 밥알)",
+        "size": "1536x1024",
+        "slot_mode": "setup_base",
+        "body": """A painterly HERO illustration of a gimbap base being set up on a bamboo rolling mat,
+laid out FLAT and ready for fillings but with NO fillings on it yet — three neat flat layers stacked:
+a BAMBOO ROLLING MAT (김발) at the bottom, a sheet of dark NORI on the mat, and a FULL BED of pressed
+white rice on the nori (김발 위에 김, 김 위에 꽉 찬 밥 — 아직 재료 안 올린 깨끗한 밥 bed).
+The NORI sheet and the RICE BED are LARGE and PROMINENT and FILL MOST of the frame (about 85-90% of
+it) — the food is the big dominant subject, not a small item on a big mat. The nori and rice bed are
+clearly WIDE — distinctly WIDER than tall (a wide landscape rectangle), extending across nearly the
+full width of the frame from left to right.
+The BAMBOO MAT (김발) is the BOTTOM layer, but it shows only a THIN NARROW BORDER — just a slim strip of
+honey-oak bamboo sticks (thin round sticks tied side by side, running LEFT-TO-RIGHT) peeking out around
+the nori. The mat is only SLIGHTLY larger than the nori on all four sides, so only a thin border line of
+bamboo shows around the seaweed — NOT a wide bamboo frame, NOT a large mat margin, NOT lots of empty
+bamboo around the food.
+On the mat sits a single sheet of dark green-black matte SEAWEED (nori) lying FLAT and LARGE, and on the
+nori a FULL EVEN BED of pressed warm cream-white rice covers MOST of the sheet — made of VERY FINE SMALL
+individual rice grains, many tiny finely-grained densely-packed kernels, much smaller and finer, forming
+a proper full rice LAYER with gentle VOLUME (a real pressed rice bed you could lay fillings on). The rice
+grains are SMALL and FINE — NOT large chunky grains, NOT big lumps, NOT oversized kernels, NOT a thin
+paper-like sheet, NOT a flat cracker, NOT a translucent skim. A bare DARK nori MARGIN stays exposed along
+the FAR (top) edge for sealing, and a slim rim of dark nori shows along the left, right and near edges
+around the rice. Everything is OPEN and FLAT — nothing is rolled or curled, no bend anywhere, all three
+layers lie flat and stacked. NO fillings at all — NO colored strips, NO orange carrot, NO golden egg, NO
+green spinach, NO yellow danmuji, NO row of ingredients — just bamboo mat + nori + the clean even FINE
+white rice bed ready for fillings to be laid on top. The bamboo mat, the nori and the rice bed are all
+upright RECTANGLES with their edges PARALLEL to the frame, facing the viewer straight-on.
 %s
 %s""",
     },
@@ -320,53 +472,59 @@ mid-rolling, not yet sealed shut.
     },
     {
         "id": "roll_finished",
-        "name": "Roll s6 — 완성 매끈 검은 통 (smooth glossy nori cylinder, seam 1줄, 단면 0)",
+        "name": "Roll s6 — 완성 통 (둘레만 glossy 김 + 양끝 OPEN 단면, uncut log)",
         "size": "1536x1024",
-        "slot_mode": "closed",
-        "body": """A painterly HERO illustration of ONE FINISHED gimbap roll, exactly as a Korean gimbap
-shop owner presents it — a SMOOTH GLOSSY DARK SEAWEED (NORI) CYLINDER, a sealed closed LOG, whole and
-UNCUT (완성된 김밥 한 줄 통째 — 매끈하고 반들반들한 검은 김 원통, 안 썰림). A firm clean ROUNDED horizontal log of
-deep dark green-black seaweed with a sleek reflective sesame-oil SHEEN running along its top, its long
-axis running LEFT-TO-RIGHT, and a single faint SEAM line where the sheet laps shut along the length.
-Real round volume, soft top-left highlight. The whole outer surface is unbroken smooth nori — ONLY
-the outer seaweed skin and that one seam show; the ROUND CUT END is NOT facing the camera and there is
-NO spiral, NO rice ring, NO filling ring visible (that appears only when sliced). A clean tight
-perfect roll, a sleek black-green seaweed tube (the GOOD result).
+        "slot_mode": "open_log",
+        "body": """A painterly HERO illustration of ONE FINISHED whole UNCUT gimbap roll lying on a board,
+exactly as a Korean gimbap shop owner has just rolled it — a long horizontal log whose LONG CURVED
+SURFACE is smooth glossy dark seaweed but whose BOTH ROUND END FACES ARE OPEN, showing the cross-section
+(완성된 김밥 한 줄 통째 — 둘레는 매끈한 검은 김, 양쪽 끝은 열려 단면이 보임). A firm clean ROUNDED horizontal log,
+its long axis running LEFT-TO-RIGHT, the long tube circumference a deep dark green-black seaweed skin
+with a sleek sesame-oil SHEEN and a single faint SEAM along the length; the TWO ends are OPEN (not
+capped by seaweed) and reveal the round cross-section — an outer ring of warm cream-white rice around a
+tight center cluster of colorful fillings (orange carrot, golden egg, dark-green spinach, bright yellow
+danmuji). Seen at a slight angle so BOTH open ends show. Real round volume, soft top-left highlight. A
+clean tight perfect roll, NOT a closed capsule, NOT sealed at the ends, NOT sliced into pieces (the
+GOOD result).
 %s
 %s
 %s""",
     },
     {
         "id": "roll_finished_loose",
-        "name": "Roll s6 variant — 헐거운 매끈 검은 통 (살짝 우는 표면, seam 살짝 뜸, 단면 0)",
+        "name": "Roll s6 variant — 헐거운 통 (둘레 우는 김 + 양끝 OPEN 벌어진 단면)",
         "size": "1536x1024",
-        "slot_mode": "closed",
-        "body": """A painterly HERO illustration of a FINISHED gimbap roll rolled LOOSE with too little
-pressure — still a CLOSED smooth dark seaweed (nori) LOG, just under-pressed (헐겁게 말린 완성 김밥 통 —
-약한 압력, 살짝 우는 표면). A horizontal CYLINDER (running left-to-right) wrapped in dark glossy seaweed but
-clearly SLACK and a bit LUMPY — the outer nori skin looks slightly slumped, softly wavy and uneven, and
-the single SEAM along the length gapes a little OPEN, under-pressed and floppy. The surface is still
-the unbroken outer seaweed skin — the ROUND CUT END is NOT facing the camera, NO spiral / rice ring /
-filling ring is visible (that only shows when sliced). A soft loose closed log, clearly NOT a clean
-tight roll, but NOT torn open (the LOOSE result).
+        "slot_mode": "open_log",
+        "body": """A painterly HERO illustration of a FINISHED whole UNCUT gimbap roll rolled LOOSE with too
+little pressure — its LONG SURFACE is dark seaweed but its BOTH ROUND ENDS ARE OPEN, and being
+under-pressed the open ends are a bit GAPING and loose (헐겁게 말린 완성 김밥 통 — 약한 압력, 둘레 우는 김, 양쪽
+끝 단면 살짝 벌어짐). A horizontal log (running left-to-right) wrapped along its circumference in dark glossy
+seaweed but clearly SLACK and a bit LUMPY — the outer nori skin looks slightly slumped, softly wavy, and
+the SEAM along the length gapes a little OPEN. The TWO ends are OPEN (not capped by seaweed), showing a
+LOOSE cross-section where the rice ring and the cluster of colorful fillings (orange carrot, golden egg,
+dark-green spinach, yellow danmuji) sit a bit slack and slightly spread / falling apart. Seen at a slight
+angle so both open ends show. A soft loose log, clearly NOT a clean tight roll, NOT a closed capsule, but
+NOT fully torn open (the LOOSE result).
 %s
 %s
 %s""",
     },
     {
         "id": "roll_finished_burst",
-        "name": "Roll s6 variant — 과압축 갈라진 통 (김 split + rice 삐져나옴, 단면은 아님)",
+        "name": "Roll s6 variant — 과압축 갈라진 통 (둘레 김 split + rice 삐져나옴 + 양끝 OPEN)",
         "size": "1536x1024",
-        "slot_mode": "closed",
-        "body": """A painterly HERO illustration of a FINISHED gimbap roll squeezed with TOO MUCH pressure
-so the wrap has burst — still a CLOSED log shown along its length, not an end-on slice (너무 세게 눌러
-터진 완성 김밥 통 — 김이 갈라지고 밥이 삐져나옴, 단면 노출은 아님). A horizontal CYLINDER (running left-to-right) of
-dark seaweed CRUSHED too hard: the glossy nori skin has SPLIT and CRACKED along the TOP of the wrap and
-warm cream-white rice is being SQUEEZED OUT, bulging up through the split; the log is FLATTENED and
-deformed (pressed wider and lower, not a clean round tube), over-compressed and blown-out. The split
-and bulging rice are along the TOP surface — the ROUND CUT END is NOT facing the camera, this is NOT
-a sliced spiral cross-section, NO pinwheel rice-ring is shown. Still a whole gimbap, just over-pressured
-and ruptured along its length (the BURST result).
+        "slot_mode": "open_log",
+        "body": """A painterly HERO illustration of a FINISHED whole UNCUT gimbap roll squeezed with TOO
+MUCH pressure so the wrap has BURST — a long horizontal log whose LONG SURFACE seaweed has split, and
+whose BOTH ROUND ENDS ARE OPEN (너무 세게 눌러 터진 완성 김밥 통 — 둘레 김이 갈라지고 밥이 삐져나옴, 양쪽 끝은 열림).
+A horizontal log (running left-to-right) wrapped along its circumference in dark seaweed but CRUSHED too
+hard: the glossy nori skin has SPLIT and CRACKED along the TOP of the long surface and warm cream-white
+rice is being SQUEEZED OUT, bulging up through the split; the log is FLATTENED and deformed (pressed
+wider and lower, not a clean round tube), over-compressed and blown-out. The TWO ends are OPEN (not
+capped by seaweed), showing a smushed cross-section of rice and the colorful fillings (orange carrot,
+golden egg, dark-green spinach, yellow danmuji) squeezed out of round. Seen at a slight angle so both
+open ends show. Still ONE whole gimbap log (NOT sliced into separate pieces), just over-pressured and
+ruptured along its length and ends (the BURST result).
 %s
 %s
 %s""",
@@ -409,64 +567,84 @@ texture, soft volumetric edge. Edges parallel to the frame.
     },
     {
         "id": "rice_painterly",
-        "name": "Build — rice layer painterly (낟알 texture, 흰 rectangle 아님)",
+        "name": "Build — rice layer painterly (얇게 펴진 한 겹, 두꺼운 slab 아님)",
         "size": "1536x1024",
         "n_slots": 2,
-        "body": """A painterly HERO illustration of an even bed of cooked white rice for gimbap, pressed
-flat into a thin wide layer, seen from a high overhead angle: warm cream-white rice (#FAF4E6) made of
-many plump readable individual GRAINS with a soft sticky sheen and gentle volume, spread evenly. It
-must read clearly as RICE GRAINS (NOT a flat white rectangle, NOT a smooth white block, NOT vector).
-Soft top-left highlight catching the moist grains, slightly uneven natural edge.
+        "body": """A painterly HERO illustration of a THIN evenly-spread layer of cooked white rice for
+gimbap, pressed FLAT and THIN (about 5mm thick) in a single shallow sheet, as if it were already spread
+over a sheet of seaweed, seen from a high overhead angle: warm cream-white rice (#FAF4E6) made of many
+plump readable individual GRAINS with a soft sticky sheen, spread as ONE THIN even layer with the TOP
+flat and the SIDE thickness minimal. The grains thin out toward the edges so the layer feathers off and
+gets sparse / patchy at the rim, where the dark seaweed underneath faintly shows through the gaps
+between grains. It must read clearly as a THIN bed of separate RICE GRAINS — NOT a thick white block,
+NOT a chunky rounded slab, NOT a styrofoam cushion, NOT a tall mound, NOT a smooth pure-white solid
+brick, NOT a flat white rectangle, NOT vector. The white is slightly uneven and translucent (real
+moist grains, not a uniform pure-white panel). Soft top-left highlight catching the moist grains, a
+naturally uneven thin edge, almost no visible side wall.
 %s
 %s""",
     },
     {
         "id": "filling_carrot_painterly",
-        "name": "Build filling — carrot strip painterly (주황 채, volume)",
-        "size": "1024x1024",
-        "n_slots": 2,
-        "body": """A painterly HERO illustration of a long bundle of julienned CARROT for gimbap filling:
-slender matchstick strips of warm ORANGE carrot (#E8732C) bundled into a long horizontal strip, each
-stick with soft volume, a moist highlight and real thickness (NOT a flat orange band, NOT a vector
-line). Appetizing fresh carrot, warm orange, clearly carrot.
+        "name": "Build filling — carrot 가로 strip (주황 당근채 납작 띠, 6:1)",
+        "size": "1536x1024",
+        "slot_mode": "flat_strip",
+        "body": """A painterly HERO illustration of a LONG FLAT horizontal STRIP of julienned CARROT for a
+gimbap filling — a single thin band of slender ORANGE carrot matchsticks (#E8732C) gathered neatly
+side-by-side and laid flat, all running LEFT-TO-RIGHT to form ONE long thin strip (가는 당근채 여러 개를
+가지런히 모은 납작한 가로 띠). The fine matchsticks lie parallel along the length with a soft moist sheen and
+just enough rounding to read as real carrot strips, but the whole thing stays a FLAT low band, not a
+heap. Appetizing fresh warm orange carrot, clearly julienned carrot, a LONG FLAT STRIP laid flat ready
+to lay side-by-side with the other gimbap fillings, NOT a thick mound, NOT a chunky bundle, NOT a slab.
+%s
 %s
 %s""",
     },
     {
         "id": "filling_egg_painterly",
-        "name": "Build filling — egg strip painterly (노랑 지단, volume)",
-        "size": "1024x1024",
-        "n_slots": 2,
-        "body": """A painterly HERO illustration of a long strip of golden-yellow EGG omelette (지단) for
-gimbap filling: a long horizontal band of soft golden-yellow pan-fried egg sliced into a thick strip,
-with a tender soft surface, a gentle sheen, and real thickness / volume (NOT a flat yellow band, NOT
-vector). Warm golden egg, clearly cooked egg omelette.
+        "name": "Build filling — egg 가로 strip (노랑 계란지단 납작 띠, 6:1)",
+        "size": "1536x1024",
+        "slot_mode": "flat_strip",
+        "body": """A painterly HERO illustration of a LONG FLAT horizontal STRIP of golden-yellow EGG
+omelette (지단) for a gimbap filling — a single long thin band of soft folded golden-yellow pan-fried egg
+sliced into a flat strip, running LEFT-TO-RIGHT all the way across (folded 계란지단을 길게 썬 납작한 가로 띠). The
+egg is tender with a gentle warm sheen and faint folded layers along its length, but it lies FLAT and
+LOW — a thin band, not a fat brick. Warm golden egg, clearly cooked egg omelette, a LONG FLAT STRIP laid
+flat ready to lay side-by-side with the other gimbap fillings, NOT a thick block, NOT a fat brick, NOT a
+mound, NOT a slab.
+%s
 %s
 %s""",
     },
     {
         "id": "filling_spinach_painterly",
-        "name": "Build filling — spinach strip painterly (진녹 나물, volume)",
-        "size": "1024x1024",
-        "n_slots": 2,
-        "body": """A painterly HERO illustration of a long bundle of seasoned SPINACH (시금치나물) for
-gimbap filling: a long horizontal bundle of cooked dark-green wilted leafy spinach, soft glossy
-leaves clustered with real volume and a moist seasoned sheen (NOT a green onion, NO white bulb, NO
-long hollow stem, NOT a flat green band, NOT vector). Dark green wilted leafy greens, clearly cooked
-spinach namul.
+        "name": "Build filling — spinach 가로 strip (진녹 시금치나물 납작 띠, 6:1)",
+        "size": "1536x1024",
+        "slot_mode": "flat_strip",
+        "body": """A painterly HERO illustration of a LONG FLAT horizontal STRIP of seasoned SPINACH
+(시금치나물) for a gimbap filling — a single long thin band of cooked dark-green wilted leafy spinach
+gathered and laid flat, running LEFT-TO-RIGHT all the way across (진녹색 시금치나물을 길게 모은 납작한 가로 띠). Soft
+glossy dark-green leaves clustered along the length with a moist seasoned sheen, but kept as a FLAT low
+band, not a heaped clump. Dark green wilted leafy greens, clearly cooked spinach namul (NOT a green
+onion, NO white bulb, NO long hollow stem). A LONG FLAT STRIP laid flat ready to lay side-by-side with
+the other gimbap fillings, NOT a thick mound, NOT a chunky clump, NOT a slab.
+%s
 %s
 %s""",
     },
     {
         "id": "filling_danmuji_painterly",
-        "name": "Build filling — danmuji strip painterly (밝은 노랑 단무지, volume)",
-        "size": "1024x1024",
-        "n_slots": 2,
-        "body": """A painterly HERO illustration of a long strip of yellow pickled radish DANMUJI (단무지)
-for gimbap filling: a long horizontal rectangular strip of BRIGHT CLEAN YELLOW (#F5D547) pickled
-radish with a slightly translucent glossy crisp surface and real thickness / volume (NOT orange, NOT
-carrot — clearly distinct yellow; NOT a flat band, NOT vector). Bright clean yellow danmuji, crisp
-and glossy.
+        "name": "Build filling — danmuji 가로 strip (밝은 노랑 단무지 납작 띠, 6:1)",
+        "size": "1536x1024",
+        "slot_mode": "flat_strip",
+        "body": """A painterly HERO illustration of a LONG FLAT horizontal STRIP of yellow pickled radish
+DANMUJI (단무지) for a gimbap filling — a single long thin band of BRIGHT CLEAN YELLOW (#F5D547) pickled
+radish laid flat, running LEFT-TO-RIGHT all the way across (밝은 노랑 단무지를 길게 썬 납작한 가로 띠). A slightly
+translucent glossy crisp yellow band with just enough rounding to read as real danmuji, but kept FLAT
+and LOW. Bright clean yellow danmuji, crisp and glossy (NOT orange, NOT carrot — clearly distinct
+yellow). A LONG FLAT STRIP laid flat ready to lay side-by-side with the other gimbap fillings, NOT a
+thick stick, NOT a fat block, NOT a mound, NOT a slab.
+%s
 %s
 %s""",
     },
@@ -539,18 +717,20 @@ just badly cut). Real volume and highlights, NOT a flat band, NOT vector. Clearl
 SLICE = [
     {
         "id": "gimbap_roll_for_slice",
-        "name": "Slice — 썰기 전 완성 roll (매끈한 검은 통 가로로 누움, seam 1줄, 단면 0)",
+        "name": "Slice — 썰기 전 완성 통 (둘레 glossy 김 + 양끝 OPEN 단면, uncut log 누움)",
         "size": "1536x1024",
-        "slot_mode": "closed",
-        "body": """A painterly HERO illustration of ONE finished whole gimbap roll LYING HORIZONTALLY,
-ready to be sliced — a SMOOTH GLOSSY DARK SEAWEED (NORI) CYLINDER, a sealed closed LOG, as a Korean
-gimbap shop owner sets it on the board before cutting (썰기 전 완성 김밥 — 가로로 누운 매끈한 검은 김 통). A
-firm clean ROUNDED horizontal cylinder of deep dark green-black seaweed with a sleek sesame-oil sheen,
-long axis running LEFT-TO-RIGHT, a single faint SEAM along the length, real round VOLUME, and a soft
-contact shadow cast straight down beneath it. The log is whole and UNCUT — the whole outer surface is
-unbroken smooth nori, ONLY the outer skin and seam show; the round CUT END is NOT facing the camera and
-NO spiral / rice ring is visible (it is about to be cut, not yet sliced — the cross-section appears only
-once it is sliced into pieces). A premium appetizing sleek black-green roll, NOT a flat capsule, NOT
+        "slot_mode": "open_log",
+        "body": """A painterly HERO illustration of ONE finished whole UNCUT gimbap roll LYING HORIZONTALLY
+on a board, ready to be sliced — a long log whose LONG CURVED SURFACE is smooth glossy dark seaweed and
+whose BOTH ROUND ENDS ARE OPEN, as a Korean gimbap shop owner sets it on the board before cutting (썰기 전
+완성 김밥 — 가로로 누운 통, 둘레는 매끈한 검은 김, 양쪽 끝은 열려 단면 보임). A firm clean ROUNDED horizontal log, long
+axis running LEFT-TO-RIGHT, its tube circumference a deep dark green-black seaweed skin with a sleek
+sesame-oil sheen and a single faint SEAM along the length, real round VOLUME, and a soft contact shadow
+cast straight down beneath it. The TWO ends are OPEN (not capped by seaweed) and reveal the round
+cross-section — an outer ring of warm cream-white rice around a tight center cluster of colorful fillings
+(orange carrot, golden egg, dark-green spinach, bright yellow danmuji). The log is whole and UNCUT (it is
+ONE long log about to be cut, NOT yet sliced into separate pieces). Seen at a slight angle so both open
+ends show. A premium appetizing roll, NOT a closed capsule, NOT sealed at the ends, NOT a flat shape, NOT
 vector.
 %s
 %s
@@ -769,7 +949,8 @@ def main() -> None:
             print(f"     - {fname}: {err}")
     print(f"   비용 예상: ${est_total * len(successes) / max(len(jobs), 1):.2f}")
     print(f"   경로: {args.out_dir}")
-    print("   → 검수: high-angle painterly(70-80°) + 단면금지(roll s1~s5) + NOT flat vector 확인")
+    print("   → 검수: high-angle painterly(70-80°) + 단면금지(roll s1~s5) + 완성통 양끝 OPEN(둘레만 김) "
+          "+ NOT flat vector 확인")
     print("   → 검수 통과 후 res://art/sprites/ 배포 + godot-dev procedural→painterly swap")
     print("=" * 74)
 

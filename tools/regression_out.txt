@@ -174,7 +174,7 @@ Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
 Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
 
 === Cooking Runner ??integration smoke ===
-[runner] t1_002 L1 S=1.00 base=1.00 dish=0.00 pass=true compat=79 mood=grumpy emo=excellent rec=true seq=["slice", "timing", "season", "plate"]
+[runner] t1_002 L1 S=1.00 base=1.00 dish=0.00 pass=true compat=86 mood=easy emo=excellent rec=true seq=["slice", "timing", "season", "plate"]
   [PASS] [t1_002] factor coverage matches sequence  (got=["plating", "prep", "season", "timing"] expected=["plating", "prep", "season", "timing"])
   [PASS] [t1_002] plating registered
   [PASS] [t1_002] plating == 1.0  (got=1.000 expected=1.000)
@@ -192,14 +192,14 @@ At C:\Projects\kfood-game\tools\run_regression.ps1:19 char:3
  
    at: push_warning (core/variant/variant_utility.cpp:1034)
    GDScript backtrace (most recent call first):
-       [0] _warn_unmapped (res://scripts/gameplay/art_registry.gd:411)
-       [1] timing_food_for (res://scripts/gameplay/art_registry.gd:405)
+       [0] _warn_unmapped (res://scripts/gameplay/art_registry.gd:415)
+       [1] timing_food_for (res://scripts/gameplay/art_registry.gd:409)
        [2] _build_food_sprites (res://scripts/cooking_modules/timing_module.gd:176)
        [3] _module_start (res://scripts/cooking_modules/timing_module.gd:94)
        [4] start (res://scripts/cooking_modules/base_module.gd:57)
        [5] _run_next_module (res://scripts/gameplay/cooking_module_runner.gd:461)
        [6] _on_module_completed (res://scripts/gameplay/cooking_module_runner.gd:555)
-[runner] t1_003 L2 S=1.00 base=1.00 dish=0.00 pass=true compat=79 mood=happy emo=excellent rec=true seq=["slice", "season", "stir", "timing", "plate"]
+[runner] t1_003 L2 S=1.00 base=1.00 dish=0.00 pass=true compat=69 mood=grumpy emo=good rec=true seq=["slice", "season", "stir", "timing", "plate"]
   [PASS] [t1_003] factor coverage matches sequence  (got=["cook", "plating", "prep", "season", "timing"] expected=["cook", "plating", "prep", "season", "timing"])
   [PASS] [t1_003] plating registered
   [PASS] [t1_003] plating == 1.0  (got=1.000 expected=1.000)
@@ -270,7 +270,7 @@ Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
   [PASS] timing hold=0.0 -> score in [0,100] (=0.0)
 
 [6] Runner buckets slice/timing/season into correct factor
-[runner] t1_002 L1 S=0.84 base=0.84 dish=0.00 pass=true compat=79 mood=grumpy emo=excellent rec=false seq=["slice", "timing", "season", "plate"]
+[runner] t1_002 L1 S=0.84 base=0.84 dish=0.00 pass=true compat=86 mood=easy emo=excellent rec=false seq=["slice", "timing", "season", "plate"]
   [PASS] prep bucket got slice
   [PASS] timing bucket got timing
   [PASS] season bucket got season
@@ -465,9 +465,9 @@ Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
   [PASS] compat 40 mult 0.85  (got=0.8500 expected=0.8500)
   [PASS] compat 10 mult 0.70  (got=0.7000 expected=0.7000)
   [PASS] reward final(10000, 93, Junho) == 15600  (got=15600 expected=15600)
-  [PASS] mood deterministic for junho  (got=grumpy expected=grumpy)
+  [PASS] mood deterministic for junho  (got=easy expected=easy)
   [PASS] junho mood is in mood_pool
-[mood] junho=grumpy mina=happy riley=grumpy mrs_lee=hungry seoyeon=hungry mother_01=happy father_01=grumpy
+[mood] junho=easy mina=grumpy riley=easy mrs_lee=hungry seoyeon=easy mother_01=picky father_01=easy
 === done ===
 [scene-exit=0]
 ==================== res://scenes/save_migration_test.tscn ====================

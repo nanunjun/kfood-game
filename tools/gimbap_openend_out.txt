@@ -1,0 +1,9 @@
+﻿Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+OpenGL API 3.3.0 Core Profile Context 25.10.30.02.250923 - Compatibility - Using Device: ATI Technologies Inc. - AMD Radeon(TM) Graphics
+
+[gimbap-slice-vs] roll_q=0.92 window_scale=0.97
+[openend-shot] slice_openend -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gimbap_openend/slice_openend.png (799x1421)
+[openend-shot] roll_finished_openend left_p=0.93 right_p=0.93
+[openend-shot] roll_finished_openend -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gimbap_openend/roll_finished_openend.png (799x1421)
+[openend-shot] build_thin_rice -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gimbap_openend/build_thin_rice.png (799x1421)
+EXIT=0

@@ -1,0 +1,17 @@
+# Render Build 김밥 setup 축정렬(axis-aligned) 합성 F5 verification (real opengl3 viewport)
+# then copy the PNGs out of user:// into assets-raw/_screenshots/gimbap_aligned/.
+$godot   = "C:\Users\JS Park\Downloads\Godot_v4.6.3-stable_win64.exe\Godot_v4.6.3-stable_win64.exe"
+$proj    = "C:\Projects\kfood-game\godot-project"
+$userdir = "C:\Users\JS Park\AppData\Roaming\Godot\app_userdata\K-Food Master\gimbap_aligned"
+$dest    = "C:\Projects\kfood-game\assets-raw\_screenshots\gimbap_aligned"
+$out     = "C:\Projects\kfood-game\tools\gimbap_aligned_out.txt"
+
+New-Item -ItemType Directory -Force -Path $dest | Out-Null
+& $godot --path $proj --rendering-driver opengl3 --resolution 1080x1920 --quit-after 9000 "res://scenes/shot_gimbap_aligned.tscn" *>&1 | Out-File -FilePath $out -Encoding utf8
+"EXIT=$LASTEXITCODE" | Out-File -FilePath $out -Append -Encoding utf8
+
+# Copy generated PNGs from user://gimbap_aligned to the screenshot dir.
+Get-ChildItem $userdir -Filter '*.png' -ErrorAction SilentlyContinue | ForEach-Object {
+  Copy-Item $_.FullName (Join-Path $dest $_.Name) -Force
+  Write-Output ("copied " + $_.Name)
+}

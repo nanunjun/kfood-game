@@ -1,4 +1,4 @@
-Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+﻿Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
 OpenGL API 3.3.0 Core Profile Context 25.10.30.02.250923 - Compatibility - Using Device: ATI Technologies Inc. - AMD Radeon(TM) Graphics
 
 [gbs-shot] build_topdown -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gimbap_build_slice/build_topdown.png (540x960)
@@ -12,7 +12,6 @@ OpenGL API 3.3.0 Core Profile Context 25.10.30.02.250923 - Compatibility - Using
 [gbs-shot] sprite_check -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gimbap_build_slice/sprite_check.png (540x960)
 [shopping] collected=[] wrong=0 quality=0.00 fillings=[]
 [roll-vs] prep_q=0.30 sweet_scale=0.73 arrange_bal=1.00 tilt_off=0.000
-[roll-staged-4] built=6 staged_available=true (flat/edge/half + finished/loose/tight)
 [gimbap-slice-vs] roll_q=0.47 window_scale=0.79
 [gbs-shot] runner_routing saw_slice=true cur_is_gimbap_slice=true plan_idx=5
 [gbs-shot] runner_routing -> C:/Users/JS Park/AppData/Roaming/Godot/app_userdata/K-Food Master/gimbap_build_slice/runner_routing.png (540x960)
