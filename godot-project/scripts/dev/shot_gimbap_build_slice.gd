@@ -131,10 +131,11 @@ func _shot_build_snap() -> void:
 	var gesture = build.get("_gesture")
 	var strips: Array = build.get("_strips")
 	var sg = build.get("_stage_group")
-	# 각 tray strip을 집어 밥 lower-third guide line(STRIP_TARGET_Y=96, stage 로컬) 위로 drag→release.
-	# guide global y = stage.position.y + 96. x는 중앙(BUILD_X=540).
+	# 각 tray strip을 집어 gimbap_mat 흰 밥 region lower-third(BUNDLE_TARGET_Y, stage 로컬) 위로
+	# drag→release. drop x = 밥 region 중심(BUILD_X + RICE_CENTER_X), y = stage.y + BUNDLE_TARGET_Y.
 	if gesture != null and strips != null and sg != null:
-		var guide_y: float = sg.position.y + 96.0
+		var rice_cx: float = float(BuildScript.BUILD_X) + float(BuildScript.RICE_CENTER_X)
+		var guide_y: float = sg.position.y + float(BuildScript.BUNDLE_TARGET_Y)
 		for i in range(strips.size()):
 			# 매 stroke 전에 현재 미배치 strip의 home을 다시 읽는다(이미 배치된 건 skip).
 			if bool(strips[i]["placed"]):
@@ -143,7 +144,7 @@ func _shot_build_snap() -> void:
 			if not is_instance_valid(node):
 				continue
 			var home: Vector2 = strips[i]["home"]
-			await _stroke(gesture, home, Vector2(540.0, guide_y))
+			await _stroke(gesture, home, Vector2(rice_cx, guide_y))
 			await get_tree().create_timer(0.22).timeout
 	await get_tree().create_timer(0.5).timeout
 	print("[gbs-shot] build_snap placed=%d build_q-ish balance=%.2f" % [
@@ -182,14 +183,15 @@ func _shot_slice_cut() -> void:
 	slice.start(p)
 	await get_tree().create_timer(0.6).timeout
 	var gesture = slice.get("_gesture")
-	# ROLL_RECT = (140, 760, 800, 380). 6 guide를 각각 위→아래로 swipe.
-	var roll_top: float = 760.0
-	var roll_bot: float = 760.0 + 380.0
+	# OPEN-END (2026-06-13): ROLL_RECT = (60, 700, 960, 470). guide x는 김 본체 위 lerp(470, 950).
+	# 6 guide를 각각 위→아래로 swipe (큰 통 세로 span을 충분히 가로지름).
+	var roll_top: float = 700.0
+	var roll_bot: float = 700.0 + 470.0
 	if gesture != null:
 		for i in range(6):
-			# guide x = lerp(x0=210, x1=870, (i+0.5)/6).
-			var gx: float = lerpf(140.0 + 70.0, 140.0 + 800.0 - 70.0, (float(i) + 0.5) / 6.0)
-			await _stroke(gesture, Vector2(gx, roll_top - 50.0), Vector2(gx, roll_bot + 50.0))
+			# guide x = lerp(x0=470, x1=950, (i+0.5)/6) — 좌측 open 단면 오른쪽 김 본체.
+			var gx: float = lerpf(470.0, 950.0, (float(i) + 0.5) / 6.0)
+			await _stroke(gesture, Vector2(gx, roll_top - 30.0), Vector2(gx, roll_bot + 30.0))
 			await get_tree().create_timer(0.20).timeout
 	await get_tree().create_timer(0.5).timeout
 	print("[gbs-shot] slice_cut cuts_done=%d slice_q=%.2f" % [

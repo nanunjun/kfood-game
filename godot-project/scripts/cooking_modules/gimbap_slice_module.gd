@@ -27,11 +27,17 @@ extends "res://scripts/cooking_modules/base_module.gd"
 const TouchGesture := preload("res://scripts/cooking_modules/touch_gesture.gd")
 
 # --- top-down layout (화면 1080x1920) — strict top-down 가로 cylinder ---
-# 완성 roll(가로 cylinder)을 action zone 중앙에 크게 눕힌다. 6 cut guide가 이 폭 안 등간격.
-const ROLL_RECT := Rect2(140, 760, 800, 380)         # 가로 cylinder box (near top-down log)
+# 완성 roll(가로 cylinder)을 action zone 중앙에 **크게** 눕힌다. 6 cut guide가 이 폭 안 등간격.
+#
+# OPEN-END PROMINENT (2026-06-13): gimbap_roll_for_slice 자산은 **왼쪽 끝이 열려 단면(밥 ring+속)
+# 노출** 가로 통(1536x1024, aspect 1.5). 이전 ROLL_RECT(800x380, aspect 2.1)는 KEEP_ASPECT_CENTERED
+# 라 height-limit → 통이 690px로 작게 letterbox되고 좌측 단면이 작고 어두워 잘 안 보였다.
+# → ROLL_RECT를 자산 1.5 aspect에 맞춘 **큰 박스**로 키워 통이 action zone 가로를 가득 채우고
+#    **양끝(특히 좌측 open 단면)이 화면에 크게 + crop 없이** 보이게 한다.
+const ROLL_RECT := Rect2(60, 700, 960, 470)          # 가로 cylinder box (크게, action zone 가로 채움)
 const CUT_COUNT: int = 6                              # 6개 cut guide → 6 조각.
 # 분리된 조각(cut-side)이 가지런히 쌓이는 아래 plate row.
-const PIECE_ZONE := Rect2(120, 1240, 840, 220)
+const PIECE_ZONE := Rect2(120, 1290, 840, 210)
 const CROSS_MARGIN: float = 60.0                     # swipe 통과 판정 여유.
 
 # guide 허용폭(px) — swipe x가 guide 중심에서 이 안이면 그 guide 절단. roll_quality로 보정.
@@ -149,7 +155,12 @@ func _consume_vs_consequence(params: Dictionary) -> void:
 ##    단면(spiral)은 자를 때 분리되는 조각(cut-side)에서만 노출(§slice 단계 OK).
 func _build_roll() -> void:
 	# PAINTERLY SWAP (2026-06-13): procedural 가로 capsule → gimbap_roll_for_slice (완성 roll,
-	# high-angle painterly, end-cap 단면 0 — slice가 단면을 만든다). 미존재 시 procedural fallback.
+	# high-angle painterly, **왼쪽 끝 open 단면(밥 ring+속) 노출** — slice가 더 자른다). 미존재 시 procedural.
+	#
+	# OPEN-END PROMINENT: 자산(1536x1024, aspect 1.5) 전체를 **크게 + crop 0**으로 보이게 한다.
+	# display box = 자산 aspect(1.5)에 맞춰 ROLL_RECT보다 살짝 크게 잡아(가로 1020 → 세로 680) 통이
+	# 화면 가로를 가득 채우고, ROLL_RECT 중심에 정렬해 **좌측 open 단면이 화면 안쪽에서 크게** 보인다.
+	# KEEP_ASPECT_CENTERED라 어떤 박스에서도 좌우 끝은 절대 crop되지 않는다(letterbox만).
 	var roll_path: String = ArtRegistry.get_painterly("gimbap_roll_for_slice")
 	if roll_path != "":
 		var rimg := TextureRect.new()
@@ -157,8 +168,12 @@ func _build_roll() -> void:
 		rimg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		rimg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		rimg.texture = load(roll_path)
-		rimg.position = ROLL_RECT.position - Vector2(30, 40)
-		rimg.size = ROLL_RECT.size + Vector2(60, 80)
+		# 자산 1.5 aspect에 맞춘 큰 display box (가로 1020). ROLL_RECT 중심에 정렬 → 통 크게, 양끝 full.
+		var disp_w: float = 1020.0
+		var disp_h: float = disp_w / 1.5            # = 680, aspect 정확히 일치 → 통이 박스를 가득 채움.
+		var center: Vector2 = ROLL_RECT.position + ROLL_RECT.size * 0.5
+		rimg.size = Vector2(disp_w, disp_h)
+		rimg.position = center - Vector2(disp_w, disp_h) * 0.5
 		rimg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		rimg.z_index = L3_INGREDIENT
 		add_child(rimg)
@@ -271,8 +286,9 @@ func _build_guides() -> void:
 	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	holder.z_index = L4_TOOL - 1   # 칼 아래, roll 위.
 	add_child(holder)
-	var gy0: float = ROLL_RECT.position.y - 10.0
-	var gy1: float = ROLL_RECT.position.y + ROLL_RECT.size.y + 10.0
+	# guide 세로 span = 화면에 보이는 김 본체 위 (큰 통 display: 세로 ~640~1180). 통 밖으로 안 넘치게.
+	var gy0: float = 660.0
+	var gy1: float = 1180.0
 	for i in range(CUT_COUNT):
 		var gx: float = _guide_x(i)
 		var line := _make_dashed_guide(Vector2(gx, gy0), gy1 - gy0)
@@ -280,10 +296,15 @@ func _build_guides() -> void:
 		_guides.append(line)
 
 
-## guide i 의 x — cylinder 폭 안 등간격(첫/끝 여백). 6 guide = 6 균일 조각.
+## guide i 의 x — cylinder **세로 본체** 위 등간격. 6 guide = 6 균일 조각.
+##
+## OPEN-END (2026-06-13): gimbap_roll_for_slice 좌측 끝은 open 단면(밥 ring) — 자르는 대상이 아니라
+## "이미 잘린 면" 참조다. guide는 **단면 오른쪽 김 본체** 위에만 둔다(단면 위에 점선 X). 자산 좌표로
+## 단면 우측 끝(~asset x590) → display x≈420부터 김 본체(~display x960). x0를 이 본체 시작에 맞춘다.
 func _guide_x(i: int) -> float:
-	var x0: float = ROLL_RECT.position.x + 70.0
-	var x1: float = ROLL_RECT.position.x + ROLL_RECT.size.x - 70.0
+	# display box(가로 1020, 자산 1.5 aspect, ROLL_RECT 중심 정렬) 기준 김 본체 가로 범위.
+	var x0: float = 470.0    # 좌측 open 단면 바로 오른쪽 = 김 본체 시작.
+	var x1: float = 950.0    # 통 우측 끝 살짝 안쪽.
 	var t: float = (float(i) + 0.5) / float(CUT_COUNT)
 	return lerpf(x0, x1, t)
 

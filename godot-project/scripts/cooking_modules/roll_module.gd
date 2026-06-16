@@ -599,6 +599,33 @@ class _TopDownRollStage extends Control:
 	var _painterly: bool = false
 	var _stage_sprites: Array = []    # 6 진행 state TextureRect (cross-fade).
 	var _result_sprites: Dictionary = {}   # result_state → 완성 variant TextureRect.
+	# === MISMATCH STAGED 통 제거 + 김발 유지 + 재료 가로 (F5 fix, 2026-06-15 v2) ───────────────
+	# 사용자 거부(F5 Roll Step 4/7):
+	#   (1) 말리는 중 재료 방향이 세로(roll 축에 수직)로 박힘. 속은 **가로**(roll 축과 평행)여야 함.
+	#   (2) roll 시작 시 gimbap_mat(김발) 전체를 fade out → **김발이 사라짐**. 받침이라 계속 보여야 함.
+	# 원인: 진행 단계가 AI staged 통 sprite(roll_edge_lift/curling/...)로 swap하는데, 이 sprite들이
+	#   gimbap_mat과 불일치 = (a) 김발 없음, (b) 사선 3/4 view, (c) 재료 세로 baked.
+	# 교정(방안 B = procedural 단순 roll):
+	#   - gimbap_mat base(_bamboo_mat)는 **roll 내내 full alpha 유지** = 김발이 받침으로 계속 보임.
+	#   - flat 재료(가로 painterly band)도 유지 — 말리는 동안 near(하단) edge부터 위로 통에 먹힌다.
+	#   - mismatch staged 통 sprite(roll_edge_lift~compression) **표시 안 함**. 대신 procedural
+	#     _RollGrowth overlay가 김발 위에서 **near→far로 어두운 김 통**이 자라며 가로 재료를 감싼다.
+	#   - 완성 통은 success 후 result sprite(roll_finished, open-end) — 단 말리는 중은 procedural.
+	# scoring/two-finger/consequence 무변경 — 순수 시각/전환만. set_roll/finalize_roll 시그니처 동일.
+	var _roll_growth = null            # _RollGrowth — 김발 위 near→far 자라는 통 overlay(procedural).
+	var _use_staged_roll: bool = false # false = mismatch staged 통 sprite swap 안 함(procedural 사용).
+	# === VISIBLE BAMBOO MAT (F5 fix, 2026-06-14) ===
+	# 사용자: Roll setup이 "훨씬 나음"이나 **김발(bamboo rolling mat)이 안 보임**. → painterly 진행
+	# sprite(roll_flat_setup 등, mat 없음) **밑에** 평면 top-down bamboo mat을 깐다. roll_flat_setup의
+	# 김(seaweed)은 box의 ~89%w/75%h를 차지 → mat을 box보다 키워(MAT_OVERSCALE) 깔면 김 밑으로 bamboo
+	# 가로 slats frame이 사방으로 또렷이 보인다. Roll은 "김발 추가만" — 나머지(진행 sprite/입력/scoring)
+	# 전부 무변경. mat은 fold 진행과 무관하게 고정(말기 동안 받침으로 계속 보임).
+	var _bamboo_mat: TextureRect = null
+	const MAT_OVERSCALE: float = 1.20   # mat을 stage box보다 20% 크게(김 사방으로 bamboo frame 노출).
+	# OPEN-END PROMINENT (2026-06-13): 완성 통만 키워 양끝 단면 prominent. base offset = 큰 box를
+	# stage box 중심에 정렬하는 좌상단 보정 (tilt가 여기에 더해짐).
+	const RESULT_SCALE: float = 1.30
+	var _result_base_off: Vector2 = Vector2.ZERO
 	const _STAGE_KEYS := [
 		"roll_flat_setup", "roll_edge_lift", "roll_first_fold",
 		"roll_curling", "roll_compression", "roll_finished",
@@ -609,6 +636,36 @@ class _TopDownRollStage extends Control:
 	# "mat이 통을 감싸 누르는" pulse. 순수 시각(set_roll/finalize_roll 시그니처·scoring 무변경).
 	var _press_overlay: _PressMatBand = null   # 통 위를 감싸 누르는 김발 band 오버레이.
 	var _pressed_stage: bool = false           # compression(idx>=4) 진입 시 1회만 press pulse.
+
+	# === Build 연속성 — 초기 flat state 재료 strip overlay (Build 최종 = Roll 초기) ===
+	# gimbap_mat base 밥 region 위에 Build와 동일한 색 strip 다발(carrot/egg/spinach/danmuji)을
+	# 깔아 roll 시작 화면이 Build 완성 setup과 동일하게 보이게 한다. 말기 시작(roundness>=0.16) 시
+	# fade out → edge_lift~finished 진행 sprite가 시각을 이어받는다(말리는 sequence 무변경).
+	var _flat_fillings: Control = null
+	var _flat_faded: bool = false
+	# 재료 다발 bed geometry (box 좌표) — _build_flat_fillings에서 산출, _RollGrowth가 통이 가로 재료를
+	# near→far로 감싸는 좌표 기준으로 사용. (rice region + 재료 strip 가로 폭/세로 band)
+	var _bed_geom: Dictionary = {}
+	# gimbap_mat 안 흰 밥 region(측정 frac) — Build module RICE_FRAC_* 정합. box-fit 좌표 산정용.
+	const MAT_RICE_FRAC_CX: float = 0.480
+	const MAT_RICE_FRAC_CY: float = 0.455
+	const MAT_RICE_FRAC_W: float = 0.600
+	const MAT_RICE_FRAC_H: float = 0.500
+	const MAT_IMG_ASPECT: float = 1151.0 / 716.0   # gimbap_mat 비율(KEEP_ASPECT fit 산정).
+	# ── PAINTERLY FILLINGS (F5 fix, 2026-06-15): Roll 초기 재료를 ColorRect 솔리드 색 바 폐기 →
+	# Build와 동일한 filling_{id}_painterly band crop(AtlasTexture)로. 음식 텍스처(당근채/계란지단/
+	# 시금치/단무지)가 보이게(색 바 아님). Build module FILLING_BAND/FILLING_SRC_W와 동일 측정값.
+	const FILL_BAND: Dictionary = {
+		"carrot":  {"y0": 360.0, "y1": 698.0},
+		"egg":     {"y0": 398.0, "y1": 680.0},
+		"spinach": {"y0": 326.0, "y1": 710.0},
+		"danmuji": {"y0": 410.0, "y1": 694.0},
+	}
+	const FILL_SRC_W: float = 1536.0
+	# 실측: 흰 밥 가로 frac 0.132..0.844, 김(seaweed) 안쪽 0.102..0.876. 재료를 밥보다 길게(양끝
+	# 삐져나옴) 김 안쪽까지 = 밥폭/김폭 평균. rice_w(placement 0.60*disp_w)와 별개의 실측 비례.
+	const FILL_RICE_FRAC_W: float = 0.844 - 0.132   # 흰 밥 실측 가로 frac ≈ 0.712.
+	const FILL_SEAWEED_FRAC_W: float = 0.876 - 0.102  # 김 안쪽 실측 가로 frac ≈ 0.774.
 
 	# 김밥 속 색 — danmuji 노랑 / spinach 녹 / carrot 주황 / egg 노랑(GimbapSlice와 정합).
 	const FILL_COLS := [
@@ -633,8 +690,38 @@ class _TopDownRollStage extends Control:
 	## 전 sprite는 box를 가득 채우는 high-angle painterly(KEEP_ASPECT_CENTERED, 수평 유지).
 	func _build_painterly_sprites() -> void:
 		var any: bool = false
+		# ── Layer 0 — BASE. Build 연속성(Build 최종 = Roll 초기): Build base와 **같은 gimbap_mat.png
+		# 한 장**(김발+김+밥 full bed)을 최하단에 깐다 → roll 초기 화면이 Build 최종과 동일하게 보인다.
+		# rotation 0 / KEEP_ASPECT(1151:716 비율 유지). gimbap_mat 미존재 시 bamboo_mat_large fallback.
+		# (이전엔 bamboo_mat_large만 깔고 roll_flat_setup 진행 sprite의 김+밥에 의존 → Build base와
+		#  perspective/look 불일치. 이제 Build와 똑같은 base 한 장으로 통일.)
+		var mat_path: String = ArtRegistry.get_painterly("gimbap_mat")
+		var mat_keep_aspect: bool = mat_path != ""   # gimbap_mat = 비율 유지(KEEP_ASPECT), bamboo = STRETCH.
+		if mat_path == "":
+			mat_path = ArtRegistry.get_roll_asset("bamboo_mat_large")
+		if mat_path == "":
+			mat_path = ArtRegistry.get_painterly("mat_painterly")
+		if mat_path != "":
+			_bamboo_mat = TextureRect.new()
+			_bamboo_mat.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			# gimbap_mat = KEEP_ASPECT_CENTERED(비율 유지, 회전 0). bamboo fallback = STRETCH_SCALE(box 채움).
+			_bamboo_mat.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED if mat_keep_aspect else TextureRect.STRETCH_SCALE
+			_bamboo_mat.custom_minimum_size = Vector2.ZERO
+			_bamboo_mat.texture = load(mat_path)
+			# gimbap_mat은 김발+김+밥이 한 장에 다 있어 box를 거의 꽉 채운다(OVERSCALE 불필요, 1.0).
+			# bamboo fallback만 box보다 크게(OVERSCALE) 깔아 김 사방 frame 노출.
+			var over: float = 1.0 if mat_keep_aspect else MAT_OVERSCALE
+			var msize: Vector2 = _box * over
+			_bamboo_mat.size = msize
+			_bamboo_mat.position = (_box - msize) * 0.5   # box 중심 정렬.
+			_bamboo_mat.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			_bamboo_mat.modulate = Color(1.0, 1.0, 1.0) if mat_keep_aspect else Color(1.06, 1.0, 0.90)
+			add_child(_bamboo_mat)
+		# ── MISMATCH STAGED 통 제거(F5 fix v2): 진행 단계 sprite(roll_edge_lift~compression)는
+		# gimbap_mat과 불일치(김발 없음 + 사선 + 재료 세로)라 **표시하지 않는다**. index 정합을 위해
+		# 빈 alpha-0 placeholder TextureRect만 깐다(texture 없음). 말리는 시각은 procedural _RollGrowth가
+		# 담당(김발 위 near→far 통 + 가로 재료). _use_staged_roll=true(디버그)일 때만 staged sprite 로드.
 		for key in _STAGE_KEYS:
-			var path: String = ArtRegistry.get_painterly(key)
 			var tr := TextureRect.new()
 			tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -643,12 +730,33 @@ class _TopDownRollStage extends Control:
 			tr.pivot_offset = _box * 0.5
 			tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			tr.modulate = Color(1, 1, 1, 0.0)
-			if path != "":
-				tr.texture = load(path)
-				any = true
+			if _use_staged_roll:
+				var path: String = ArtRegistry.get_painterly(key)
+				if path != "":
+					tr.texture = load(path)
 			add_child(tr)
 			_stage_sprites.append(tr)
+		# Build 최종과 동일한 재료 strip 다발을 base 밥 위에 overlay(초기 flat state).
+		_build_flat_fillings()
+		# ── PROCEDURAL ROLL GROWTH (F5 fix v2) — 김발 위 near→far로 자라는 통. mismatch staged 통
+		# sprite를 대체. base(_bamboo_mat=김발)와 _flat_fillings(가로 재료) **위에** 깔아 말리는 동안
+		# 어두운 김 통이 near(하단) edge부터 위로 자라며 가로 재료를 감싼다. 김발은 통 사방에 계속 보임.
+		# result/press overlay는 이 뒤에 add되어 통 위에 온다(완성/press beat).
+		_roll_growth = _RollGrowth.new()
+		_roll_growth.size = _box
+		_roll_growth.position = Vector2.ZERO
+		_roll_growth.pivot_offset = _box * 0.5   # press squash가 통 중심 기준이 되도록.
+		_roll_growth.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_roll_growth.setup_geom(_flat_fillings_geom())
+		add_child(_roll_growth)
 		# result variant — well_rolled/loose/burst (state 6 분기). 미존재 시 roll_finished로 fallback.
+		#
+		# OPEN-END PROMINENT (2026-06-13): 완성 통 자산(roll_finished*)은 **왼쪽 끝 open 단면(밥 ring+속)
+		# 노출**. 진행 box(_box)에 그대로 fit하면 통이 작아 단면이 잘 안 읽힌다. → 완성 variant만
+		# box를 키워(RESULT_SCALE) **통을 크게 + 양끝 단면 prominent**하게 한다. stage box 중심에 정렬
+		# (_result_base_off) — tilt는 이 base offset에 더해진다(_apply_tilt_transform).
+		var rbox: Vector2 = _box * RESULT_SCALE
+		_result_base_off = (_box - rbox) * 0.5    # 큰 box를 stage box 중심에 정렬하는 좌상단 보정.
 		for pair in [[RESULT_FINISHED, "roll_finished"], [RESULT_LOOSE, "roll_finished_loose"],
 				[RESULT_TIGHT, "roll_finished_burst"]]:
 			var rpath: String = ArtRegistry.get_painterly(String(pair[1]))
@@ -657,9 +765,9 @@ class _TopDownRollStage extends Control:
 			var rt := TextureRect.new()
 			rt.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			rt.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			rt.size = _box
-			rt.position = Vector2.ZERO
-			rt.pivot_offset = _box * 0.5
+			rt.size = rbox
+			rt.position = _result_base_off
+			rt.pivot_offset = rbox * 0.5
 			rt.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			rt.modulate = Color(1, 1, 1, 0.0)
 			if rpath != "":
@@ -676,8 +784,134 @@ class _TopDownRollStage extends Control:
 		_press_overlay.modulate = Color(1, 1, 1, 0.0)
 		add_child(_press_overlay)
 		_painterly = any
+		# painterly가 없으면 procedural _draw가 자체 mat을 그리므로 bamboo sprite는 숨긴다(double mat 방지).
+		if not _painterly and is_instance_valid(_bamboo_mat):
+			_bamboo_mat.visible = false
 		if _painterly:
 			_show_stage(0)
+
+	## Build 최종과 동일한 재료 strip 다발을 gimbap_mat base 밥 region 위에 깔아 roll 초기 화면이
+	## Build 완성 setup과 같게 한다. (F5 fix, 2026-06-15) 솔리드 색 ColorRect/Panel 폐기 →
+	## Build와 동일한 filling_{id}_painterly band crop(AtlasTexture)로 음식 텍스처가 보이게.
+	## 재료는 밥보다 좌우로 길게(양끝 삐져나옴, 김 안쪽). 순수 시각(scoring 무관). mat 미존재 시 생략.
+	func _build_flat_fillings() -> void:
+		if ArtRegistry.get_painterly("gimbap_mat") == "":
+			return
+		# KEEP_ASPECT_CENTERED fit — gimbap_mat(aspect 1.607)을 box에 비율 유지로 깔 때의 표시 영역.
+		var box_aspect: float = _box.x / _box.y
+		var disp_w: float = _box.x
+		var disp_h: float = _box.y
+		var off_x: float = 0.0
+		var off_y: float = 0.0
+		if MAT_IMG_ASPECT > box_aspect:
+			# 이미지가 더 wide → 가로 맞춤, 위아래 letterbox.
+			disp_h = _box.x / MAT_IMG_ASPECT
+			off_y = (_box.y - disp_h) * 0.5
+		else:
+			disp_w = _box.y * MAT_IMG_ASPECT
+			off_x = (_box.x - disp_w) * 0.5
+		# 밥 region(흰 밥) box 좌표.
+		var rice_cx: float = off_x + MAT_RICE_FRAC_CX * disp_w
+		var rice_cy: float = off_y + MAT_RICE_FRAC_CY * disp_h
+		var rice_w: float = MAT_RICE_FRAC_W * disp_w
+		var rice_h: float = MAT_RICE_FRAC_H * disp_h
+		# 다발 중심 = 밥 region lower-middle(Build BUNDLE_TARGET_Y 정합 — 두꺼워진 다발이 밥 안에).
+		var bundle_cy: float = rice_cy + rice_h * 0.10
+		var holder := Control.new()
+		holder.name = "FlatFillings"
+		holder.size = _box
+		holder.position = Vector2.ZERO
+		holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		# 진행 sprite보다 위(초기 base 위에 재료) — z 최상단 근처(press_overlay/result는 add 순서로 위).
+		add_child(holder)
+		_flat_fillings = holder
+		# ── 재료를 밥보다 길게 (F5 fix): 흰 밥 실측 폭(0.712*disp_w)과 김 안쪽(0.774*disp_w) 평균 =
+		# 밥보다 길고 김 안쪽. 양끝이 밥/김 위로 살짝 삐져나오되 김 밖으론 안 나간다.
+		var strip_w: float = (FILL_RICE_FRAC_W + FILL_SEAWEED_FRAC_W) * 0.5 * disp_w
+		# 재료 strip 세로 두께 — 음식 텍스처는 읽히되 살짝 **더 얇게** (F5 fix, 2026-06-15: 사용자
+		# "재료를 조금만 더 얇게"). 0.25 → 0.18 (약 28% 얇아짐). stride도 비례해 다발이 더 납작·고르게.
+		var strip_h: float = rice_h * 0.18
+		var stride: float = strip_h * 0.70
+		# carrot/egg/spinach/danmuji 순(Build _strip_specs 안착 순서 정합).
+		var ids: Array = ["carrot", "egg", "spinach", "danmuji"]
+		var cols: Array = [FILL_COLS[2], FILL_COLS[3], FILL_COLS[1], FILL_COLS[0]]
+		var n: int = ids.size()
+		var band_top: float = bundle_cy + (0.0 - float(n - 1) * 0.5) * stride - strip_h * 0.5
+		var band_bot: float = bundle_cy + (float(n - 1) - float(n - 1) * 0.5) * stride + strip_h * 0.5
+		for i in range(n):
+			var fid: String = String(ids[i])
+			var row_y: float = bundle_cy + (float(i) - float(n - 1) * 0.5) * stride
+			var node: Control = _make_flat_filling_node(fid, cols[i], strip_w, strip_h)
+			node.position = Vector2(rice_cx - strip_w * 0.5, row_y - strip_h * 0.5)
+			node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			holder.add_child(node)
+		# bed geometry 저장 — _RollGrowth가 통이 가로 재료를 near→far로 감싸는 좌표 기준으로 사용.
+		_bed_geom = {
+			"rice_cx": rice_cx, "rice_cy": rice_cy, "rice_w": rice_w, "rice_h": rice_h,
+			"strip_w": strip_w, "band_top": band_top, "band_bot": band_bot,
+			"disp_w": disp_w, "disp_h": disp_h, "off_y": off_y,
+		}
+
+	## _RollGrowth에 넘길 bed geometry. _build_flat_fillings가 산출(_bed_geom). 미존재 시 box 기반 기본값.
+	func _flat_fillings_geom() -> Dictionary:
+		if not _bed_geom.is_empty():
+			return _bed_geom
+		# fallback (gimbap_mat 미존재) — box 중앙 기준 합리적 기본 bed.
+		return {
+			"rice_cx": _box.x * 0.50, "rice_cy": _box.y * 0.50,
+			"rice_w": _box.x * 0.72, "rice_h": _box.y * 0.50,
+			"strip_w": _box.x * 0.60, "band_top": _box.y * 0.50, "band_bot": _box.y * 0.66,
+			"disp_w": _box.x, "disp_h": _box.y, "off_y": 0.0,
+		}
+
+	## 한 재료 가로 strip — filling_{id}_painterly band를 AtlasTexture로 가로 full-width crop(음식
+	## 텍스처). 미존재 시 둥근 색 Panel fallback(graceful). Build _make_strip_node와 동일 방식.
+	func _make_flat_filling_node(fid: String, col: Color, strip_w: float, strip_h: float) -> Control:
+		var path: String = ArtRegistry.gimbap_painterly_filling(fid)
+		if path != "" and FILL_BAND.has(fid):
+			var src: Texture2D = load(path)
+			if src != null:
+				var band: Dictionary = FILL_BAND[fid]
+				var atlas := AtlasTexture.new()
+				atlas.atlas = src
+				atlas.region = Rect2(0.0, float(band["y0"]), FILL_SRC_W, float(band["y1"]) - float(band["y0"]))
+				atlas.filter_clip = true
+				var t := TextureRect.new()
+				t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+				t.stretch_mode = TextureRect.STRETCH_SCALE
+				t.custom_minimum_size = Vector2.ZERO
+				t.texture = atlas
+				t.size = Vector2(strip_w, strip_h)
+				return t
+		# painterly 미존재 — 둥근 색 띠 fallback(거대 슬랩/날카로운 바 금지).
+		var p := Panel.new()
+		p.size = Vector2(strip_w, strip_h)
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = col
+		sb.set_corner_radius_all(int(strip_h * 0.45))
+		p.add_theme_stylebox_override("panel", sb)
+		return p
+
+	## 완성 직전(result sprite 전환) 시 flat 재료 overlay만 1회 fade out. **김발(_bamboo_mat)은
+	## 절대 fade 안 함** (받침으로 계속 보임).
+	##
+	## ── 김발 유지 + 재료 가로 + 이중 이미지 0 (F5 fix v2, 2026-06-15) ──────────────────────
+	## 사용자 거부:
+	##   (1) 김발이 말 때 사라짐 — 이전엔 이중 이미지를 막으려고 gimbap_mat 전체(김발 포함)를 fade했음.
+	##   (2) staged 통 sprite의 재료가 세로.
+	## 교정(방안 B procedural):
+	##   - 김발(_bamboo_mat)은 roll 내내 full alpha = 받침으로 계속 보임. **여기서 fade하지 않는다.**
+	##   - 말리는 동안 flat 재료(가로 band)도 그대로 두고, procedural _RollGrowth 통이 near→far로
+	##     **위에 덮어** 가로 재료를 통 안으로 먹는다(별도 위치 통/세로 재료 등장 0 = 이중 이미지 0).
+	##   - 이 함수는 finalize 때 open-end result sprite로 넘어갈 때 flat 재료 overlay만 정리한다.
+	func _fade_flat_fillings() -> void:
+		if _flat_faded:
+			return
+		_flat_faded = true
+		if is_instance_valid(_flat_fillings):
+			var tw := _flat_fillings.create_tween()
+			tw.tween_property(_flat_fillings, "modulate:a", 0.0, 0.18)
+		# 김발(_bamboo_mat)은 fade하지 않는다 — 받침으로 계속 보여야 한다(사용자 거부 핵심).
 
 	## roundness 0~1 → 6 진행 state index. flat(0)→edge_lift→first_fold→curling→compression→finished.
 	func _stage_index_for(r: float) -> int:
@@ -713,15 +947,23 @@ class _TopDownRollStage extends Control:
 			var rt: TextureRect = _result_sprites[k]
 			if is_instance_valid(rt):
 				rt.rotation = rot
-				rt.position = Vector2(dx, 0.0)
+				# 큰 완성 box의 center 정렬(_result_base_off)에 tilt x offset만 더한다.
+				rt.position = _result_base_off + Vector2(dx, 0.0)
 
-	## roll 진행 갱신 — fold(bottom→top) + 좌우 비대칭. painterly면 state swap, 아니면 procedural _draw.
+	## roll 진행 갱신 — fold(bottom→top) + 좌우 비대칭.
+	## 김발 유지 + 재료 가로 (F5 fix v2): 말리는 시각은 procedural _RollGrowth가 담당한다. 김발 base와
+	## 가로 재료는 그대로 두고, 통이 near→far로 가로 재료를 덮으며 자란다(staged 통 sprite swap 안 함).
+	## mismatch staged 통 sprite는 모두 alpha 0 유지(_show_stage가 정리). 별도 통/세로 재료 0 = 이중 이미지 0.
 	func set_roll(roundness: float, tilt: float) -> void:
 		_round = clampf(roundness, 0.0, 1.0)
 		_tilt = clampf(tilt, -1.0, 1.0)
+		# procedural 통 — 김발 위에서 near→far로 자라며 가로 재료를 감싼다(핵심 시각).
+		if is_instance_valid(_roll_growth) and _result == RESULT_NONE:
+			_roll_growth.set_roll(_round, _tilt)
+		# (mismatch staged 통 sprite는 표시 안 함) — index 정합 placeholder만 alpha 0으로 정리.
 		if _painterly and _result == RESULT_NONE:
 			_show_stage(_stage_index_for(_round))
-		# 눌러 다지기 beat — compression stage(idx>=4, roundness>=0.72) 진입 시 1회 김발 press pulse.
+		# 눌러 다지기 beat — roundness>=0.72 진입 시 1회 김발 press pulse(통 다지기).
 		if not _pressed_stage and _round >= 0.72:
 			_pressed_stage = true
 			_play_press_beat(0.0)
@@ -739,8 +981,11 @@ class _TopDownRollStage extends Control:
 		tw.tween_property(_press_overlay, "modulate:a", 0.92, 0.10).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		tw.tween_interval(0.10)
 		tw.tween_property(_press_overlay, "modulate:a", 0.0, 0.16).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-		# 통 살짝 눌림(squash) — 진행 sprite/완성 sprite를 세로로 미세 압착 후 복원(다져지는 느낌).
+		# 통 살짝 눌림(squash) — 활성 통(procedural growth / 완성 sprite)을 세로로 미세 압착 후 복원.
 		var targets: Array = []
+		# 말리는 중 = procedural growth tube가 활성 통.
+		if is_instance_valid(_roll_growth) and (_roll_growth as Control).visible and _result == RESULT_NONE:
+			targets.append(_roll_growth)
 		for tr in _stage_sprites:
 			if is_instance_valid(tr) and (tr as TextureRect).modulate.a > 0.5:
 				targets.append(tr)
@@ -754,12 +999,18 @@ class _TopDownRollStage extends Control:
 			ct.tween_property(t, "scale", Vector2(1.0, 1.0), 0.20).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 	## 끝 상태 확정 — result shape + settle tilt(well_rolled면 0=똑바른 수평 원통).
+	## 완성 통은 success 후 open-end result sprite(roll_finished*). 김발(_bamboo_mat)은 통 밑 받침으로
+	## 계속 보인다(fade 안 함). procedural 통(_roll_growth)은 result sprite가 인계하므로 숨긴다.
 	func finalize_roll(result_state: int, settle_tilt: float) -> void:
 		_result = result_state
 		_round = 1.0
 		_tilt = clampf(settle_tilt, -1.0, 1.0)
+		_fade_flat_fillings()   # 초기 재료 overlay 정리(완성 통이 시각 인계). 김발은 유지.
+		# procedural 통은 result sprite(open-end)가 인계 — 숨긴다.
+		if is_instance_valid(_roll_growth):
+			_roll_growth.visible = false
 		if _painterly:
-			# 진행 sprite 전부 숨기고 result variant 1개만 표시.
+			# 진행 sprite placeholder 전부 숨기고 result variant 1개만 표시.
 			for tr in _stage_sprites:
 				if is_instance_valid(tr):
 					(tr as TextureRect).modulate.a = 0.0
@@ -905,6 +1156,104 @@ class _TopDownRollStage extends Control:
 			Vector2(x_l, cyl - r), Vector2(x_r, cyr - r),
 			Vector2(x_r, cyr + r), Vector2(x_l, cyl + r)]), col)
 		# 양끝 둥근 반원 (위에서 본 둥근 외피 — end-cap 단면 아님).
+		draw_circle(Vector2(x_l, cyl), r, col)
+		draw_circle(Vector2(x_r, cyr), r, col)
+
+
+# =====================================================================================
+# PROCEDURAL ROLL GROWTH — 김발 위에서 near→far로 자라는 어두운 김 통 (F5 fix v2, 2026-06-15).
+#
+# 사용자 거부 교정의 핵심 시각. mismatch staged 통 sprite(roll_edge_lift~compression: 김발 없음 +
+# 사선 + 재료 세로)를 대체한다. 이 overlay는 김발 base(_bamboo_mat)와 가로 재료(_flat_fillings)
+# **위에** 깔려, 말리는 동안 어두운 김 통이 **near(하단) edge부터 far(상단)로 자라며** 그 아래 가로
+# 재료를 통 안으로 감싼다(덮는다). 별도 위치 통 / 세로 재료 등장 0 = 이중 이미지 0.
+#
+# ── 일관 원칙(사용자 요구 정합) ──────────────────────────────────────────────────────────
+#   - 받침: 김발은 이 overlay가 안 그림(base sprite가 항상 보임). 통은 김발 가운데에서만 자란다.
+#   - 재료 가로: 통 아래 가로 재료(_flat_fillings)는 그대로. 통이 near→far로 덮어 통 안에 가로로 들어감.
+#   - near→far 말림: 통이 덮는 영역(fold line)이 band_bottom(near) → band_top(far)로 이동.
+#   - flat 부분은 near부터 줄어듦: 통이 near(하단)부터 덮으므로 안 덮인 가로 재료는 far(상단)에 남는다.
+#   - 단면(end-cap) 0: 통은 수평 capsule(axis 가로 고정). 완성 단면은 다음 Slice 단계에서만.
+# set_roll(roundness 0~1, tilt) 1개 — roundness만큼 통이 자란다. tilt = 좌우 비대칭(near edge 높이차).
+# =====================================================================================
+class _RollGrowth extends Control:
+	const SEAWEED := Color(0.12, 0.16, 0.10)        # 김 외피 본체(어두움).
+	const SEAWEED_LO := Color(0.07, 0.10, 0.06)     # 김 외피 그림자.
+	const SEAWEED_SHEEN := Color(0.30, 0.36, 0.24, 0.55)
+	const SHADOW := Color(0, 0, 0, 0.18)
+
+	# bed geometry (box 좌표) — _build_flat_fillings에서 산출. 통이 가로 재료를 감싸는 기준.
+	var _rice_cx: float = 0.0
+	var _band_top: float = 0.0       # 재료 band 상단(far).
+	var _band_bot: float = 0.0       # 재료 band 하단(near). 통은 여기(near)부터 자란다.
+	var _tube_w: float = 0.0         # 통 가로 길이(재료보다 살짝 길게 = 양끝이 재료를 덮음).
+	var _round: float = 0.0
+	var _tilt: float = 0.0
+
+	func setup_geom(geom: Dictionary) -> void:
+		_rice_cx = float(geom.get("rice_cx", size.x * 0.5))
+		var strip_w: float = float(geom.get("strip_w", size.x * 0.6))
+		var rice_h: float = float(geom.get("rice_h", size.y * 0.5))
+		_band_top = float(geom.get("band_top", size.y * 0.5))
+		_band_bot = float(geom.get("band_bot", size.y * 0.66))
+		# 통은 재료보다 살짝 더 길게(양끝이 가로 재료를 덮어 통 안으로 들어간 느낌). 김 안쪽 폭 정도.
+		_tube_w = strip_w * 1.06
+		# 통이 자랄 세로 여유 — band 위/아래로 약간 확장(통이 두꺼워지며 재료를 완전히 감쌈).
+		var pad: float = rice_h * 0.14
+		_band_top -= pad
+		_band_bot += pad * 0.5
+		queue_redraw()
+
+	func set_roll(roundness: float, tilt: float) -> void:
+		_round = clampf(roundness, 0.0, 1.0)
+		_tilt = clampf(tilt, -1.0, 1.0)
+		queue_redraw()
+
+	func _draw() -> void:
+		# 말기 전(거의 flat)엔 통을 안 그린다 — 김발 + 김 + 밥 + 가로 재료 flat만 보이게(roll_flat).
+		if _round <= 0.10:
+			return
+		var band_h: float = _band_bot - _band_top
+		if band_h <= 0.0:
+			return
+		# 0.10~1.0 구간을 0~1로 remap — flat 직후 통이 얇게 시작해 자라도록(시작 두께 과대 방지).
+		var g: float = clampf((_round - 0.10) / 0.90, 0.0, 1.0)
+		# fold line — 통이 덮은 far 경계. near(band_bot)부터 위로 올라가며 가로 재료를 덮는다.
+		#   g 0 = near(band_bot, 안 덮음) / 1 = far(band_top 위, 전부 덮음).
+		var fold_y: float = lerpf(_band_bot, _band_top - band_h * 0.10, g)
+		# 통 중심 = 덮은 영역의 중간(near band_bot ~ fold_y). 통은 자랄수록 위로 올라가며 두꺼워진다.
+		var tube_cy: float = (_band_bot + fold_y) * 0.5
+		# 통 두께 — g가 커질수록 누적 layer가 두꺼워진다(둥근 통). 시작은 얇게(near edge fold).
+		var tube_h: float = lerpf(band_h * 0.30, band_h * 1.18, g)
+		var r: float = tube_h * 0.5
+		var cx: float = _rice_cx
+		# tilt = near edge 좌우 높이차(crooked). 본체 axis는 수평 유지(좌우 끝 y만 다르게).
+		var tilt_dy: float = _tilt * band_h * 0.22
+
+		# 정하향 soft contact shadow (top-down 통일).
+		_capsule(Vector2(cx, tube_cy + r * 0.35 + 10.0), _tube_w, tube_h * 0.92, SHADOW, tilt_dy * 0.5)
+		# 김 외피 — 어두운 통(가로 capsule, 길이축 = 가로). 가로 재료를 통 안에 감싼다(덮는다).
+		_capsule(Vector2(cx, tube_cy + 4.0), _tube_w, tube_h, SEAWEED_LO, tilt_dy)
+		_capsule(Vector2(cx, tube_cy), _tube_w, tube_h - 8.0, SEAWEED, tilt_dy)
+		# 위쪽 절반 sheen — 원기둥 볼륨감(단면 아님, 길이 방향 가로).
+		_capsule(Vector2(cx, tube_cy - r * 0.32), _tube_w - 46.0, tube_h * 0.40, SEAWEED_SHEEN, tilt_dy)
+		# 막 말려 들어가는 near edge(fold line) — 김발이 통을 밀어 올린 highlight(가로).
+		var fl_dy: float = tilt_dy * 0.5
+		draw_line(Vector2(cx - _tube_w * 0.5 + r, fold_y - fl_dy),
+				Vector2(cx + _tube_w * 0.5 - r, fold_y + fl_dy),
+				Color(0.20, 0.26, 0.16, 0.7), 8.0, true)
+
+	# (0,0 무관) 가로 capsule — center 기준. tilt_dy = 우측 끝을 좌측보다 올림(좌우 비대칭, 본체 수평).
+	func _capsule(center: Vector2, cw: float, ch: float, col: Color, tilt_dy: float = 0.0) -> void:
+		var r: float = ch * 0.5
+		var cx: float = center.x
+		var cyl: float = center.y - tilt_dy * 0.5   # 좌측 끝 y
+		var cyr: float = center.y + tilt_dy * 0.5   # 우측 끝 y
+		var x_l: float = cx - cw * 0.5 + r
+		var x_r: float = cx + cw * 0.5 - r
+		draw_colored_polygon(PackedVector2Array([
+			Vector2(x_l, cyl - r), Vector2(x_r, cyr - r),
+			Vector2(x_r, cyr + r), Vector2(x_l, cyl + r)]), col)
 		draw_circle(Vector2(x_l, cyl), r, col)
 		draw_circle(Vector2(x_r, cyr), r, col)
 

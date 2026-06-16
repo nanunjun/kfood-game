@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bpfis5u7on9bl"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_gimbap_aligned.gd" id="1_galn"]
+
+[node name="ShotGimbapAligned" type="Node"]
+script = ExtResource("1_galn")

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bqohsduivkx41"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_gimbap_match.gd" id="1_gmatch"]
+
+[node name="ShotGimbapMatch" type="Node"]
+script = ExtResource("1_gmatch")

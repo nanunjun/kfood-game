@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://fya3ab3ydv34"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_gimbap_openend.gd" id="1_oe"]
+
+[node name="ShotGimbapOpenEnd" type="Node"]
+script = ExtResource("1_oe")

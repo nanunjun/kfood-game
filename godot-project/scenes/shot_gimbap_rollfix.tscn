@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bb1wkny4ichu7"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_gimbap_rollfix.gd" id="1_rollfix"]
+
+[node name="ShotGimbapRollfix" type="Node"]
+script = ExtResource("1_rollfix")

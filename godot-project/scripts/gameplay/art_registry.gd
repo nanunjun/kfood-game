@@ -121,8 +121,12 @@ const PAINTERLY_KEYS := [
 	"roll_flat_setup", "roll_edge_lift", "roll_first_fold",
 	"roll_curling", "roll_compression", "roll_finished",
 	"roll_finished_loose", "roll_finished_burst",
-	# build layers (mat/김/밥/filling 4).
-	"mat_painterly", "seaweed_painterly", "rice_painterly",
+	# build layers (mat/김/밥/filling 4). rice_bed_full = axis-aligned 꽉 찬 밥 bed(작은 밥알,
+	# rice_painterly clean core tile-fill — 얇은 RICE_CROP 폐기 자산, gimbap build 축정렬 합성).
+	"mat_painterly", "seaweed_painterly", "rice_painterly", "rice_bed_full",
+	# gimbap_mat = 사용자 제작 완성 setup 한 장(김발+김+밥 full bed, 이미 똑바로 정렬 + recline baked).
+	# Build/Roll base single-sprite — 이전 Godot 타일 합성(mat+seaweed+rice 레이어) 폐기 교체.
+	"gimbap_mat",
 	"filling_carrot_painterly", "filling_egg_painterly",
 	"filling_spinach_painterly", "filling_danmuji_painterly",
 	# julienne carrot 4 state.

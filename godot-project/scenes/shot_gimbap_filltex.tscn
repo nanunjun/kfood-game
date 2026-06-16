@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bnsj5h0yitp1g"]
+
+[ext_resource type="Script" path="res://scripts/dev/shot_gimbap_filltex.gd" id="1_ftex"]
+
+[node name="ShotGimbapFillTex" type="Node"]
+script = ExtResource("1_ftex")
