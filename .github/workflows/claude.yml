@@ -53,7 +53,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: "--max-turns 15 --model claude-opus-4-8"
+          claude_args: '--max-turns 15 --model claude-opus-4-8 --allowedTools "Edit,Write,Read,Bash,Glob,Grep,MultiEdit"'
           prompt: |
             이 이슈(#${{ github.event.issue.number }})에 'ready-for-dev' 라벨이 붙어 개발 요청이 들어왔습니다.
 
